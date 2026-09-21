@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import roles from "@/data/roles.json";
 import { scenarios } from "@/data/scenarios";
@@ -44,6 +45,8 @@ export default function Drawer({ docked = false, onClose, onNewProject, onExampl
             <p className="text-lg font-extrabold leading-tight">AskBack</p>
             <p className="truncate text-xs text-sub">🧑‍🚀 {profile?.name}의 프로젝트</p>
           </div>
+          {/* 소개 페이지(/about) — AskBack이 무엇인지 한 장으로 */}
+          <Link href="/about" className="ml-auto shrink-0 rounded-full border border-line bg-sand px-3 py-1.5 text-xs font-bold text-clay active:bg-line">✨ 소개</Link>
         </div>
 
         {/* 별이 — 질문 10개마다 한 단계 자란다 */}

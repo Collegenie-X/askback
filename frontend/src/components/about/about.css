@@ -1,0 +1,183 @@
+/* 소개 페이지(/about) 전용 — 순수 검정 위에 오로라 · 유리 카드 · 네온 노드. 문서처럼 아래로 스크롤한다 */
+html:has(.about) { scroll-behavior: smooth; scroll-padding-top: 84px; }
+body:has(.about) { background: #000; }
+
+.about {
+  position: relative;
+  min-height: 100dvh;
+  color: #fff;
+  font-family: "Twemoji", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  word-break: keep-all;
+  overflow-x: clip;
+  isolation: isolate;
+}
+/* 오로라 — 네 귀퉁이의 색이 천천히 흘러다닌다 */
+.about::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 34% at 18% 16%, rgba(108, 92, 231, 0.30), transparent 70%),
+    radial-gradient(34% 30% at 84% 24%, rgba(6, 182, 212, 0.20), transparent 70%),
+    radial-gradient(40% 36% at 26% 84%, rgba(236, 72, 153, 0.16), transparent 70%),
+    radial-gradient(34% 30% at 80% 78%, rgba(34, 197, 94, 0.13), transparent 70%);
+  filter: blur(30px);
+  animation: ab-about-aurora 26s ease-in-out infinite;
+}
+/* 잔별 */
+.about::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 120px 90px, rgba(255, 255, 255, 0.7) 0 0.8px, transparent 1.6px),
+    radial-gradient(circle at 340px 260px, rgba(196, 181, 253, 0.7) 0 0.9px, transparent 1.7px),
+    radial-gradient(circle at 60px 400px, rgba(147, 197, 253, 0.6) 0 0.9px, transparent 1.7px),
+    radial-gradient(circle at 460px 140px, rgba(255, 255, 255, 0.5) 0 0.7px, transparent 1.5px),
+    radial-gradient(circle at 250px 480px, rgba(255, 255, 255, 0.45) 0 0.8px, transparent 1.6px),
+    radial-gradient(circle at 410px 370px, rgba(255, 255, 255, 0.35) 0 0.6px, transparent 1.4px);
+  background-size: 520px 520px;
+  animation: ab-about-tw 3.6s ease-in-out infinite alternate;
+}
+@keyframes ab-about-aurora { 0%, 100% { transform: translate3d(-6%, -4%, 0) scale(1); } 50% { transform: translate3d(6%, 5%, 0) scale(1.15); } }
+
+/* 앱의 남색 팔레트를 이 페이지 안에서만 유리 톤으로 바꾼다 */
+.about .bg-card { background: rgba(255, 255, 255, 0.035); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.about .bg-sand { background: rgba(255, 255, 255, 0.06); }
+.about .bg-void { background: rgba(0, 0, 0, 0.55); }
+.about .border-line { border-color: rgba(255, 255, 255, 0.1); }
+.about .text-sub { color: #a8a8c0; }
+.about .bg-mint-soft { background: rgba(52, 211, 153, 0.09); }
+.about .bg-clay-soft { background: rgba(251, 191, 36, 0.09); }
+.about .bg-rose-soft { background: rgba(236, 72, 153, 0.09); }
+.about .bg-student { background: linear-gradient(135deg, #4f46e5, #6c5ce7); }
+
+/* 상단 메뉴 — 가운데 알약 모양 */
+.about .topnav { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(0, 0, 0, 0.6); border-color: rgba(255, 255, 255, 0.06); }
+.about .pill { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); }
+.about .pill a { white-space: nowrap; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, 0.55); transition: color 0.15s, background 0.15s; }
+.about .pill a:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+.about .pill a[aria-current="page"] { color: #fff; background: linear-gradient(135deg, #6c5ce7, #a855f7); font-weight: 800; box-shadow: 0 4px 16px rgba(108, 92, 231, 0.55); }
+.about .noscroll { scrollbar-width: none; }
+.about .noscroll::-webkit-scrollbar { display: none; }
+
+.about .cta { background-image: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); box-shadow: 0 8px 40px rgba(108, 92, 231, 0.55); transition: transform 0.15s; position: relative; overflow: hidden; }
+.about .cta:hover { transform: scale(1.03); }
+.about .cta::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.35) 50%, transparent 65%); transform: translateX(-100%); animation: ab-about-shine 3.2s ease-in-out infinite; }
+@keyframes ab-about-shine { 0%, 55% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.about .ghost { border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.04); color: rgba(255, 255, 255, 0.85); transition: border-color 0.15s, background 0.15s; }
+.about .ghost:hover { border-color: rgba(255, 255, 255, 0.32); background: rgba(255, 255, 255, 0.08); }
+
+.about .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: #c084fc; }
+.about .grad { background-image: linear-gradient(110deg, #c4b5fd 0%, #a78bfa 25%, #818cf8 50%, #60a5fa 75%, #93c5fd 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: ab-about-hue 6s ease-in-out infinite alternate; }
+.about .grad-gold { background-image: linear-gradient(100deg, #fde68a, #fbbf24 45%, #fb923c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+@keyframes ab-about-hue { to { background-position: 100% 0; } }
+.about .tilecard { border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.035); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 20px; transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s; }
+.about .tilecard:hover { border-color: rgba(167, 139, 250, 0.55); transform: translateY(-3px); box-shadow: 0 18px 60px rgba(108, 92, 231, 0.22); }
+.about .icon { display: grid; place-items: center; border-radius: 14px; }
+
+@keyframes ab-about-float { from { transform: translateY(-4px); } to { transform: translateY(5px); } }
+@keyframes ab-about-tw { from { opacity: 0.25; } to { opacity: 1; } }
+@keyframes ab-about-dash { to { stroke-dashoffset: -28; } }
+.about .ab-float { animation: ab-about-float 3.6s ease-in-out infinite alternate; }
+.about .ab-tw { animation: ab-about-tw 2.2s ease-in-out infinite alternate; }
+.about .ab-dash { stroke-dasharray: 8 6; animation: ab-about-dash 1.6s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .about .ab-float, .about .ab-tw, .about .ab-dash { animation: none; } }
+
+/* ── 움직임 ─────────────────────────────────────────── */
+.about .progress { background: linear-gradient(90deg, #6c5ce7, #a855f7, #60a5fa); transform: scaleX(0); }
+.about .tab { border-color: rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.04); color: rgba(255, 255, 255, 0.6); cursor: pointer; white-space: nowrap; }
+.about .tab:hover { color: #fff; border-color: rgba(255, 255, 255, 0.3); }
+.about .tab.on { background: linear-gradient(135deg, #6c5ce7, #a855f7); border-color: transparent; color: #fff; box-shadow: 0 4px 18px rgba(108, 92, 231, 0.55); }
+.about .scene-stage { background: radial-gradient(80% 90% at 50% 0%, rgba(108, 92, 231, 0.2), transparent 70%), rgba(0, 0, 0, 0.35); }
+.about .hero-h1 { letter-spacing: -1.5px; }
+.about .banner { background: linear-gradient(135deg, rgba(108, 92, 231, 0.22) 0%, rgba(168, 85, 247, 0.12) 55%, rgba(99, 102, 241, 0.1) 100%); border: 1px solid rgba(139, 92, 246, 0.35); box-shadow: 0 0 120px rgba(108, 92, 231, 0.25) inset; }
+
+/* Reveal — 화면에 들어오면 떠오른다 */
+.about .rv { opacity: 0; transform: translateY(26px); transition: opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.about .rv.in { opacity: 1; transform: none; }
+/* 차례로 등장 · 톡 튀어나오기 */
+.about .rv .stg, .about .rv .stg-pop { opacity: 0; }
+.about .rv.in .stg { animation: ab-about-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.about .rv.in .stg-pop { animation: ab-about-pop 0.55s cubic-bezier(0.3, 1.5, 0.5, 1) both; transform-box: fill-box; transform-origin: center; }
+/* 선 그리기 (pathLength=1) */
+.about .draw { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.about .rv.in .draw { animation: ab-about-draw 1.1s ease-out forwards; }
+.about .rv.in .draw-ring { animation: ab-about-ring 1.2s ease-out both; }
+/* 자라기 */
+.about .grow, .about .grow-x, .about .grow-c { transform-box: fill-box; }
+.about .grow { transform-origin: bottom; } .about .grow-x { transform-origin: left; } .about .grow-c { transform-box: view-box; }
+.about .rv.in .grow { animation: ab-about-grow-y 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.about .rv.in .grow-x { animation: ab-about-grow-x 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.about .rv.in .grow-c { animation: ab-about-pop 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+/* 탭 내용이 바뀔 때 */
+.about .swap { animation: ab-about-rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.about .swap .stg, .about .swap .stg-pop { opacity: 1; animation: ab-about-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.about .swap .draw { animation: ab-about-draw 1s ease-out forwards; }
+.about .swap .grow { animation: ab-about-grow-y 0.7s both; } .about .swap .grow-x { animation: ab-about-grow-x 0.7s both; }
+
+@keyframes ab-about-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes ab-about-pop { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: none; } }
+@keyframes ab-about-draw { to { stroke-dashoffset: 0; } }
+@keyframes ab-about-ring { from { stroke-dasharray: 0 1; } }
+@keyframes ab-about-grow-y { from { transform: scaleY(0); } }
+@keyframes ab-about-grow-x { from { transform: scaleX(0); } }
+
+/* 늘 움직이는 것들 */
+@keyframes ab-about-pulse { from { transform: scale(0.92); opacity: 0.6; } to { transform: scale(1.08); opacity: 1; } }
+@keyframes ab-about-spin { to { transform: rotate(360deg); } }
+@keyframes ab-about-swing { from { transform: rotate(-62deg); } to { transform: rotate(58deg); } }
+@keyframes ab-about-slide { 0%, 20% { transform: translateX(0); } 50%, 100% { transform: translateX(40px); } }
+@keyframes ab-about-dot { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
+@keyframes ab-about-fadeout { 0%, 20% { opacity: 1; } 70%, 100% { opacity: 0.12; } }
+@keyframes ab-about-tick { 0%, 100% { opacity: 0.25; transform: scale(0.7); } 12%, 30% { opacity: 1; transform: scale(1.15); } }
+@keyframes ab-about-wave { from { transform: skewY(-6deg); } to { transform: skewY(6deg); } }
+@keyframes ab-about-glow { 0%, 22%, 100% { opacity: 0; } 5%, 16% { opacity: 0.2; } }
+@keyframes ab-about-play { from { transform: translateX(0); } to { transform: translateX(296px); } }
+@keyframes ab-about-drop { 0% { transform: translateY(-6px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(16px); opacity: 0; } }
+@keyframes ab-about-gap { 0% { transform: translateY(-130px); opacity: 0; } 22%, 84% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(0); opacity: 0; } }
+@keyframes ab-about-gapbox { 0%, 18%, 100% { stroke: #ff7b8a; } 28%, 84% { stroke: #5ad1b3; } }
+@keyframes ab-about-gapq { 0%, 15%, 100% { opacity: 0.5; } 24%, 90% { opacity: 0; } }
+@keyframes ab-about-blink { 0%, 92%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+@keyframes ab-about-shoot { 0% { transform: translate(0, 0) rotate(-28deg); opacity: 0; } 4% { opacity: 1; } 14%, 100% { transform: translate(-720px, 380px) rotate(-28deg); opacity: 0; } }
+
+.about .ab-pulse { animation: ab-about-pulse 2.4s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+.about .sc-spin { animation: ab-about-spin 7s linear infinite; }
+.about .galaxy-spin { animation: ab-about-spin 140s linear infinite; transform-origin: 50% 50%; }
+.about .sc-swing { animation: ab-about-swing 2.6s ease-in-out infinite alternate; }
+.about .sc-slide { animation: ab-about-slide 3.2s cubic-bezier(0.3, 1.3, 0.5, 1) infinite alternate; }
+.about .sc-dot { animation: ab-about-dot 1.2s infinite; }
+.about .sc-fade { animation: ab-about-fadeout 3.4s ease-in-out infinite alternate; }
+.about .sc-tick { animation: ab-about-tick 2.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.about .ab-wave { animation: ab-about-wave 1.4s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: left center; }
+.about .ab-blink { animation: ab-about-blink 4.5s infinite; transform-box: fill-box; transform-origin: center; }
+.about .rh-glow { opacity: 0; animation: ab-about-glow 7.2s linear infinite; }
+.about .fa-play { animation: ab-about-play 4s linear infinite; }
+.about .fa-drop { animation: ab-about-drop 1.4s ease-in infinite; }
+.about .gap-drop { animation: ab-about-gap 6s cubic-bezier(0.3, 1.2, 0.5, 1) infinite; }
+.about .gap-box { animation: ab-about-gapbox 6s infinite; }
+.about .gap-q { animation: ab-about-gapq 6s infinite; }
+.about .shoot { position: absolute; width: 110px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, #fff, transparent); animation: ab-about-shoot 9s linear infinite; opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .about .rv, .about .rv .stg, .about .rv .stg-pop { opacity: 1; transform: none; transition: none; }
+  .about .draw { stroke-dashoffset: 0; }
+  .about .rh-glow, .about .shoot { display: none; }
+  .about *, .about *::before { animation: none !important; }
+}
+
+/* 네온 노드 · 물결 경로 */
+@keyframes ab-about-flowdash { to { stroke-dashoffset: -120; } }
+.about .wave-flow { stroke-dasharray: 22 38; animation: ab-about-flowdash 2.4s linear infinite; }
+.about .neon { filter: drop-shadow(0 0 10px var(--neon, #a78bfa)) drop-shadow(0 0 26px var(--neon, #a78bfa)); }
+@keyframes ab-about-knob { 0%, 15% { transform: translateX(0); } 60%, 100% { transform: translateX(224px); } }
+.about .sl-knob { animation: ab-about-knob 4.5s ease-in-out infinite alternate; }
+@keyframes ab-about-eyes { 0%, 40%, 100% { transform: translateX(0); } 50%, 90% { transform: translateX(4px); } }
+@keyframes ab-about-stamp { 0% { opacity: 0; transform: scale(2.2) rotate(-14deg); } 60% { opacity: 1; transform: scale(0.92); } 100% { opacity: 1; transform: none; } }
+.about .sec-eyes { animation: ab-about-eyes 3.4s ease-in-out infinite; }
+.about .draw-now { stroke-dashoffset: 1; animation: ab-about-draw 0.9s ease-out 0.2s forwards; }
+.about .stamp { animation: ab-about-stamp 0.6s cubic-bezier(0.3, 1.4, 0.5, 1) 0.5s both; }

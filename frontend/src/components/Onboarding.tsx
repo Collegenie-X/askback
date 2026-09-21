@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import data from "@/data/onboarding.json";
 import { createProject } from "@/lib/actions";
@@ -109,9 +110,13 @@ export default function Onboarding({ hasProfile, onDone, onDemo }: { hasProfile:
       <div className="pointer-events-none absolute inset-0 -z-[1] bg-[#05041a]/90" />
       <div className="scroll flex flex-1 flex-col px-7 pb-[max(28px,env(safe-area-inset-bottom))] pt-8">
         <div className="mb-6 grid grid-cols-[1fr_auto_1fr] items-center">
-          <button type="button" className={`justify-self-start text-xs font-semibold text-sub ${step === 0 ? "invisible" : ""}`} onClick={() => go(step - 1)}>
-            ‹ 이전
-          </button>
+          {step === 0 ? (
+            <Link href="/about" className="justify-self-start text-xs font-semibold text-clay">✨ 소개</Link>
+          ) : (
+            <button type="button" className="justify-self-start text-xs font-semibold text-sub" onClick={() => go(step - 1)}>
+              ‹ 이전
+            </button>
+          )}
           <div className="flex gap-1.5">
             {Array.from({ length: hasProfile ? INTRO : INTRO + 2 }, (_, i) => (
               <span key={i} className={`h-1 rounded-full transition-all duration-300 ${i === step ? "w-7 bg-clay" : "w-3.5 bg-line"}`} />
