@@ -76,7 +76,60 @@ export function MiniFlow({ x = 0, y = 0 }: { x?: number; y?: number }) {
 }
 
 // 히어로 — 글 대신 그림 한 장. “코드 짜줘”가 코치를 지나 되물음이 되고, 설계도 위에서 화분이 자란다.
-export function HeroArt() {
+export interface HeroScene { format: string; ask: string; back: string; result: string }
+const HERO_DEFAULT: HeroScene = { format: "product", ask: "“코드 짜줘”", back: "“그 400, 왜?”", result: "📝 네 말로 채운 기획서 한 장" };
+
+// 설계도 위에서 자라는 작품 — 형식마다 다르다. 바닥 중심은 (230, 378).
+function HeroPiece({ format }: { format: string }) {
+  if (format === "service") return (
+    <g>
+      <rect x="196" y="282" width="68" height="98" rx="10" fill={CARD} stroke="#60a5fa" strokeWidth="2.200" />
+      <rect x="220" y="288" width="20" height="4" rx="2" fill={LINE} />
+      <rect x="204" y="300" width="52" height="24" rx="5" fill="#60a5fa33" stroke="#60a5fa" />
+      {[0, 1].map((i) => <rect key={i} x={204 + i * 28} y="330" width="24" height="16" rx="4" fill={SAND} className="grow" style={at(0.3 + i * 0.2)} />)}
+      <rect x="210" y="354" width="40" height="14" rx="7" fill={MINT} className="ab-tw" />
+    </g>
+  );
+  if (format === "campaign") return (
+    <g>
+      <rect x="182" y="310" width="96" height="66" rx="8" fill={CARD} stroke="#fb923c" strokeWidth="2.200" />
+      <path d="M182 310l6-20 92-8 2 14z" fill="#fb923c" /><path d="M200 289l8 17M226 286l8 18M252 284l8 18" stroke="#0b0b16" strokeWidth="5" />
+      <path d="M220 328v30l26-15z" fill="#fb923c" className="ab-pulse" />
+    </g>
+  );
+  if (format === "research") return (
+    <g>
+      <path d="M186 376h88" stroke={SUB} strokeWidth="2" strokeLinecap="round" />
+      {[34, 58, 24, 46].map((hh, i) => <rect key={i} x={192 + i * 20} y={376 - hh} width="14" height={hh} rx="3" fill={i === 1 ? GOLD : MINT} className="grow" style={at(0.2 + i * 0.18)} />)}
+      <g className="ab-float"><circle cx="262" cy="300" r="17" fill="#0b0b1699" stroke="#4ade80" strokeWidth="3" /><path d="M274 313l14 15" stroke="#4ade80" strokeWidth="4.500" strokeLinecap="round" /></g>
+    </g>
+  );
+  if (format === "paper") return (
+    <g>
+      <path d="M192 284h56l20 20v74h-76z" fill={CARD} stroke="#c084fc" strokeWidth="2.200" strokeLinejoin="round" />
+      <path d="M248 284v20h20" fill="#2a1030" stroke="#c084fc" strokeWidth="2.200" strokeLinejoin="round" />
+      <path d="M202 312h34" stroke="#c084fc" strokeWidth="4" strokeLinecap="round" className="draw" pathLength={1} />
+      {[0, 1, 2, 3].map((i) => <path key={i} d={`M202 ${328 + i * 11}h${[56, 48, 56, 36][i]}`} stroke={INK} strokeWidth="2.200" strokeLinecap="round" opacity="0.7" className="draw" pathLength={1} style={at(0.3 + i * 0.15)} />)}
+    </g>
+  );
+  return (
+    <g>
+      <g className="grow">
+        <path d="M230 336c-2-22 2-34 0-52" fill="none" stroke={MINT} strokeWidth="4" strokeLinecap="round" />
+        <path d="M230 306c-22 2-34-10-36-28 20-2 34 8 36 28z" fill={MINT} />
+        <path d="M230 292c20 0 34-12 34-32-20 0-34 12-34 32z" fill="#6ee7b7" />
+      </g>
+      <rect x="200" y="332" width="60" height="12" rx="5" fill="#fed7aa" />
+      <path d="M205 344h50l-7 34h-36z" fill="url(#ha-pot)" />
+      <circle cx="241" cy="360" r="3.500" fill={MINT} className="sc-dot" />
+      {[0, 1].map((i) => <circle key={i} cx={216 + i * 9} cy={322} r="2.200" fill={SKY} className="fa-drop" style={at(i * 0.6)} />)}
+    </g>
+  );
+}
+
+// 히어로 그림 — scene 이 바뀌면 말풍선 · 가운데 작품 · 아래 라벨이 문구와 함께 바뀐다.
+export function HeroArt({ scene = HERO_DEFAULT }: { scene?: HeroScene }) {
+  const code = scene.format === "product" || scene.format === "service";
   const chips: [number, number, string, ReactNode][] = [
     [112, 300, SKY, <path key="d" d="M0-8c5 6 7 9 7 12a7 7 0 0 1-14 0c0-3 2-6 7-12z" />],
     [152, 248, MINT, <g key="c"><rect x="-6" y="-6" width="12" height="12" rx="2.500" /><path d="M-3-6v-3M3-6v-3M-3 6v3M3 6v3M-6-3h-3M-6 3h-3M6-3h3M6 3h3" /></g>],
@@ -132,17 +185,7 @@ export function HeroArt() {
           </g>
         </g>
       ))}
-      <g className="stg" style={at(1.2)}>
-        <g className="grow">
-          <path d="M230 336c-2-22 2-34 0-52" fill="none" stroke={MINT} strokeWidth="4" strokeLinecap="round" />
-          <path d="M230 306c-22 2-34-10-36-28 20-2 34 8 36 28z" fill={MINT} />
-          <path d="M230 292c20 0 34-12 34-32-20 0-34 12-34 32z" fill="#6ee7b7" />
-        </g>
-        <rect x="200" y="332" width="60" height="12" rx="5" fill="#fed7aa" />
-        <path d="M205 344h50l-7 34h-36z" fill="url(#ha-pot)" />
-        <circle cx="241" cy="360" r="3.500" fill={MINT} className="sc-dot" />
-        {[0, 1].map((i) => <circle key={i} cx={216 + i * 9} cy={322} r="2.200" fill={SKY} className="fa-drop" style={at(i * 0.6)} />)}
-      </g>
+      <g className="stg" style={at(1.2)}><g key={scene.format} className="swap" style={at(0.9)}><HeroPiece format={scene.format} /></g></g>
 
       {/* 코치 */}
       <circle cx="230" cy="106" r="80" fill="url(#ha-glow)" className="ab-pulse" />
@@ -157,8 +200,10 @@ export function HeroArt() {
       <g className="stg" style={at(0.5)}>
         <rect x="6" y="44" width="150" height="60" rx="18" fill={BLUE} stroke="#818cf8" />
         <path d="M128 103l16 16-3-17z" fill={BLUE} />
-        <path d="M32 64l-10 10 10 10M50 64l10 10-10 10M45 60l-8 28" fill="none" stroke="#c7d2fe" strokeWidth="2.600" strokeLinecap="round" strokeLinejoin="round" />
-        <text x="70" y="80" fill="#fff" fontSize="15" fontWeight="800">“코드 짜줘”</text>
+        {code
+          ? <path d="M32 64l-10 10 10 10M50 64l10 10-10 10M45 60l-8 28" fill="none" stroke="#c7d2fe" strokeWidth="2.600" strokeLinecap="round" strokeLinejoin="round" />
+          : <path d="M24 64h32M24 74h32M24 84h20" fill="none" stroke="#c7d2fe" strokeWidth="2.600" strokeLinecap="round" />}
+        <text key={scene.ask} x="108" y="80" fill="#fff" fontSize={scene.ask.length > 8 ? 13 : 15} fontWeight="800" textAnchor="middle" className="swap">{scene.ask}</text>
       </g>
       <path d="M158 78c14 2 24 8 34 18" fill="none" stroke="#c7d2fe" strokeWidth="2" strokeLinecap="round" strokeDasharray="1 6" />
       <circle r="4" fill="#fff"><animateMotion dur="1.800s" repeatCount="indefinite" path="M158 78c14 2 24 8 34 18" /></circle>
@@ -170,7 +215,7 @@ export function HeroArt() {
         <rect x="304" y="44" width="150" height="60" rx="18" fill="#2a2108" stroke={GOLD} strokeWidth="1.600" />
         <path d="M332 103l-16 16 3-17z" fill="#2a2108" stroke={GOLD} strokeWidth="1.600" strokeLinejoin="round" />
         <path d="M318 102h16" stroke="#2a2108" strokeWidth="3" />
-        <text x="379" y="80" fill={GOLD} fontSize="15" fontWeight="800" textAnchor="middle">“그 400, 왜?”</text>
+        <text key={scene.back} x="379" y="80" fill={GOLD} fontSize={scene.back.length > 9 ? 13 : 15} fontWeight="800" textAnchor="middle" className="swap" style={at(0.5)}>{scene.back}</text>
       </g>
 
       {/* 남긴다 — 되물음이 설계도로 내려앉는다 */}
@@ -196,7 +241,7 @@ export function HeroArt() {
           ))}
         </g>
         <rect x="150" y="462" width="226" height="28" rx="14" fill="#2a1030" stroke={PINK} />
-        <text x="263" y="481" fill="#fbcfe8" fontSize="13" fontWeight="800" textAnchor="middle">📝 네 말로 채운 기획서 한 장</text>
+        <text key={scene.result} x="263" y="481" fill="#fbcfe8" fontSize="13" fontWeight="800" textAnchor="middle" className="swap" style={at(1.4)}>{scene.result}</text>
       </g>
     </svg>
   );

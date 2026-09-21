@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
+import about from "@/data/about.json";
 
 // 몰래 쓰는 AI → 설명하고 인정받는 AI.
 // 특성화고의 '화이트보드 검문'(순서도 · 핵심 · 차별점 · 실패 조건)을 AskBack의 역질문이 매일 대신한다.
@@ -16,12 +17,7 @@ const MINT = "#34d399";
 const ROSE = "#fb7185";
 const VIOLET = "#a78bfa";
 
-const GATES = [
-  { key: "flow", color: GOLD, name: "순서도", teacher: "화면 닫고, 순서도를 그려 보세요.", lines: ["화면 닫고,", "순서도를 그려 보세요."], app: "센서값이 380이 들어왔어. 네 순서도에서 어느 상자를 지나가?", proves: "구조를 머릿속에 갖고 있다", why: "화면을 못 보는 상태에서 나오는 건 이해뿐이다" },
-  { key: "core", color: VIOLET, name: "핵심", teacher: "핵심 한 곳에 동그라미. 왜 거기예요?", lines: ["핵심 한 곳에 동그라미.", "왜 거기예요?"], app: "이 규칙에서 한 줄만 남긴다면 어느 줄이야? 왜?", proves: "무엇이 중요한지 판단했다", why: "“전부 중요해요”라고 답하면 아무것도 모르는 것이다" },
-  { key: "diff", color: PINK, name: "차별점", teacher: "고친 곳은? 고치기 전엔 어땠어요?", lines: ["고친 곳은?", "고치기 전엔 어땠어요?"], app: "타이머로 3초 주는 것과 뭐가 달라? 네 방식이 나은 점을 한 문장으로.", proves: "대안을 비교하고 골랐다", why: "왜 그 대안을 버렸는지는 본인만 안다" },
-  { key: "fail", color: ROSE, name: "실패 조건", teacher: "이거 언제 안 돌아가요?", lines: ["이거 언제", "안 돌아가요?"], app: "센서가 빠져서 0이 되면 화분에 어떤 일이 벌어질까?", proves: "시스템 전체를 본다", why: "안 돌아가는 조건을 아는 사람이 진짜 만든 사람이다" },
-];
+const { gates: GATES, teacherLabel, appLabel, provesLabel, whyLabel } = about.gate;
 
 // 지금 — 책상 밑에서 몰래 쓴다
 export function SecretArt() {
@@ -125,13 +121,13 @@ export function GateTabs() {
           {GATES.map((x, n) => <button key={x.key} role="tab" aria-selected={n === i} type="button" onClick={() => pick(n)} className={`tab shrink-0 rounded-full border px-3.5 py-2 text-[13px] font-bold transition ${n === i ? "on" : ""}`}>{n + 1}. {x.name}</button>)}
         </div>
         <div key={i} className="tilecard swap mt-4 p-5 sm:p-6" style={{ borderColor: `${g.color}88` }}>
-          <p className="text-[11px] font-extrabold text-sub">👩‍🏫 선생님은 이렇게 묻습니다</p>
+          <p className="text-[11px] font-extrabold text-sub">{teacherLabel}</p>
           <p className="mt-1 text-lg font-extrabold leading-snug">“{g.teacher}”</p>
-          <div className="my-4 flex items-center gap-2 text-xs font-bold text-sub"><span className="h-px flex-1 bg-white/10" />AskBack은 매일, 대화 속에서<span className="h-px flex-1 bg-white/10" /></div>
+          <div className="my-4 flex items-center gap-2 text-xs font-bold text-sub"><span className="h-px flex-1 bg-white/10" />{appLabel}<span className="h-px flex-1 bg-white/10" /></div>
           <p className="rounded-2xl rounded-bl-md border px-4 py-3 text-[15px] font-bold leading-snug" style={{ borderColor: g.color, color: g.color }}>🧭 “{g.app}”</p>
           <dl className="mt-4 space-y-2 text-[13.5px]">
-            <div className="flex gap-3"><dt className="w-[92px] shrink-0 text-xs font-extrabold text-mint">증명되는 것</dt><dd className="font-semibold">{g.proves}</dd></div>
-            <div className="flex gap-3"><dt className="w-[92px] shrink-0 text-xs font-extrabold text-sub">AI가 못 하는 이유</dt><dd className="leading-relaxed text-sub">{g.why}</dd></div>
+            <div className="flex gap-3"><dt className="w-[92px] shrink-0 text-xs font-extrabold text-mint">{provesLabel}</dt><dd className="font-semibold">{g.proves}</dd></div>
+            <div className="flex gap-3"><dt className="w-[92px] shrink-0 text-xs font-extrabold text-sub">{whyLabel}</dt><dd className="leading-relaxed text-sub">{g.why}</dd></div>
           </dl>
         </div>
       </div>

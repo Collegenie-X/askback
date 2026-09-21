@@ -181,3 +181,10 @@ body:has(.about) { background: #000; }
 .about .sec-eyes { animation: ab-about-eyes 3.4s ease-in-out infinite; }
 .about .draw-now { stroke-dashoffset: 1; animation: ab-about-draw 0.9s ease-out 0.2s forwards; }
 .about .stamp { animation: ab-about-stamp 0.6s cubic-bezier(0.3, 1.4, 0.5, 1) 0.5s both; }
+/* 히어로 — 돌아가며 바뀌는 문구 */
+@keyframes ab-about-word { from { opacity: 0; transform: translateY(0.7em); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes ab-about-hl { 0% { box-shadow: 0 0 0 0 transparent; } 25% { box-shadow: 0 0 0 2px var(--hl), 0 0 28px var(--hl); } 100% { box-shadow: 0 0 0 0 transparent; } }
+@keyframes ab-about-timer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.about .word-in { animation: ab-about-word 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.about .step-hl { animation: ab-about-hl 1.6s ease-out both; }
+.about .scene-timer { animation: ab-about-timer linear both; }
