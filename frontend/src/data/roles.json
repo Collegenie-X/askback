@@ -1,0 +1,36 @@
+{
+  "openness": {
+    "O1": { "label": "지시", "short": "O1 지시", "shape": "무엇을 어떻게 바꿀지 다 정해서 시킨다", "gain": "속도", "lose": "AI의 판단 전부", "role": "typist" },
+    "O2": { "label": "좁은 질문", "short": "O2 좁은", "shape": "설계는 내가 끝냈고 구현만 묻는다", "gain": "정확한 구현", "lose": "내 설계가 틀렸어도 그대로 만든다", "role": "coder" },
+    "O3": { "label": "조건 있는 열린 질문", "short": "O3 열린", "shape": "목표·제약·기준을 주고 방법을 묻는다", "gain": "맞춤형 설계 + 이유", "lose": "— (스위트 스팟)", "role": "engineer" },
+    "O4": { "label": "대안 질문", "short": "O4 대안", "shape": "다른 길과 그 대가를 묻는다", "gain": "선택지와 판단 근거", "lose": "시간 (구현 중엔 과하다)", "role": "architect" },
+    "O5": { "label": "맨 열린 질문", "short": "O5 맨 열린", "shape": "맥락 없이 크게 묻는다", "gain": "개요", "lose": "나에게 맞는 답", "role": "encyclopedia" }
+  },
+  "roles": {
+    "typist": { "emoji": "⌨️", "name": "받아쓰기", "writing": "받아쓰기", "reason": "무엇을 어떻게 바꿀지 네가 다 정해줬거든", "color": "#b7b3d6" },
+    "coder": { "emoji": "👨‍💻", "name": "코더", "writing": "대필", "reason": "네가 설계를 다 정해줬거든", "color": "#5cb8ff" },
+    "engineer": { "emoji": "🛠", "name": "엔지니어", "writing": "편집자", "reason": "목표와 제약을 주고 방법을 물어봐서", "color": "#3fe0c0" },
+    "architect": { "emoji": "🏛", "name": "아키텍트", "writing": "기획 파트너", "reason": "다른 길과 대가를 물어봐서", "color": "#ff7ac8" },
+    "encyclopedia": { "emoji": "📚", "name": "백과사전", "writing": "백과사전", "reason": "맥락 없이 크게 물어봐서, 누구에게나 같은 답을 했어", "color": "#ffd98a" }
+  },
+  "six": {
+    "why": { "short": "왜", "name": "왜 (목적)" },
+    "context": { "short": "맥", "name": "맥락" },
+    "constraint": { "short": "제", "name": "제약" },
+    "criteria": { "short": "기", "name": "기준" },
+    "verify": { "short": "검", "name": "검증" },
+    "discard": { "short": "버", "name": "버릴 것" }
+  },
+  "stageMix": {
+    "탐색": { "O1": 0, "O2": 10, "O3": 50, "O4": 30, "O5": 10 },
+    "설계": { "O1": 0, "O2": 20, "O3": 40, "O4": 40, "O5": 0 },
+    "구현": { "O1": 10, "O2": 60, "O3": 25, "O4": 5, "O5": 0 },
+    "검증": { "O1": 0, "O2": 30, "O3": 30, "O4": 40, "O5": 0 }
+  },
+  "packs": {
+    "maker": { "emoji": "🔧", "name": "메이커", "desc": "내 손으로 만들고, 실패하고, 고쳤는가" },
+    "share": { "emoji": "📣", "name": "공유", "desc": "남이 따라 할 수 있게 내놓았는가" },
+    "collab": { "emoji": "🤝", "name": "협력", "desc": "비슷한 일을 하는 다른 팀·업체와 어떻게 손잡을 것인가" },
+    "ai": { "emoji": "🤖", "name": "AI·자동화", "desc": "무엇을 AI에 맡기고, 무엇을 끝까지 내가 쥘 것인가" }
+  }
+}

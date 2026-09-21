@@ -1,0 +1,26 @@
+[
+  {
+    "file": "answer-boundary.md",
+    "emoji": "🫵",
+    "title": "답은 어디까지 하는가",
+    "desc": "정보·구현은 끝까지, 판단은 네 몫, 확인은 네 손으로"
+  },
+  {
+    "file": "question-width.md",
+    "emoji": "🔭",
+    "title": "질문의 폭이 AI의 역할을 정한다",
+    "desc": "O1~O5 · 같은 주제, 다섯 가지 질문"
+  },
+  {
+    "file": "rhythm.md",
+    "emoji": "🔁",
+    "title": "2문 1역 — 두 번 묻고 한 번 돌아본다",
+    "desc": "역질문 리듬과 평가 요소 8개"
+  },
+  {
+    "file": "report-guide.md",
+    "emoji": "📄",
+    "title": "리포트 읽는 법",
+    "desc": "10문 리포트 · 월간 · 통 타임라인"
+  }
+]

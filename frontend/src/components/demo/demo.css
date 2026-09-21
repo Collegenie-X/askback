@@ -1,0 +1,52 @@
+/* /demo 시연 전용 스타일 — 공용 globals.css 를 건드리지 않는다 */
+.askback-demo {
+  font-family: var(--font-geist-sans), "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  word-break: keep-all;
+}
+
+/* 답 본문 (마크다운) */
+.askback-demo .md > :first-child { margin-top: 0; }
+.askback-demo .md > :last-child { margin-bottom: 0; }
+.askback-demo .md p { margin: 0.6em 0; }
+.askback-demo .md pre {
+  margin: 0.6em 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: #1c1917;
+  color: #f5f5f4;
+  font-size: 12.5px;
+  line-height: 1.55;
+  overflow-x: auto; /* 코드는 줄바꿈하지 않고 가로 스크롤 */
+}
+.askback-demo .md code { font-family: var(--font-geist-mono), ui-monospace, monospace; }
+.askback-demo .md :not(pre) > code { padding: 1px 5px; border-radius: 4px; background: #f5f5f4; font-size: 0.9em; }
+.askback-demo .md table { display: block; overflow-x: auto; margin: 0.6em 0; border-collapse: collapse; font-size: 12.5px; }
+.askback-demo .md th, .askback-demo .md td { padding: 5px 8px; border: 1px solid #e7e5e4; text-align: left; vertical-align: top; min-width: 84px; }
+.askback-demo .md th { background: #fafaf9; }
+
+.askback-demo .md h1 { margin: 0.2em 0 0.5em; font-size: 1.3em; font-weight: 800; }
+.askback-demo .md h2 { margin: 1.3em 0 0.5em; padding-top: 0.8em; border-top: 1px solid #e7e5e4; font-size: 1.08em; font-weight: 700; }
+.askback-demo .md h3 { margin: 1em 0 0.4em; font-weight: 700; }
+.askback-demo .md ul { margin: 0.5em 0; padding-left: 1.2em; list-style: disc; }
+.askback-demo .md ol { margin: 0.5em 0; padding-left: 1.4em; list-style: decimal; }
+.askback-demo .md li { margin: 0.2em 0; }
+.askback-demo .md blockquote { margin: 0.6em 0; padding: 6px 10px; border-left: 3px solid #d6d3d1; background: #fafaf9; color: #57534e; border-radius: 0 8px 8px 0; }
+.askback-demo .md blockquote p { margin: 0; }
+.askback-demo .mermaid-box svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+
+/* 부가물은 답이 끝난 뒤 하나씩 붙는다 */
+@keyframes abd-fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.askback-demo .fade-up { animation: abd-fade-up 0.35s ease-out both; }
+
+@keyframes abd-dot-bounce { 0%, 80%, 100% { transform: translateY(0); opacity: 0.4; } 40% { transform: translateY(-4px); opacity: 1; } }
+.askback-demo .dot-bounce { animation: abd-dot-bounce 1s infinite; }
+
+/* 시연에서 '다음에 누를 곳' */
+@keyframes abd-pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.55); } 100% { box-shadow: 0 0 0 9px rgba(249, 115, 22, 0); } }
+.askback-demo .pulse-ring { animation: abd-pulse-ring 1.4s infinite; }
+
+.askback-demo .caret { display: inline-block; width: 2px; height: 1em; margin-left: 1px; vertical-align: -2px; background: #f97316; animation: abd-dot-bounce 0.9s infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .askback-demo .fade-up, .askback-demo .dot-bounce, .askback-demo .pulse-ring, .askback-demo .caret { animation: none; }
+}

@@ -1,0 +1,415 @@
+/* AskBack 앱 전용 스타일 — 공용 globals.css 는 건드리지 않는다 */
+@import "tailwindcss/theme";
+@import "tailwindcss/utilities";
+
+/* 트위터 이모지(Twemoji) — 기기마다 다른 이모지를 하나로 통일한다 */
+@font-face {
+  font-family: "Twemoji";
+  src: url("https://cdn.jsdelivr.net/npm/twemoji-colr-font@15.0.3/twemoji.woff2") format("woff2");
+  font-display: swap;
+  unicode-range: U+00A9, U+00AE, U+203C, U+2049, U+2122, U+2139, U+2194-21AA, U+231A-23FF, U+24C2, U+25AA-25FE, U+2600-27BF, U+2934-2935, U+2B05-2B55, U+3030, U+303D, U+3297, U+3299, U+FE0F, U+1F000-1FAFF, U+200D, U+20E3;
+}
+
+@theme inline {
+  /* 밤하늘 팔레트 — 거의 검은 남색 바탕 위에 또렷한 솔리드 카드, 포인트는 별빛 노랑 */
+  --color-paper: #070a18;
+  --color-card: #131a35;
+  --color-sand: #1d2648;
+  --color-line: #2b3560;
+  --color-ink: #f2f4ff;
+  --color-sub: #98a2cc;
+  --color-clay: #ffc83d;
+  --color-clay-soft: #33290a;
+  --color-mint: #5ad1b3;
+  --color-mint-soft: #0e2f2c;
+  --color-sky-soft: #12284d;
+  --color-rose-soft: #35163a;
+  --color-amber-soft: #2b2208;
+  --color-gold: #ffc83d;
+  --color-void: #04060f;
+  --color-student: #2f49c9;
+}
+
+html:has(.phone), body:has(.phone) { height: 100%; }
+body:has(.phone) { background: #020309; -webkit-tap-highlight-color: transparent; }
+
+/* 모바일 전용: 데스크톱에서도 폰 너비로만 보인다 */
+.phone {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  height: 100dvh;
+  margin: 0 auto;
+  background: var(--color-void);
+  color: var(--color-ink);
+  isolation: isolate;
+  font-family: "Twemoji", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.phone button { cursor: pointer; }
+.phone button:disabled { cursor: default; }
+@media (min-width: 721px) {
+  .phone { box-shadow: 0 0 0 1px #232b55, 0 30px 80px rgba(0, 0, 0, 0.6); }
+}
+
+/* 상세 영역 — 시트·서랍·뷰어는 이 안에서만 덮는다 */
+.phone .stage { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.phone .side { display: none; }
+/* PC 버전(1024px~): 왼쪽 메뉴 250px + 오른쪽 상세. 햄버거는 숨긴다 */
+@media (min-width: 1024px) {
+  .phone.docked { flex-direction: row; max-width: 1274px; } /* 메뉴 250 + 상세 1024 */
+  .phone.docked .side { display: flex; border-right: 1px solid var(--color-line); }
+  .phone.docked .menu-btn { display: none; }
+}
+
+.phone .scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.phone .scroll::-webkit-scrollbar { display: none; }
+
+@keyframes ab-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes ab-sheet { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes ab-drawer { from { transform: translateX(-100%); } to { transform: none; } }
+@keyframes ab-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ab-dot { 0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
+@keyframes ab-spark { 0% { transform: scale(0.6) rotate(-20deg); opacity: 0; } 60% { transform: scale(1.08) rotate(4deg); opacity: 1; } 100% { transform: none; opacity: 1; } }
+.phone .rise { animation: ab-rise 0.28s ease-out both; }
+.phone .sheet { animation: ab-sheet 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.phone .drawer { animation: ab-drawer 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.phone .fade { animation: ab-fade 0.2s ease-out both; }
+.phone .spark { animation: ab-spark 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.phone .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--color-clay); animation: ab-dot 1.2s infinite; }
+.phone .dot:nth-child(2) { animation-delay: 0.15s; }
+.phone .dot:nth-child(3) { animation-delay: 0.3s; }
+@media (prefers-reduced-motion: reduce) { .phone .rise, .phone .sheet, .phone .drawer, .phone .fade, .phone .spark { animation: none; } }
+
+/* Markdown */
+.phone .md { font-size: 15px; line-height: 1.7; word-break: keep-all; overflow-wrap: anywhere; }
+.phone .md > *:first-child { margin-top: 0; }
+.phone .md > *:last-child { margin-bottom: 0; }
+.phone .md p { margin: 0.7em 0; }
+.phone .md h1 { font-size: 1.35em; font-weight: 800; margin: 1.2em 0 0.5em; letter-spacing: -0.01em; }
+.phone .md h2 { font-size: 1.15em; font-weight: 700; margin: 1.3em 0 0.5em; }
+.phone .md h3 { font-size: 1.02em; font-weight: 700; margin: 1.2em 0 0.4em; }
+.phone .md ul, .phone .md ol { margin: 0.6em 0; padding-left: 1.3em; }
+.phone .md ul { list-style: disc; }
+.phone .md ol { list-style: decimal; }
+.phone .md li { margin: 0.25em 0; }
+.phone .md a { color: var(--color-clay); text-decoration: underline; text-underline-offset: 2px; }
+.phone .md strong { font-weight: 700; }
+.phone .md blockquote { margin: 0.8em 0; padding: 0.6em 0.9em; background: var(--color-sand); border-left: 3px solid var(--color-clay); border-radius: 0 10px 10px 0; color: var(--color-ink); }
+.phone .md blockquote p { margin: 0.3em 0; }
+.phone .md code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.86em; background: var(--color-sand); padding: 0.12em 0.36em; border-radius: 5px; }
+.phone .md pre { margin: 0; padding: 12px 14px; overflow-x: auto; font-size: 12.5px; line-height: 1.6; background: #04060f; color: #dfe6ff; }
+.phone .md pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+.phone .md .table-wrap { overflow-x: auto; margin: 0.8em 0; border: 1px solid var(--color-line); border-radius: 12px; background: var(--color-card); }
+.phone .md table { border-collapse: collapse; width: 100%; font-size: 13px; line-height: 1.5; }
+.phone .md th { background: var(--color-sand); font-weight: 700; text-align: left; white-space: nowrap; }
+.phone .md th, .phone .md td { padding: 8px 10px; border-bottom: 1px solid var(--color-line); vertical-align: top; }
+.phone .md tr:last-child td { border-bottom: none; }
+.phone .md img { max-width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--color-line); margin: 0.6em 0; }
+.phone .md hr { border: none; border-top: 1px solid var(--color-line); margin: 1.2em 0; }
+.phone .md .mermaid-box svg, .phone .mermaid-box svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+/* 어두운 시연 바 안의 마크다운 */
+.phone .on-dark .md { color: #efeaff; font-size: 13px; line-height: 1.6; }
+.phone .on-dark .md strong { color: var(--color-gold); }
+
+/* ---------- 우주 · 게임 HUD ---------- */
+.phone .starfield { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; container-type: size; transition: opacity 0.4s, filter 0.4s; }
+.phone .starfield.vivid { filter: saturate(1.35) brightness(1.18); }
+.phone .starfield-galaxy { position: absolute; right: -110px; bottom: 90px; opacity: 0.5; filter: blur(0.3px); }
+.phone .sky-obj { position: absolute; }
+/* 큰 궤도 — 중심점(0×0)에서 팔을 뻗어 돌리고, 행성은 같은 빠르기로 거꾸로 돌려 늘 바로 서 있게 한다 */
+.phone .orbit-sys { position: absolute; left: 50%; top: 52%; width: 0; height: 0; }
+.phone .orbit-ring { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); border: 1px dashed rgba(169, 163, 217, 0.26); border-radius: 50%; }
+.phone .rider { position: absolute; left: 0; top: 0; width: 0; height: 0; animation: ab-orbit linear infinite; }
+.phone .rider-arm { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.phone .rider-up { position: absolute; left: 0; top: 0; width: 0; height: 0; animation: ab-orbit-rev linear infinite; }
+.phone .rider-up > svg { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); }
+@keyframes ab-probe { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(26px, 38px) rotate(14deg); } }
+.phone .probe-drift { animation: ab-probe 26s ease-in-out infinite; }
+.phone .starfield.still *, .phone .space-still * { animation-play-state: paused !important; }
+@keyframes ab-twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@keyframes ab-spin { to { transform: rotate(360deg); } }
+@keyframes ab-shoot { 0%, 86% { opacity: 0; transform: translate(0, 0); } 88% { opacity: 1; } 100% { opacity: 0; transform: translate(260px, 130px); } }
+@keyframes ab-glow { 0%, 100% { box-shadow: 0 0 0 1px rgba(157, 123, 255, 0.5), 0 0 18px rgba(157, 123, 255, 0.35); } 50% { box-shadow: 0 0 0 1px rgba(157, 123, 255, 0.8), 0 0 28px rgba(157, 123, 255, 0.6); } }
+@keyframes ab-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.phone .tw { animation: ab-twinkle 3.2s ease-in-out infinite; }
+.phone .tw-1 { animation-delay: 0.6s; animation-duration: 2.6s; }
+.phone .tw-2 { animation-delay: 1.2s; animation-duration: 4s; }
+.phone .tw-3 { animation-delay: 1.9s; }
+.phone .tw-4 { animation: none; opacity: 0.7; }
+.phone .galaxy-spin { animation: ab-spin 120s linear infinite; transform-origin: 50% 50%; }
+.phone .shooting { animation: ab-shoot 9s ease-in infinite; }
+.phone .shooting-2 { animation-duration: 13s; animation-delay: 4s; }
+@keyframes ab-surface-wide { to { transform: translateX(-80px); } }
+.phone .surface-wide { animation: ab-surface-wide 24s linear infinite; }
+.phone .float { animation: ab-float 4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .phone .tw, .phone .galaxy-spin, .phone .shooting, .phone .float, .phone .surface-wide, .phone .rider, .phone .rider-up, .phone .probe-drift { animation: none; } }
+
+/* 솔리드 패널 — 비치지 않는 또렷한 덩어리 */
+.phone header, .phone .hud { background: #0a0e20; }
+
+/* 통통한 게임 버튼: 아래 두꺼운 테두리가 눌리는 느낌을 준다 */
+.phone .chunk, .phone .bg-ink { background: #ffc83d; color: #1d1600; border-bottom: 4px solid #b98a12; box-shadow: none; transition: transform 0.06s, border-width 0.06s; }
+.phone .chunk:active, .phone .bg-ink:active { transform: translateY(3px); border-bottom-width: 1px; }
+.phone .bg-ink.text-paper, .phone .bg-ink .text-paper { color: #1d1600; }
+.phone .bg-ink:disabled { background: #2b3560; color: #6c77a6; border-bottom-color: #1d2648; }
+.phone .chunk-ghost { background: #1d2648; color: #f2f4ff; border-bottom: 3px solid #121833; }
+.phone .chunk-ghost:active { transform: translateY(2px); border-bottom-width: 1px; }
+.phone .chunk-card { background: #131a35; border: 2px solid #2b3560; border-bottom-width: 5px; transition: transform 0.06s, border-color 0.15s; }
+.phone .chunk-card:active { transform: translateY(3px); border-bottom-width: 2px; border-color: #ffc83d; }
+.phone .bg-clay { background: #ffc83d; color: #1d1600; box-shadow: none; }
+.phone .bg-clay.text-white, .phone .bg-clay .text-white { color: #1d1600; }
+.phone .glow { animation: none; }
+.phone .xp { background: linear-gradient(90deg, #5ad1b3, #ffc83d); box-shadow: none; }
+.phone .buddy { filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.35)); }
+.phone .text-gold { color: var(--color-gold); }
+.phone input, .phone textarea { color: var(--color-ink); }
+.phone input::placeholder, .phone textarea::placeholder { color: #7f79b8; }
+.phone .md .mermaid-box, .phone .mermaid-box { background: #f6f7ff; border-radius: 16px; }
+
+/* 서랍 · 시트 · 뷰어는 뒤가 비치지 않는 단단한 패널 */
+.phone .panel { background: #0c1124; box-shadow: 0 0 0 1px #2b3560, 0 0 40px rgba(0, 0, 0, 0.7); }
+.phone .scrim { background: rgba(2, 3, 9, 0.86); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+
+/* 은하수 · 공전 · 자전 */
+@keyframes ab-orbit { to { transform: rotate(360deg); } }
+@keyframes ab-orbit-rev { to { transform: rotate(-360deg); } }
+@keyframes ab-surface { to { transform: translateX(-40px); } }
+@keyframes ab-drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-10px, 8px); } }
+.phone .orbit { transform-box: fill-box; transform-origin: center; animation: ab-orbit 38s linear infinite; }
+.phone .orbit-fast { transform-box: fill-box; transform-origin: center; animation: ab-orbit 14s linear infinite; }
+.phone .orbit-slow { transform-box: fill-box; transform-origin: center; animation: ab-orbit-rev 70s linear infinite; }
+.phone .surface { animation: ab-surface 9s linear infinite; }
+.phone .milky { animation: ab-drift 40s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .phone .orbit, .phone .orbit-fast, .phone .orbit-slow, .phone .surface, .phone .milky { animation: none; } }
+
+/* ---------- 온보딩: 형광펜 · 팝 · 그려지는 선 ---------- */
+@keyframes ob-mark { to { background-size: 100% 100%; } }
+@keyframes ob-pop { 0% { opacity: 0; transform: scale(0.3); } 65% { opacity: 1; transform: scale(1.14); } 100% { opacity: 1; transform: none; } }
+@keyframes ob-beam { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+@keyframes ob-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes ob-bar { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes ob-ping { 0% { opacity: 0.8; transform: scale(0.6); } 100% { opacity: 0; transform: scale(1.7); } }
+@keyframes ob-wiggle { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
+@keyframes ob-shine { 0%, 55% { transform: translateX(-120%) skewX(-20deg); } 100% { transform: translateX(320%) skewX(-20deg); } }
+@keyframes ob-slide { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+.phone .hl { white-space: nowrap; color: #fff; font-weight: 800; padding: 0 0.12em; border-radius: 4px; background: linear-gradient(transparent 52%, rgba(255, 95, 176, 0.6) 52%) no-repeat 0 0 / 0% 100%; animation: ob-mark 0.55s ease-out 0.55s forwards; }
+.phone h1 .hl { background-image: linear-gradient(transparent 58%, rgba(124, 92, 255, 0.85) 58%); color: var(--color-gold); animation-delay: 0.3s; }
+.phone .ob-point { position: relative; overflow: hidden; }
+.phone .ob-point::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 35%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent); animation: ob-shine 3.2s ease-in-out 1s infinite; }
+.phone .ob-badge { animation: ob-pop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both, ab-float 2.4s ease-in-out 0.8s infinite; }
+.phone .ob-pop, .phone .ob-bob, .phone .ob-ping, .phone .ob-wiggle, .phone .ob-bar { transform-box: fill-box; transform-origin: center; }
+.phone .ob-pop { animation: ob-pop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.phone .ob-bob { animation: ob-bob 3s ease-in-out infinite; }
+.phone .ob-beam { animation: ob-beam 1.8s ease-in-out infinite; }
+.phone .ob-bar { transform-origin: bottom; animation: ob-bar 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.phone .ob-ping { animation: ob-ping 1.8s ease-out infinite; }
+.phone .ob-wiggle { animation: ob-wiggle 1.4s ease-in-out infinite; }
+.phone .ob-slide { animation: ob-slide 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .phone .hl { animation: none; background-size: 100% 100%; }
+  .phone .ob-point::after { display: none; }
+  .phone .ob-badge, .phone .ob-pop, .phone .ob-bob, .phone .ob-beam, .phone .ob-bar, .phone .ob-ping, .phone .ob-wiggle, .phone .ob-slide { animation: none; }
+}
+
+/* 별이(캐릭터) — 깜빡임 · 레벨업 */
+@keyframes ob-blink { 0%, 92%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+@keyframes ob-levelup { 0% { opacity: 0; transform: translateY(8px) scale(0.6); } 25% { opacity: 1; transform: translateY(-4px) scale(1.15); } 75% { opacity: 1; transform: translateY(-10px) scale(1); } 100% { opacity: 0; transform: translateY(-20px) scale(1); } }
+@keyframes ob-flash { 0% { opacity: 0.9; transform: scale(0.4); } 100% { opacity: 0; transform: scale(1.8); } }
+.phone .ob-blink { transform-box: fill-box; transform-origin: center; animation: ob-blink 4s infinite; }
+.phone .ob-levelup { animation: ob-levelup 1.6s ease-out both; }
+.phone .ob-flash { animation: ob-flash 0.7s ease-out both; }
+.phone .ob-xp { transition: width 0.9s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) { .phone .ob-blink, .phone .ob-levelup, .phone .ob-flash { animation: none; } .phone .ob-levelup, .phone .ob-flash { opacity: 0; } .phone .ob-xp { transition: none; } }
+
+/* 입력창 위 질문 버튼 줄 — 옆으로 민다 */
+.phone .quickbar { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.phone .quickbar::-webkit-scrollbar { display: none; }
+
+/* 타자 커서 */
+@keyframes ob-caret { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.phone .ob-caret { display: inline-block; width: 2px; height: 1em; margin-left: 1px; vertical-align: -0.12em; background: var(--color-mint); animation: ob-caret 0.8s steps(1) infinite; }
+
+/* ---------- 채팅: 내 말과 코치의 답을 또렷이 가른다 ---------- */
+/* 나 = 오른쪽 · 파란 말풍선 / 코치 = 왼쪽 · 아바타 + 어두운 카드 */
+.phone .me { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.phone .me-label, .phone .coach-label { font-size: 11px; font-weight: 800; letter-spacing: 0.02em; }
+.phone .me-label { color: #9db2ff; padding-right: 6px; }
+.phone .coach-label { color: var(--color-clay); }
+.phone .me-bubble { max-width: 84%; background: var(--color-student); color: #fff; border-radius: 24px 24px 8px 24px; padding: 12px 16px; font-size: 15px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; border-bottom: 3px solid #1f3291; }
+.phone .me-bubble.deep { background: #8a2f7d; border-bottom-color: #5c1d54; }
+.phone .coach-row { display: flex; gap: 10px; align-items: flex-start; }
+.phone .coach-bubble { min-width: 0; flex: 1; background: var(--color-card); border: 1.5px solid var(--color-line); border-radius: 8px 24px 24px 24px; padding: 14px 16px; }
+.phone .coach-extra { margin-left: 44px; }
+.phone .mic-on { background: #e5484d; color: #fff; border-bottom-color: #8f2227; animation: ab-dot 1.2s infinite; }
+
+/* ---------- 턴 카드: 내 질문(파란 띠) + 코치의 답을 한 장으로 ---------- */
+.phone .turn { border-radius: 22px; overflow: hidden; border: 2px solid #2b3560; background: #0d1329; }
+.phone .turn.open { border-color: #3f5be0; }
+.phone .turn-q { display: flex; width: 100%; align-items: flex-start; gap: 10px; padding: 12px 14px; text-align: left; background: #2f49c9; color: #fff; }
+.phone .turn.closed .turn-q { background: #18224f; color: #dfe6ff; }
+.phone .turn-n { flex-shrink: 0; margin-top: 2px; border-radius: 8px; background: rgba(255, 255, 255, 0.18); padding: 3px 8px; font-size: 11px; font-weight: 900; letter-spacing: 0.03em; }
+.phone .turn-who { display: block; font-size: 11px; font-weight: 800; opacity: 0.75; margin-bottom: 1px; }
+.phone .turn.closed .turn-who { display: none; }
+.phone .turn-role { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+.phone .turn-caret { flex-shrink: 0; font-size: 12px; opacity: 0.7; margin-top: 4px; }
+.phone .turn-img { padding: 12px 14px 0; background: #2f49c9; padding-bottom: 12px; }
+.phone .turn-a { padding: 14px 14px 16px; }
+/* 카드 안에서는 코치 말풍선의 테두리를 벗긴다 — 카드가 이미 테두리다 */
+.phone .turn-a .coach-bubble { border: none; background: transparent; padding: 0; }
+.phone .turn-a .coach-extra { margin-left: 0; }
+.phone .turn-a .coach-row > svg { display: none; }
+.phone .turn-a .coach-label::before { content: "A · "; opacity: 0.6; }
+
+/* 보기 도구 — 필터 · 모두 접기 · 정렬 */
+.phone .viewbar { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-bottom: 1px solid var(--color-line); background: #0a0e20; font-size: 12px; font-weight: 700; }
+.phone .seg { display: flex; flex: 1; min-width: 0; gap: 2px; border-radius: 12px; background: var(--color-sand); padding: 3px; }
+.phone .seg button { flex: 1; white-space: nowrap; border-radius: 9px; padding: 5px 6px; color: var(--color-sub); }
+.phone .seg button.on { background: #ffc83d; color: #1d1600; }
+.phone .viewbar .tool { flex-shrink: 0; white-space: nowrap; border-radius: 10px; background: var(--color-sand); padding: 7px 9px; color: var(--color-ink); }
+.phone .demobar { border-top: 1px solid var(--color-line); background: #10152e; padding: 8px 12px; }
+
+/* 요술 램프 — 입력창 위 트레이가 아래 버튼에서 빨려 나오듯 솟는다 */
+@keyframes ab-genie { 0% { opacity: 0; transform: translateY(26px) scale(0.35, 0.1) skewX(-8deg); } 55% { opacity: 1; transform: translateY(-3px) scale(1.02, 1.04) skewX(1deg); } 100% { opacity: 1; transform: none; } }
+.phone .genie { transform-origin: 40px 100%; animation: ab-genie 0.34s cubic-bezier(0.2, 0.9, 0.25, 1) both; }
+@media (prefers-reduced-motion: reduce) { .phone .genie { animation: none; } }
+
+/* ---------- 그림 입히기: 글자만 있던 자리에 별 · 행성 · 작은 일러스트 ---------- */
+/* 마크다운 — 별 글머리, 번호 배지, 별 구분선, 끝의 열린 되묻기는 말풍선 상자로 */
+.phone .md strong { color: #ffe9b0; }
+.phone .md ul { list-style: none; padding-left: 0.2em; }
+.phone .md ul > li { position: relative; padding-left: 1.5em; }
+.phone .md ul > li::before { content: "✦"; position: absolute; left: 0.15em; top: 0.05em; font-size: 0.8em; color: var(--color-clay); }
+.phone .md ul > li:nth-child(3n + 2)::before { color: #8fe9ff; }
+.phone .md ul > li:nth-child(3n)::before { color: #ff9bd8; }
+.phone .md ul ul > li::before { content: "·"; font-size: 1.2em; top: -0.15em; color: var(--color-sub); }
+.phone .md ol { list-style: none; padding-left: 0; counter-reset: ab-ol; }
+.phone .md ol > li { position: relative; padding-left: 2.1em; margin: 0.45em 0; counter-increment: ab-ol; }
+.phone .md ol > li::before { content: counter(ab-ol); position: absolute; left: 0; top: 0.18em; width: 1.55em; height: 1.55em; border-radius: 999px; display: grid; place-items: center; font-size: 0.78em; font-weight: 900; background: var(--color-clay); color: #1d1600; border-bottom: 2px solid #b98a12; }
+.phone .md h2, .phone .md h3 { display: flex; align-items: center; gap: 0.4em; }
+.phone .md h2::before { content: "🪐"; font-size: 0.9em; }
+.phone .md hr { position: relative; border-top: 1px dashed #3a4577; margin: 1.5em 0 1.3em; overflow: visible; }
+.phone .md hr::after { content: "✦"; position: absolute; left: 50%; top: 0; transform: translate(-50%, -55%); padding: 0 10px; font-size: 12px; line-height: 1; color: var(--color-clay); background: var(--ab-surface, #0d1329); }
+.phone .coach-bubble { --ab-surface: var(--color-card); }
+.phone .turn-a .coach-bubble { --ab-surface: #0d1329; }
+.phone .turn-a .md hr + p:last-child { border: 1.5px solid #2f6f63; background: var(--color-mint-soft); border-radius: 6px 18px 18px 18px; padding: 10px 14px; }
+.phone .md th { background: linear-gradient(180deg, #232e5c, var(--color-sand)); color: #ffe9b0; }
+
+/* 턴 카드 — 질문 띠에 꼬마 우주인과 별자리 */
+.phone .turn-q { position: relative; align-items: center; background: linear-gradient(100deg, #2f49c9 0%, #3b3fd0 55%, #5a3fd6 100%); }
+.phone .turn-q::after { content: ""; position: absolute; right: 44px; top: 0; bottom: 0; width: 150px; pointer-events: none; opacity: 0.5; background: no-repeat right center / auto 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 56'%3E%3Cg fill='none' stroke='%23fff' stroke-width='.8' opacity='.55'%3E%3Cpath d='M12 40 38 18 70 30 98 10 134 24'/%3E%3Cpath d='M70 30 84 48'/%3E%3C/g%3E%3Cg fill='%23fff'%3E%3Ccircle cx='12' cy='40' r='1.8'/%3E%3Ccircle cx='38' cy='18' r='2.4'/%3E%3Ccircle cx='70' cy='30' r='1.8'/%3E%3Ccircle cx='98' cy='10' r='2.6' fill='%23ffd98a'/%3E%3Ccircle cx='134' cy='24' r='1.8'/%3E%3Ccircle cx='84' cy='48' r='1.5'/%3E%3Ccircle cx='120' cy='46' r='1' opacity='.7'/%3E%3Ccircle cx='52' cy='46' r='1' opacity='.7'/%3E%3C/g%3E%3C/svg%3E"); }
+.phone .turn-q > * { position: relative; z-index: 1; }
+.phone .turn.closed .turn-q { background: #18224f; }
+.phone .turn.closed .turn-q::after { opacity: 0.2; }
+.phone .turn-n { margin-top: 0; background: #ffc83d; color: #1d1600; border-bottom: 2px solid #b98a12; }
+.phone .turn.closed .turn-n { background: rgba(255, 255, 255, 0.14); color: #dfe6ff; border-bottom-color: transparent; }
+.phone .turn-role { margin-top: 0; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px; background: rgba(4, 6, 15, 0.35); }
+.phone .turn-caret { margin-top: 0; }
+.phone .coach-label { display: inline-flex; align-items: center; gap: 5px; }
+.phone .coach-label .mini { display: none; }
+.phone .turn-a .coach-label .mini { display: block; }
+
+/* 리포트 도착 띠 · 말랑한 알약 */
+.phone .report-pill { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.phone .tile { display: grid; place-items: center; flex-shrink: 0; border-radius: 12px; background: var(--color-sand); border-bottom: 3px solid #121833; }
+.phone .tile.on { background: var(--color-clay-soft); border-bottom-color: #1d1600; }
+
+/* 확장 사다리 지도 */
+.phone .journey { margin: 0 0 12px; padding: 14px 8px 10px; border-radius: 18px; background: radial-gradient(120% 140% at 0% 0%, #1b1f55 0%, #0b1030 60%); border: 1.5px solid #343c7a; overflow: hidden; }
+.phone .journey-track { position: relative; display: grid; gap: 4px; }
+.phone .journey-line { position: absolute; left: 8%; right: 8%; top: 14px; width: 84%; height: 28px; }
+.phone .journey-stop { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; padding: 0 2px; }
+.phone .journey-planet { position: relative; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 999px; border: 2px solid; box-shadow: 0 5px 0 rgba(0, 0, 0, 0.35), inset -6px -8px 12px rgba(0, 0, 0, 0.35); }
+.phone .journey-emoji { font-size: 24px; line-height: 1; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.35)); }
+.phone .journey-rocket { position: absolute; right: -14px; top: -12px; transform: rotate(35deg); }
+.phone .journey-step { margin-top: 9px; font-size: 11px; font-weight: 900; letter-spacing: 0.04em; }
+.phone .journey-name { font-size: 13px; font-weight: 800; line-height: 1.3; word-break: keep-all; }
+.phone .journey-desc { margin-top: 2px; font-size: 11px; line-height: 1.4; color: var(--color-sub); word-break: keep-all; }
+.phone .journey-cap { margin-top: 10px; text-align: center; font-size: 11.5px; font-weight: 700; color: #c9cfee; }
+@media (max-width: 520px) { .phone .journey-desc { display: none; } .phone .journey-planet { width: 46px; height: 46px; } .phone .journey-line { top: 10px; } }
+
+/* 우주 배경 꾸미기 */
+.phone .space-preview { position: relative; height: 150px; border-radius: 16px; overflow: hidden; border: 1.5px solid var(--color-line); isolation: isolate; }
+.phone .space-preview .starfield { z-index: 0; }
+.phone .space-preview .sky-obj, .phone .space-preview .starfield-galaxy, .phone .space-preview .rider-up > svg { zoom: 0.42; }
+.phone .space-preview .orbit-sys { top: 50%; }
+.phone .space-chip { display: flex; align-items: center; gap: 8px; border-radius: 14px; border: 2px solid var(--color-line); border-bottom-width: 4px; background: var(--color-card); padding: 6px 10px 6px 6px; text-align: left; transition: transform 0.06s, border-color 0.15s, opacity 0.15s; }
+.phone .space-chip:active { transform: translateY(2px); border-bottom-width: 2px; }
+.phone .space-chip.on { border-color: #5a63b8; }
+.phone .space-chip.off { opacity: 0.45; }
+.phone .space-chip.off svg { filter: grayscale(1); }
+.phone .switch { position: relative; width: 42px; height: 24px; flex-shrink: 0; border-radius: 999px; background: var(--color-sand); border: 1.5px solid var(--color-line); transition: background 0.15s; }
+.phone .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 17px; height: 17px; border-radius: 999px; background: #98a2cc; transition: transform 0.15s, background 0.15s; }
+.phone .switch.on { background: #33290a; border-color: var(--color-clay); }
+.phone .switch.on::after { transform: translateX(18px); background: var(--color-clay); }
+
+/* ---------- 좁은 폰(~400px, 320px까지) — 옆 아바타를 이름표 안으로 넣고, 여백과 그림을 줄인다 ---------- */
+.phone textarea::placeholder { white-space: nowrap; }
+@media (max-width: 400px) {
+  .phone .coach-row > svg { display: none; }
+  .phone .coach-label .mini { display: block; }
+  .phone .coach-extra { margin-left: 0; }
+  .phone .coach-bubble { padding: 12px 12px; border-radius: 8px 20px 20px 20px; }
+  .phone .md { font-size: 14.5px; }
+  .phone .turn-q { gap: 7px; padding: 10px 10px; }
+  .phone .turn-q > svg:first-child { width: 30px; height: 30px; }
+  .phone .turn-q::after { width: 90px; right: 30px; opacity: 0.3; }
+  .phone .turn-a { padding: 12px 10px 14px; }
+  .phone .journey { padding: 12px 4px 8px; }
+  .phone .journey-track { gap: 0; }
+  .phone .journey-planet { width: 38px; height: 38px; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35), inset -4px -6px 9px rgba(0, 0, 0, 0.35); }
+  .phone .journey-emoji { font-size: 18px; }
+  .phone .journey-line { top: 6px; }
+  .phone .journey-rocket { right: -8px; top: -12px; scale: 0.8; }
+  .phone .journey-step { margin-top: 7px; font-size: 10px; }
+  .phone .journey-name { font-size: 11px; }
+  .phone .journey-cap { font-size: 10.5px; }
+  .phone .report-pill { margin-left: 10px; margin-right: 10px; padding-left: 10px; padding-right: 10px; font-size: 12px; gap: 6px; border-radius: 18px; }
+  .phone .report-pill > .float { display: none; }
+  .phone .sky-obj, .phone .rider-up > svg { zoom: 0.8; }
+}
+
+/* ---------- 대화 속 리포트 카드 — 접히면 위에 붙고, 열면 두루마리처럼 펼쳐진다 ---------- */
+.phone .rcard { position: relative; scroll-margin-top: 8px; border-radius: 20px; border: 1.5px solid #8a6a1f; background: var(--color-amber-soft); overflow: clip; }
+.phone .rcard.pinned { position: sticky; top: -14px; /* 스크롤 영역의 안쪽 여백(16~20px)만큼 끌어올린다 */ box-shadow: 0 10px 24px rgba(2, 3, 9, 0.75); }
+.phone .rcard-head { display: flex; width: 100%; align-items: center; gap: 10px; padding: 10px 12px; text-align: left; }
+.phone .rcard-mini { display: flex; gap: 2px; width: 84px; height: 10px; flex-shrink: 0; }
+.phone .rcard-mini > span { border-radius: 3px; min-width: 4px; }
+.phone .rcard-toggle { flex-shrink: 0; border-radius: 999px; background: #ffc83d; color: #1d1600; border-bottom: 3px solid #b98a12; padding: 5px 11px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.phone .rcard.open .rcard-toggle { background: var(--color-sand); color: var(--color-ink); border-bottom-color: #121833; }
+.phone .rcard-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.5s cubic-bezier(0.3, 1.35, 0.5, 1); }
+.phone .rcard.open .rcard-body { grid-template-rows: 1fr; }
+.phone .rcard-inner { min-height: 0; overflow: hidden; visibility: hidden; transition: visibility 0s 0.5s; }
+.phone .rcard.open .rcard-inner { visibility: visible; transition-delay: 0s; }
+.phone .rcard-item { opacity: 0; transform: translateY(14px) scale(0.97); transition: opacity 0.35s ease-out, transform 0.45s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.phone .rcard.open .rcard-item { opacity: 1; transform: none; }
+.phone .rcard:not(.open) .rcard-item { transition-delay: 0s !important; }
+.phone .rcard-h { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 13px; font-weight: 800; }
+.phone .rcard-stack { display: flex; gap: 2px; height: 26px; }
+.phone .rcard-stack > span { display: grid; place-items: center; min-width: 18px; border-radius: 4px; font-size: 12px; font-weight: 900; color: #10142b; transform: scaleX(0); transform-origin: left; transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.3, 1) 0.25s; }
+.phone .rcard-stack > span:first-child { border-radius: 10px 4px 4px 10px; }
+.phone .rcard-stack > span:last-child { border-radius: 4px 10px 10px 4px; }
+.phone .rcard.open .rcard-stack > span { transform: none; }
+.phone .rcard-track { flex: 1; height: 12px; border-radius: 4px; background: rgba(255, 255, 255, 0.07); overflow: hidden; }
+.phone .rcard-bar { display: block; height: 100%; border-radius: 0 4px 4px 0; background: #5ad1b3; transform: scaleX(0); transform-origin: left; transition: transform 0.7s cubic-bezier(0.2, 0.9, 0.3, 1) 0.35s; }
+.phone .rcard.open .rcard-bar { transform: none; }
+.phone .rcard-say { margin-top: 8px; border-radius: 6px 14px 14px 14px; background: var(--color-card); padding: 8px 12px; font-size: 13px; line-height: 1.6; }
+.phone .rcard-mission { border-radius: 14px; border: 1.5px solid var(--color-clay); background: var(--color-clay-soft); padding: 12px 14px; }
+@media (max-width: 400px) { .phone .rcard-mini { display: none; } .phone .rcard-head { gap: 8px; padding: 9px 10px; } }
+@media (prefers-reduced-motion: reduce) { .phone .rcard-body, .phone .rcard-item, .phone .rcard-stack > span, .phone .rcard-bar { transition: none; } }
+
+/* 리포트 자세히 — 게이지가 차오른다 */
+@keyframes ab-gauge { from { stroke-dasharray: 0 var(--gauge-len); } }
+.phone .gauge-arc { animation: ab-gauge 0.9s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+@keyframes ab-growx { from { transform: scaleX(0); } }
+@keyframes ab-growy { from { transform: scaleY(0); } }
+.phone .grow-x { transform-origin: left; animation: ab-growx 0.7s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+.phone .grow-y { transform-origin: bottom; animation: ab-growy 0.7s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+@media (prefers-reduced-motion: reduce) { .phone .gauge-arc, .phone .grow-x, .phone .grow-y { animation: none; } }
+
+/* 팝업 — 통통 튀며 뜬다 */
+@keyframes ab-popup { 0% { opacity: 0; transform: translateY(30px) scale(0.92); } 60% { opacity: 1; transform: translateY(-4px) scale(1.01); } 100% { opacity: 1; transform: none; } }
+.phone .popup { animation: ab-popup 0.38s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+@media (prefers-reduced-motion: reduce) { .phone .popup { animation: none; } }

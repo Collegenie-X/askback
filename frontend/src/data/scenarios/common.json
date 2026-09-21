@@ -1,0 +1,16 @@
+{
+  "_doc": "모든 시연 시나리오가 함께 쓰는 역할 배지와 칩. 시나리오 JSON은 내용(질문·답·역질문·기획서·리포트)만 담는다.",
+  "roles": {
+    "typist": { "emoji": "⌨️", "label": "받아쓰기", "desc": "시킨 대로 적는다", "color": "#EEEEEE" },
+    "coder": { "emoji": "👨‍💻", "label": "코더", "desc": "네 설계를 명세로 옮긴다", "color": "#E1F5FF" },
+    "engineer": { "emoji": "🛠", "label": "엔지니어", "desc": "상황에 맞는 방법을 설계한다", "color": "#C8E6C9" },
+    "architect": { "emoji": "🏛", "label": "아키텍트", "desc": "다른 길과 그 대가를 비교한다", "color": "#FFE1F5" },
+    "encyclopedia": { "emoji": "📚", "label": "백과사전", "desc": "누구에게나 같은 답을 한다", "color": "#FFF3E1" }
+  },
+  "chips": {
+    "widen": { "emoji": "🌅", "label": "넓히기" },
+    "narrow": { "emoji": "🔍", "label": "좁히기" },
+    "alt": { "emoji": "🔀", "label": "대안 묻기" },
+    "expand": { "emoji": "🚀", "label": "한 단 키우기" }
+  }
+}
