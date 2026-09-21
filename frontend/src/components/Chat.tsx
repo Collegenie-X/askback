@@ -22,6 +22,18 @@ import RQCard from "./RQCard";
 import { CoachAvatar, RolePlanet, Rocket } from "./Space";
 import { Sheet } from "./ui";
 
+// 확장 칩(메이커 · 공유·서버 · 협력 · AI) — 켜 둔 팩의 칩이 앞에 온다
+const PACK_QUICK = (on: Project["packs"]) => {
+  const keys = Object.keys(roles.packs) as (keyof typeof roles.packs)[];
+  return [...keys.filter((k) => on.includes(k)), ...keys.filter((k) => !on.includes(k))].flatMap((k) => roles.packs[k].quick);
+};
+// 칩 줄의 묶음 — 버튼 하나를 누르면 심화처럼 카드 트레이로 펼쳐진다
+type GroupKey = "format" | "expand" | "refine";
+const GROUP: Record<GroupKey, { emoji: string; name: string; tip: string; box: string; text: string }> = {
+  format: { emoji: "🧩", name: "형식 질문", tip: "이 형식에서 자주 막히는 곳", box: "border-line bg-card", text: "text-ink" },
+  expand: { emoji: "🚀", name: "확장", tip: "한 단씩 키우기 — 누르면 빈칸 질문이 채워져", box: "border-[#2f6f8f] bg-[#0f2a3a]", text: "text-[#7fdcff]" },
+  refine: { emoji: "🧭", name: "다듬기", tip: "방금 답을 넓히고 · 좁히고 · 되묻기", box: "border-line bg-card", text: "text-ink" },
+};
 const CHIP_LABEL: Record<ChipKind, string> = { widen: "🌅 넓히기", narrow: "🔍 좁히기", alt: "🔀 대안 묻기" };
 const SAMPLES = [
   { tag: "좁게", text: "토양센서 값이 400 밑이면 펌프 3초 켜는 코드 짜줘" },
@@ -74,7 +86,7 @@ function TurnCard({ n, q, open, onToggle, tag, children }: { n: number; q: Extra
       <button type="button" onClick={onToggle} aria-expanded={open} className="turn-q">
         {open && <AstroKid size={38} />}
         <span className="turn-n">Q{n}</span>
-        <span className="min-w-0 flex-1">
+        <span className="turn-body min-w-0 flex-1">
           <span className="turn-who">🙋 내 질문{q.chip ? ` · ${CHIP_LABEL[q.chip]} 칩` : ""}{q.images?.length ? ` · 🖼 ${q.images.length}` : ""}</span>
           <span className={`block whitespace-pre-wrap text-[15px] leading-relaxed ${open ? "" : "line-clamp-1"}`}>{q.text}</span>
         </span>
@@ -261,7 +273,7 @@ export default function Chat({ project }: { project: Project }) {
   const [openTurns, setOpenTurns] = useState<Record<string, boolean>>({}); // 턴 카드 열림 — 기본은 마지막 카드만
   const [sortNew, setSortNew] = useState(false);
   const [filter, setFilter] = useState<"all" | "q" | "rq">("all");
-  const [tray, setTray] = useState<null | "quick" | "lens">(null); // 입력창 위로 요술 램프처럼 솟는 트레이
+  const [tray, setTray] = useState<null | "quick" | "lens" | GroupKey>(null); // 입력창 위로 요술 램프처럼 솟는 트레이
   const quickOpen = tray === "quick";
   const [toolsOpen, setToolsOpen] = useState(false); // 보기 도구 줄 — 필요할 때만
   const [checksOpen, setChecksOpen] = useState(false); // 헤더의 형식 체크 칸 — 기본은 접힘
@@ -355,6 +367,13 @@ export default function Chat({ project }: { project: Project }) {
     setTray(null);
     deepAsk(project, lens, 0);
     setDeep({ lens, level: 0, awaiting: true, next: null });
+  };
+
+  const group = tray === "format" || tray === "expand" || tray === "refine" ? tray : null;
+  const groupItems: Record<GroupKey, { emoji: string; label: string; draft: string; chip?: string }[]> = {
+    format: format?.quick ?? [],
+    expand: PACK_QUICK(project.packs),
+    refine: formats.common.filter((q) => lastAnswerId || !q.draft.startsWith("방금")),
   };
 
   const fillDraft = (text: string, kind: ChipKind | null) => {
@@ -666,6 +685,28 @@ export default function Chat({ project }: { project: Project }) {
             </div>
           </div>
         )}
+        {!deep?.awaiting && group && (
+          <div className={`genie mb-2 rounded-2xl border p-2 ${GROUP[group].box}`} aria-label={`${GROUP[group].name} 질문 고르기`}>
+            <div className={`flex items-center justify-between px-1.5 pb-1.5 text-[11px] font-bold ${GROUP[group].text}`}>
+              <button type="button" onClick={() => setTray("quick")} className="text-left">‹ {GROUP[group].emoji} {GROUP[group].name} — {GROUP[group].tip}</button>
+              <button type="button" aria-label="닫기" onClick={() => setTray(null)} className="px-1 text-sub">✕</button>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5 min-[520px]:grid-cols-3">
+              {groupItems[group].map((q) => (
+                <button key={q.label} type="button" disabled={busy} title={q.draft} onClick={() => { setTray(null); fillDraft(q.draft.replaceAll("{goal}", project.desc || "___"), ("chip" in q ? (q.chip as ChipKind) : null)); }} className="chunk-card rounded-xl px-2 py-2 text-center disabled:opacity-40">
+                  <span className="block text-xl">{q.emoji}</span>
+                  <b className="block text-xs">{q.label}</b>
+                </button>
+              ))}
+              {group === "refine" && lastAnswerId && (
+                <button type="button" disabled={busy} onClick={async () => { setTray(null); setBusy(true); await askMe(project.id); setBusy(false); }} className="chunk-card rounded-xl px-2 py-2 text-center disabled:opacity-40">
+                  <span className="block text-xl">🙋</span>
+                  <b className="block text-xs">나한테 물어봐</b>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         {!deep?.awaiting && quickOpen && (
           <div className="quickbar genie -mx-3 mb-2 flex gap-1.5 overflow-x-auto px-3" aria-label="질문 바로 만들기">
             <button type="button" onClick={() => setTray("lens")} className="shrink-0 whitespace-nowrap rounded-full border border-[#7a2f8f] bg-rose-soft px-3 py-1.5 text-[13px] font-bold text-[#ff9bd8]">🔭 심화</button>
@@ -674,16 +715,11 @@ export default function Chat({ project }: { project: Project }) {
                 ⬜ {progress.next.label} 묻기
               </button>
             )}
-            {[...(format?.quick ?? []), ...formats.common.filter((q) => lastAnswerId || !q.draft.startsWith("방금"))].map((q) => (
-              <button key={q.label} type="button" disabled={busy} onClick={() => fillDraft(q.draft.replaceAll("{goal}", project.desc || "___"), ("chip" in q ? (q.chip as ChipKind) : null))} className="shrink-0 whitespace-nowrap rounded-full border border-line bg-card px-3 py-1.5 text-[13px] font-semibold active:bg-sand disabled:opacity-40">
-                {q.emoji} {q.label}
+            {(Object.keys(GROUP) as GroupKey[]).filter((g) => groupItems[g].length > 0).map((g) => (
+              <button key={g} type="button" onClick={() => setTray(g)} className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[13px] font-bold ${GROUP[g].box} ${GROUP[g].text}`}>
+                {g === "format" && format ? format.emoji : GROUP[g].emoji} {GROUP[g].name}
               </button>
             ))}
-            {lastAnswerId && (
-              <button type="button" disabled={busy} onClick={async () => { setBusy(true); await askMe(project.id); setBusy(false); }} className="shrink-0 whitespace-nowrap rounded-full border border-line bg-card px-3 py-1.5 text-[13px] font-semibold disabled:opacity-40">
-                🙋 나한테 물어봐
-              </button>
-            )}
             {format && (
               <button type="button" onClick={() => { if (window.confirm("형식을 바꾸면 적어 둔 초안 칸이 비워져. 바꿀까?")) update("projects", (prev) => prev.map((p) => (p.id === project.id ? { ...p, format: undefined, checks: {} } : p))); }} className="shrink-0 whitespace-nowrap rounded-full border border-line px-3 py-1.5 text-[13px] text-sub">
                 🔁 형식 바꾸기

@@ -18,7 +18,7 @@ const S = REPORT_SECTIONS;
 const Say = ({ children }: { children: React.ReactNode }) => <p className="mt-3 rounded-xl bg-sand px-3 py-2 text-[13px] leading-relaxed">💬 {children}</p>;
 const None = ({ children }: { children: React.ReactNode }) => <p className="text-[13px] leading-relaxed text-sub">{children}</p>;
 
-export default function ReportBody({ r }: { r: WindowReport }) {
+export default function ReportBody({ r, readOnly = false }: { r: WindowReport; readOnly?: boolean }) {
   const reports = useTable("reports");
   const turns = useTable("turns");
   const [editing, setEditing] = useState(false);
@@ -239,7 +239,7 @@ export default function ReportBody({ r }: { r: WindowReport }) {
                 <p className="mt-1.5 text-[13px] leading-relaxed text-sub">← {r.nextMission.editedByStudent ? "네가 직접 정한 미션이야. 똑같이 지켜볼게." : r.nextMission.basis}</p>
               </div>
             </div>
-            <button type="button" onClick={() => { setDraft(r.nextMission.text); setEditing(true); }} className="mt-3 rounded-full border border-clay px-3.5 py-1.5 text-xs font-bold text-clay">✏️ 미션 바꾸기</button>
+            {!readOnly && <button type="button" onClick={() => { setDraft(r.nextMission.text); setEditing(true); }} className="mt-3 rounded-full border border-clay px-3.5 py-1.5 text-xs font-bold text-clay">✏️ 미션 바꾸기</button>}
           </>
         )}
       </Card>

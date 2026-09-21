@@ -22,7 +22,18 @@ def check(path, full):
         need(k in s["guides"], f"guides.{k} 없음")
     turns = s["turns"]
     if full:
-        need(len(turns) >= 15, f"턴이 15개 이상이어야 함 (지금 {len(turns)})")
+        need(len(turns) >= 20, f"턴이 20개 이상이어야 함 — 리포트 2장 (지금 {len(turns)})")
+        r2 = s.get("report2")
+        need(bool(r2), "report2(2번째 리포트 — 질문 11~20) 없음")
+        if r2:
+            for k in ["title", "headline", "range", "lastMission", "mixComment", "best", "nextMission"]:
+                need(k in r2, f"report2.{k} 없음")
+            need(r2.get("title", "").endswith("2번째 리포트"), "report2.title은 '{프로젝트 이름} · 2번째 리포트'")
+            need(r2.get("lastMission", {}).get("text") == s["report"]["nextMission"]["text"], "report2.lastMission.text는 report.nextMission.text와 같아야 함")
+            second = turns[10:20]
+            q = r2.get("best", {}).get("question", "").lstrip("…")[:24]
+            need(any(q and q in t["question"] for t in second), "report2.best.question은 11~20번째 질문 중 하나의 일부여야 함")
+        need(len({t["id"] for t in turns}) == len(turns), "turn id 중복")
         need(s["window"]["startCount"] == 0 and s["window"]["size"] == 10, "window는 startCount 0 · size 10")
     need(s["window"]["startCount"] + len(turns) >= s["window"]["size"], "startCount + 턴 수 ≥ size 여야 리포트가 나온다")
     prev = None

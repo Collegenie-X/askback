@@ -136,7 +136,7 @@ export async function runTurn(projectId: string, text: string, chipUsed: ChipKin
   const bump = { validCount: state.validCount + 1, windowCount: inWindow.length % 10 };
   if (script?.report === "seed7") {
     const seeded = seedReports(Date.now())[6];
-    write("reports", [...read("reports"), { ...seeded, opened: false }]);
+    write("reports", [...read("reports"), { ...seeded, index: Math.max(0, ...read("reports").map((r) => r.index)) + 1, projectId, seq: windowIndex, projects: [project.name], opened: false }]);
     write("state", { ...read("state"), ...bump, windowCount: 0 });
   } else if (inWindow.length >= 10) {
     const reports = read("reports");

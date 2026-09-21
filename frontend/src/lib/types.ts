@@ -159,6 +159,7 @@ export interface TextStats {
 export interface WindowReport {
   index: number; // 전체에서 유일한 번호 (여는 열쇠) — 화면에는 프로젝트별 seq를 쓴다
   projectId?: string;
+  headline?: string; // 리포트 제목 — 이 10문을 한 줄로 (예시는 JSON의 report.headline)
   seq?: number; // 그 프로젝트의 몇 번째 리포트인가 (1부터)
   text?: TextStats;
   createdAt: number;
@@ -178,6 +179,7 @@ export interface WindowReport {
   nextMission: Mission;
   opened: boolean;
   seed?: boolean;
+  example?: boolean; // 불러오지 않은 예시의 리포트 — 목록에만 보이고 저장되지 않는다
 }
 
 export interface AppState {

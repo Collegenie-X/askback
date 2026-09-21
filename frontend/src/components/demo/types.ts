@@ -112,8 +112,20 @@ export interface Scenario {
     messages: DeepMessage[];
     note: string;
   };
+  /** 2번째 리포트(질문 11~20)의 글 — 숫자는 턴에서 직접 센다 */
+  report2?: {
+    title: string;
+    headline: string;
+    range: string;
+    lastMission: { text: string; result: string };
+    mixComment: string;
+    best: { question: string; comment: string };
+    nextMission: { text: string; basis: string };
+    stuckItem?: { concept: string; count: number; total: number };
+  };
   report: {
     title: string;
+    headline: string; // 리포트 제목 — 이 10문을 한 줄로
     range: string;
     lastMission: { text: string; result: string };
     mix: { role: RoleKey; label: string; count: number; note?: string }[];

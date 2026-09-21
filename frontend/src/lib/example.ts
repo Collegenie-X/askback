@@ -27,13 +27,66 @@ function analysisOf(t: ScriptTurn): Analysis {
   };
 }
 
+/** 예시 JSON 한 장에서 리포트들을 만든다 (질문 10개마다 1장) — 불러오지 않은 예시도 리포트 목록에 같은 모양으로 보여 주려고 따로 뺐다.
+ *  1번째는 s.report, 2번째는 s.report2의 글을 쓰고 숫자(질문 유형 · 실은 것 · 글자 수 · 돌아보기)는 그 구간의 턴에서 직접 센다. */
+export function exampleReports(s: Scenario, start = Date.now() - (s.turns.length * 9 + 20) * MIN): WindowReport[] {
+  const projectId = `prj_example_${s.id}`;
+  const size = s.window.size;
+  const out: WindowReport[] = [];
+  for (let w = 0; (w + 1) * size <= s.window.startCount + s.turns.length; w++) {
+    const src = w === 0 ? s.report : s.report2;
+    if (!src) break;
+    const from = Math.max(0, w * size - s.window.startCount);
+    const counted = s.turns.slice(from, (w + 1) * size - s.window.startCount);
+    const turns = counted.map((t, i) => ({ id: `t_ex_${t.id}`, projectId, n: from + i + 1, windowIndex: w + 1, barIndex: 0, question: t.question, analysis: analysisOf(t), role: ROLE_OF[t.openness] ?? null, chipUsed: null, source: "local", createdAt: start + ((from + i) * 9 + 1) * MIN }) as Turn);
+    const mix = { O1: 0, O2: 0, O3: 0, O4: 0, O5: 0, NA: 0 } as Record<Openness, number>;
+    const roles = { typist: 0, coder: 0, engineer: 0, architect: 0, encyclopedia: 0 } as Record<RoleKey, number>;
+    const six = Object.fromEntries(SIX.map((k) => [k, 0])) as Record<SixKey, number>;
+    turns.forEach((t) => {
+      mix[t.analysis.openness] += 1;
+      if (t.role) roles[t.role] += 1;
+      SIX.forEach((k) => (six[k] += t.analysis.six[k]));
+    });
+    // 예시가 중간에서 시작하면(startCount > 0) 앞선 질문의 집계는 JSON의 리포트 숫자를 쓴다
+    if (w === 0 && s.window.startCount > 0) {
+      s.report.mix.forEach((m) => {
+        roles[m.role] = m.count;
+        const o = (Object.keys(ROLE_OF) as Openness[]).find((k) => ROLE_OF[k] === m.role);
+        if (o) mix[o] = m.count;
+      });
+      s.report.six.forEach((x, i) => SIX[i] && (six[SIX[i]] = x.value));
+    } else if (w === 0) six.discard = s.report.six[5]?.value ?? 0;
+    const elements = counted.flatMap((t) => {
+      const q = t.reverseQuestion;
+      if (!q) return [];
+      const picked = q.form === "F1" ? q.options?.[q.demoOptionIndex ?? 0] : undefined;
+      const hintStage = q.demoUsesHint ? 1 : 0;
+      return [{ element: q.element, form: q.form as Form, score: picked ? picked.score : q.demoScore ?? (hintStage ? 1 : 2), hintStage, status: "answered" }];
+    });
+    const bestTurn = counted.find((t) => t.question.includes(src.best.question.replace(/^…/, "").slice(0, 24))) ?? counted[counted.length - 1];
+    const nextMission: Mission = { key: "example", text: src.nextMission.text, basis: src.nextMission.basis, check: { type: "rq", key: "answered", target: 1 }, editedByStudent: false };
+    const last = from + counted.length - 1;
+    out.push({
+      index: w + 1, projectId, seq: w + 1, headline: src.headline, text: buildTextStats(turns, (_, i) => from + i + 1),
+      createdAt: start + (last * 9 + 7) * MIN, from: start + (from * 9 + 1) * MIN, to: start + (last * 9 + 7) * MIN, turnRange: [from + 1, last + 1],
+      projects: [s.project.name], stage: w === 0 ? "설계" : "검증", mix, roles, six, elements,
+      stuck: src.stuckItem ? [{ concept: src.stuckItem.concept, countInWindow: src.stuckItem.count, countTotal: src.stuckItem.total }] : [],
+      lastMission: w === 0 ? null : { text: src.lastMission.text, result: "done", detail: src.lastMission.result }, // 1번째 리포트엔 지난 미션이 없다
+      mixComment: src.mixComment,
+      best: { turnN: s.turns.indexOf(bestTurn) + 1, text: src.best.question, reason: src.best.comment },
+      nextMission, opened: false,
+    });
+  }
+  return out;
+}
+
 export function loadExample(s: Scenario) {
   clearAll();
   const count = s.turns.length;
   const start = Date.now() - (count * 9 + 20) * MIN;
   const projectId = `prj_example_${s.id}`;
-  const reportSpan = Math.max(0, s.window.size - s.window.startCount); // 리포트는 답 10개가 쌓였을 때 1장 — 그 뒤 질문은 다음 판
-  const windowOf = (i: number) => 1 + (i >= reportSpan ? 1 : 0); // 리포트는 프로젝트마다 1번째부터 — 예시도 1번째 리포트다
+  const reportSpan = Math.max(0, s.window.size - s.window.startCount); // 1번째 리포트가 세는 질문 수
+  const windowOf = (i: number) => Math.floor((i + s.window.startCount) / s.window.size) + 1; // 리포트는 프로젝트마다 1번째부터 — 예시도 1번째 리포트다
   const rqCount = s.turns.filter((t) => t.reverseQuestion).length;
 
   const messages: Message[] = [];
@@ -55,7 +108,7 @@ export function loadExample(s: Scenario) {
       `- 답에는 **코드가 없어.** 순서도 · 규칙표 · 비교표 · 차별점만 있어 — 코드는 다른 도구로 뽑으면 돼`,
       `- 답마다 끝에 **🙋 열린 되묻기**가 있고, 다음 질문은 거기에 답하면서 시작해`,
       `- 두 번 묻고 나면 한 번 **🧭 되묻기** — 순서도와 핵심을 진짜 아는지 확인해 (${rqCount}번)`,
-      ...(count > reportSpan ? [`- 답이 **10개** 쌓였을 때 📄 리포트 1장이 나왔어. ${reportSpan + 1}번째 질문부터는 그 리포트의 **미션을 해내는** 구간이야`] : []),
+      ...(count > reportSpan ? [`- 답이 **10개** 쌓일 때마다 📄 리포트가 1장씩 나와 (지금 ${Math.floor((s.window.startCount + count) / s.window.size)}장). ${reportSpan + 1}번째 질문부터는 1번째 리포트의 **미션을 해내는** 구간이야`] : []),
       `- 위의 **📝** 을 누르면 지금까지 쌓인 **${s.planDoc.filename}** 이 열려`,
     ].join("\n"),
   });
@@ -112,41 +165,7 @@ export function loadExample(s: Scenario) {
   const notes: Note[] = [{ id: `note_ex_${s.id}`, projectId, lens, level: 1, question: deepQuestion, text: s.deep.note, createdAt: clock }];
 
   // 📄 10문 리포트 — 답이 10개 쌓였을 때만 나온다
-  const full = s.window.startCount + count >= s.window.size;
-  const windowIndex = 1;
-  const counted = turns.slice(0, reportSpan);
-  const reports: WindowReport[] = [];
-  if (full) {
-    const mix = { O1: 0, O2: 0, O3: 0, O4: 0, O5: 0, NA: 0 } as Record<Openness, number>;
-    const roles = { typist: 0, coder: 0, engineer: 0, architect: 0, encyclopedia: 0 } as Record<RoleKey, number>;
-    const six = Object.fromEntries(SIX.map((k) => [k, 0])) as Record<SixKey, number>;
-    counted.forEach((t) => {
-      mix[t.analysis.openness] += 1;
-      if (t.role) roles[t.role] += 1;
-      SIX.forEach((k) => (six[k] += t.analysis.six[k]));
-    });
-    // 예시가 판의 중간에서 시작하면(startCount > 0) 앞선 질문의 집계는 JSON의 리포트 숫자를 쓴다
-    if (s.window.startCount > 0) {
-      s.report.mix.forEach((m) => {
-        roles[m.role] = m.count;
-        const o = (Object.keys(ROLE_OF) as Openness[]).find((k) => ROLE_OF[k] === m.role);
-        if (o) mix[o] = m.count;
-      });
-      s.report.six.forEach((x, i) => SIX[i] && (six[SIX[i]] = x.value));
-    } else six.discard = s.report.six[5]?.value ?? 0;
-    const bestTurn = s.turns.slice(0, reportSpan).find((t) => t.question.includes(s.report.best.question.replace(/^…/, "").slice(0, 24))) ?? s.turns[reportSpan - 1];
-    const nextMission: Mission = { key: "example", text: s.report.nextMission.text, basis: s.report.nextMission.basis, check: { type: "rq", key: "answered", target: 1 }, editedByStudent: false };
-    reports.push({
-      index: windowIndex, projectId, seq: 1, text: buildTextStats(counted), createdAt: start + ((reportSpan - 1) * 9 + 7) * MIN, from: start, to: start + ((reportSpan - 1) * 9 + 7) * MIN, turnRange: [1, reportSpan],
-      projects: [s.project.name], stage: "설계", mix, roles, six,
-      elements: rqs.filter((r) => r.windowIndex === windowIndex).map((r) => ({ element: r.element, form: r.form, score: r.score ?? null, hintStage: r.hintStage, status: r.status })),
-      stuck: s.report.stuckItem ? [{ concept: s.report.stuckItem.concept, countInWindow: s.report.stuckItem.count, countTotal: s.report.stuckItem.total }] : [],
-      lastMission: null, // 1번째 리포트엔 지난 미션이 없다
-      mixComment: s.report.mixComment,
-      best: { turnN: s.turns.indexOf(bestTurn) + 1, text: s.report.best.question, reason: s.report.best.comment },
-      nextMission, opened: false,
-    });
-  }
+  const reports = exampleReports(s, start);
 
   const project: Project = {
     id: projectId, name: s.project.name, desc: `예시 — ${s.student.name}의 ${s.project.desc}`, emoji: s.project.emoji,

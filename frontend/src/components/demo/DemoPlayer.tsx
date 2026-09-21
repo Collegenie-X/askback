@@ -325,7 +325,7 @@ export default function DemoPlayer({ scenario }: { scenario: Scenario }) {
     if (turns[i].reverseQuestion && records[i]) barPos = 0;
   }
   const asked = scenario.window.startCount + sentCount;
-  const windowCount = asked > scenario.window.size ? asked - scenario.window.size : asked; // 10개가 차면 리포트 1장, 그다음은 새 판
+  const windowCount = asked > scenario.window.size ? asked % scenario.window.size : asked; // 10개가 차면 리포트 1장, 그다음은 새 판
   const reviewBox = Object.values(records).filter((r) => r.status === "later" || (r.score ?? 0) <= 1).length;
   const scene = phase === "afterTurns" ? turns.length + (deepDone ? 1 : 0) : turnIndex;
   const stageNow = phase === "intro" ? -1 : turn.stage;

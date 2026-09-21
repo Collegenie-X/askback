@@ -413,3 +413,23 @@ body:has(.phone) { background: #020309; -webkit-tap-highlight-color: transparent
 @keyframes ab-popup { 0% { opacity: 0; transform: translateY(30px) scale(0.92); } 60% { opacity: 1; transform: translateY(-4px) scale(1.01); } 100% { opacity: 1; transform: none; } }
 .phone .popup { animation: ab-popup 0.38s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
 @media (prefers-reduced-motion: reduce) { .phone .popup { animation: none; } }
+
+/* 리포트 전체 목록 — 한 줄이 리포트 한 장. 넓으면 표, 좁으면 제목 아래에 칸이 접힌다 */
+.phone .rrow { display: grid; grid-template-columns: minmax(0, 1fr) 120px 64px 64px 76px 44px 14px; align-items: center; column-gap: 12px; }
+.phone .rrow-head > span:not(:first-child), .phone .rrow-cell { text-align: center; justify-self: center; font-size: 12px; white-space: nowrap; }
+.phone .rrow-cell:nth-of-type(2) { width: 100%; }
+@media (max-width: 720px) {
+  .phone .rrow-head { display: none; }
+  .phone .rrow { grid-template-columns: 1.4fr 1fr 1fr 1.2fr auto; row-gap: 8px; column-gap: 8px; }
+  .phone .rrow-title { grid-column: 1 / -1; }
+  .phone .rrow-go { display: none; }
+  .phone .rrow-cell { display: flex; flex-direction: column-reverse; align-items: center; gap: 2px; width: 100%; }
+  .phone .rrow-cell::after { content: attr(data-label); font-size: 9.5px; color: var(--color-sub); }
+}
+
+/* 모바일 — 턴 카드 머리를 상하로: 윗줄 아바타 · Q번호 · 역할 · 접기, 아랫줄 질문 전문 */
+@media (max-width: 520px) {
+  .phone .turn.open .turn-q { flex-wrap: wrap; align-items: center; row-gap: 8px; }
+  .phone .turn.open .turn-q .turn-body { order: 9; flex-basis: 100%; }
+  .phone .turn.open .turn-q .turn-caret { margin-left: auto; margin-top: 0; }
+}

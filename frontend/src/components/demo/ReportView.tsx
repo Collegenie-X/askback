@@ -41,7 +41,8 @@ export default function ReportView({ scenario, records, onClose }: Props) {
           ‹
         </button>
         <div>
-          <div className="text-[14.5px] font-semibold">📄 {report.title}</div>
+          <div className="text-[11.5px] font-semibold text-stone-500">📄 {report.title}</div>
+          <div className="text-[14.5px] font-semibold">“{report.headline}”</div>
           <div className="text-[11.5px] text-stone-500">{report.range}</div>
         </div>
       </header>

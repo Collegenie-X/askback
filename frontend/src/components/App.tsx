@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "./askback.css";
 import { loadExample } from "@/lib/example";
-import { useTable, write } from "@/lib/db";
+import { scenarios } from "@/data/scenarios";
+import { read, useTable, write } from "@/lib/db";
 import { AppCtx, type View } from "./AppContext";
 import Chat from "./Chat";
 import type { Scenario } from "./demo/types";
@@ -38,6 +39,19 @@ export default function App() {
   const hideSplash = useCallback(() => setSplash(false), []);
   const ctx = useMemo(() => ({ view, go: setView, openMd: setDoc, openReport: setReportIndex, openDrawer: () => setDrawer(true) }), [view]);
   const project = projects.find((p) => p.id === state.currentProjectId) ?? projects[0];
+
+  // 예전 형식으로 저장된 예시(가짜 앞 리포트가 끼어 "7번째"로 보이던 것)는 지금 형식으로 다시 불러온다
+  useEffect(() => {
+    const id = state.demoProjectId;
+    const s = scenarios.find((x) => `prj_example_${x.id}` === id);
+    if (!id || !s) return;
+    const stale = read("reports").some((r) => !r.projectId || (!r.seed && !r.headline));
+    const grown = read("turns").filter((t) => t.projectId === id).length < s.turns.length; // 예시 JSON에 질문이 늘었다
+    if (!stale && !grown) return;
+    const seen = read("introSeen");
+    loadExample(s);
+    write("introSeen", seen);
+  }, [state.demoProjectId]);
 
   const runDemo = () => setExamples(true);
   const pickExample = (s: Scenario) => {

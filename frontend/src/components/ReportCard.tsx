@@ -4,7 +4,7 @@
 import { useState } from "react";
 import roles from "@/data/roles.json";
 import { update, useTable } from "@/lib/db";
-import { reportSub, reportTitle, ROLE_KEYS } from "@/lib/report";
+import { reportHeadline, reportSub, reportTitle, ROLE_KEYS } from "@/lib/report";
 import type { WindowReport } from "@/lib/types";
 import { ReportArt } from "./Art";
 import ReportBody from "./ReportBody";
@@ -26,10 +26,11 @@ export default function ReportCard({ r, onDoc, onDetail }: { r: WindowReport; on
       <button type="button" onClick={toggle} aria-expanded={open} className="rcard-head">
         <span key={String(open)} className={open ? "spark" : ""}><ReportArt size={34} /></span>
         <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-1.5 text-[14px] font-extrabold text-gold">
+          <span className="flex items-center gap-1.5 text-[12px] font-extrabold text-gold">
             <span className="truncate">{title}</span>
             {!r.opened && <span className="shrink-0 rounded-full bg-gold px-1.5 py-px text-[10px] text-paper">NEW</span>}
           </span>
+          <span className="block truncate text-[13px] font-bold">“{reportHeadline(r)}”</span>
           <span className="block truncate text-[11px] text-sub">{reportSub(r, reports)}{top ? ` · ${roles.roles[top].emoji} ${roles.roles[top].name} ${r.roles[top]}번` : ""}</span>
         </span>
         {/* 접힌 채로도 질문 유형이 한눈에 — 작은 띠 */}

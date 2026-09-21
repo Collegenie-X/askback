@@ -32,6 +32,18 @@ export function seqOf(r: WindowReport, reports: WindowReport[]) {
 export function reportTitle(r: WindowReport, reports: WindowReport[]) {
   return `${r.projects[0] ?? "프로젝트"} · ${seqOf(r, reports)}번째 리포트`;
 }
+/** 리포트 제목 — 이 10문을 한 줄로. 저장된 제목이 없으면(예전 기록) 숫자에서 만든다 */
+export function reportHeadline(r: WindowReport) {
+  return r.headline ?? makeHeadline(r.mix, r.roles, r.six);
+}
+function makeHeadline(mix: Record<Openness, number>, rl: Record<RoleKey, number>, six: Record<SixKey, number>) {
+  const open = mix.O3 + mix.O4;
+  const top = ROLE_KEYS.filter((k) => rl[k] > 0).sort((a, b) => rl[b] - rl[a])[0];
+  const weak = (["criteria", "verify", "constraint", "why"] as SixKey[]).sort((a, b) => six[a] - six[b])[0];
+  const lead = mix.O4 >= 3 ? `다른 길을 ${mix.O4}번 물었다` : open >= 5 ? `방법을 열어 두고 ${open}번 물었다` : top ? `AI를 ${roles.roles[top].name} 자리에 ${rl[top]}번 앉혔다` : "질문 10개를 돌아봤다";
+  return `${lead} — 다음은 ‘${roles.six[weak].name.replace(/ \(.*\)/, "")}’ 한 줄`;
+}
+
 /** 그 프로젝트 안에서의 질문 번호 구간 — 1번째 리포트는 Q1~10, 2번째는 Q11~20 */
 export function reportRange(r: WindowReport, reports: WindowReport[]): [number, number] {
   const q = seqOf(r, reports);
@@ -185,6 +197,7 @@ export function buildWindowReport(index: number, seq: number, projectId: string,
     index,
     projectId,
     seq,
+    headline: makeHeadline(mix, roleCount, six),
     text: buildTextStats(turns, (_, i) => (seq - 1) * 10 + i + 1),
     createdAt: now,
     from: turns[0]?.createdAt ?? now,
@@ -234,7 +247,7 @@ export function reportToMd(r: WindowReport, reports: WindowReport[], name: strin
   const total = Math.max(1, O_KEYS.reduce((n, k) => n + r.mix[k], 0));
   const top = ROLE_KEYS.filter((k) => r.roles[k] > 0).sort((a, b) => r.roles[b] - r.roles[a])[0];
   const h = (i: number) => `## ${REPORT_SECTIONS[i].n} ${REPORT_SECTIONS[i].title}`;
-  const L = [`# 📄 ${reportTitle(r, reports)}`, ``, `> ${name} · ${reportSub(r, reports)}`, ``];
+  const L = [`# 📄 ${reportTitle(r, reports)}`, ``, `## “${reportHeadline(r)}”`, ``, `> ${name} · ${reportSub(r, reports)}`, ``];
 
   L.push(h(0), `- 🌅 열린 질문 ${r.mix.O3 + r.mix.O4}/${total}`, `- 🪑 AI를 가장 많이 앉힌 자리: ${top ? `${roles.roles[top].emoji} ${roles.roles[top].name} ${r.roles[top]}번` : "—"}`, `- 📏 질문 평균 길이: ${r.text ? `${r.text.avg}자 (${r.text.min}~${r.text.max}자)` : "기록 없음"}`, `- 🧭 되묻기 ${r.elements.length}번 ${elementsLine(r.elements)}`, ``);
 
