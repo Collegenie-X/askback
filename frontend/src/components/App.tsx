@@ -7,6 +7,7 @@ import { scenarios } from "@/data/scenarios";
 import { read, useTable, write } from "@/lib/db";
 import { AppCtx, type View } from "./AppContext";
 import Chat from "./Chat";
+import ConfirmDialog, { type ConfirmOptions } from "./ConfirmDialog";
 import type { Scenario } from "./demo/types";
 import Drawer from "./Drawer";
 import ExamplePicker from "./ExamplePicker";
@@ -36,8 +37,12 @@ export default function App() {
   const [examples, setExamples] = useState(false);
   const [reportIndex, setReportIndex] = useState<number | null>(null); // 리포트 팝업 — 닫으면 보던 자리로 돌아온다
 
+  const [ask, setAsk] = useState<(ConfirmOptions & { resolve: (yes: boolean) => void }) | null>(null);
+
   const hideSplash = useCallback(() => setSplash(false), []);
-  const ctx = useMemo(() => ({ view, go: setView, openMd: setDoc, openReport: setReportIndex, openDrawer: () => setDrawer(true) }), [view]);
+  const confirm = useCallback((o: ConfirmOptions) => new Promise<boolean>((resolve) => setAsk({ ...o, resolve })), []);
+  const answer = useCallback((yes: boolean) => setAsk((a) => { a?.resolve(yes); return null; }), []);
+  const ctx = useMemo(() => ({ view, go: setView, openMd: setDoc, openReport: setReportIndex, openDrawer: () => setDrawer(true), confirm }), [view, confirm]);
   const project = projects.find((p) => p.id === state.currentProjectId) ?? projects[0];
 
   // 예전 형식으로 저장된 예시(가짜 앞 리포트가 끼어 "7번째"로 보이던 것)는 지금 형식으로 다시 불러온다
@@ -54,9 +59,9 @@ export default function App() {
   }, [state.demoProjectId]);
 
   const runDemo = () => setExamples(true);
-  const pickExample = (s: Scenario) => {
+  const pickExample = async (s: Scenario) => {
     const mine = profile && state.demoProjectId === null; // 예시끼리 바꿀 때는 묻지 않는다
-    if (mine && !window.confirm(`예시를 열면 지금 기록이 지워지고 '${s.student.name}'의 데이터로 바뀌어. 열까?`)) return;
+    if (mine && !(await confirm({ emoji: s.card.emoji, title: `'${s.card.title}' 예시를 열까?`, body: `지금 기록이 지워지고 '${s.student.name}'의 데이터로 바뀌어.`, ok: "예시 열기", danger: true }))) return;
     loadExample(s);
     setExamples(false);
     write("introSeen", true);
@@ -90,6 +95,7 @@ export default function App() {
           {examples && <ExamplePicker onPick={pickExample} onClose={() => setExamples(false)} />}
           {reportIndex !== null && <ReportView key={reportIndex} index={reportIndex} onClose={() => setReportIndex(null)} />}
           {doc && <MdViewer key={doc.title} doc={doc} onClose={() => setDoc(null)} />}
+          {ask && <ConfirmDialog {...ask} onDone={answer} />}
         </section>
       </main>
     </AppCtx.Provider>

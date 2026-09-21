@@ -31,7 +31,40 @@
 }
 
 html:has(.phone), body:has(.phone) { height: 100%; }
-body:has(.phone) { background: #020309; -webkit-tap-highlight-color: transparent; }
+body:has(.phone) { background: #04060f; -webkit-tap-highlight-color: transparent; }
+
+/* 폰 바깥 여백 — 안쪽 Starfield와 같은 바탕색 · 별빛(흰/금/하늘) · 성운색으로 이어지는 은은한 별밭 */
+body:has(.phone)::before, body:has(.phone)::after { content: ""; position: fixed; inset: -40px; z-index: -1; pointer-events: none; will-change: transform, opacity; } /* 떠다닐 여유분 40px */
+body:has(.phone)::before {
+  background:
+    radial-gradient(circle at 236px 448px, rgba(255, 255, 255, 0.53) 0 0.8px, transparent 1.6px),
+    radial-gradient(circle at 236px 265px, rgba(143, 233, 255, 0.35) 0 0.9px, transparent 1.7000000000000002px),
+    radial-gradient(circle at 267px 248px, rgba(255, 255, 255, 0.5) 0 0.9px, transparent 1.7000000000000002px),
+    radial-gradient(circle at 233px 160px, rgba(255, 217, 138, 0.43) 0 0.7px, transparent 1.5px),
+    radial-gradient(circle at 329px 26px, rgba(255, 255, 255, 0.4) 0 0.8px, transparent 1.6px),
+    radial-gradient(circle at 339px 383px, rgba(255, 255, 255, 0.34) 0 0.8px, transparent 1.6px),
+    radial-gradient(circle at 430px 275px, rgba(255, 255, 255, 0.31) 0 0.6px, transparent 1.4px),
+    radial-gradient(circle at 312px 20px, rgba(255, 255, 255, 0.38) 0 0.9px, transparent 1.7000000000000002px),
+    radial-gradient(55% 60% at 8% 12%, rgba(42, 63, 168, 0.3), transparent 70%),
+    radial-gradient(45% 50% at 96% 45%, rgba(122, 63, 176, 0.2), transparent 70%),
+    radial-gradient(50% 45% at 25% 100%, rgba(26, 111, 143, 0.18), transparent 70%);
+  background-size: 520px 520px, 520px 520px, 520px 520px, 520px 520px, 520px 520px, 520px 520px, 520px 520px, 520px 520px, 100% 100%, 100% 100%, 100% 100%;
+  animation: outer-twinkle-soft 4.7s ease-in-out infinite alternate, outer-drift-a 52s ease-in-out infinite alternate;
+}
+body:has(.phone)::after {
+  background:
+    radial-gradient(circle at 205px 536px, rgba(255, 255, 255, 0.61) 0 1.0px, rgba(255, 255, 255, 0.12) 2.0px, transparent 4.0px),
+    radial-gradient(circle at 683px 92px, rgba(255, 255, 255, 0.61) 0 1.1px, rgba(255, 255, 255, 0.12) 2.1px, transparent 4.1px),
+    radial-gradient(circle at 90px 265px, rgba(255, 255, 255, 0.6) 0 1.0px, rgba(255, 255, 255, 0.12) 2.0px, transparent 4.0px);
+  background-size: 690px 690px;
+  animation: outer-twinkle 2.6s ease-in-out infinite alternate, outer-drift-b 38s ease-in-out infinite alternate;
+}
+/* 두 겹이 서로 다른 박자로 깜빡이고, 반대 방향으로 천천히 떠다닌다 */
+@keyframes outer-twinkle { from { opacity: 0.15; } to { opacity: 1; } }
+@keyframes outer-twinkle-soft { from { opacity: 0.55; } to { opacity: 1; } }
+@keyframes outer-drift-a { from { transform: translate(-18px, -10px); } to { transform: translate(18px, 12px); } }
+@keyframes outer-drift-b { from { transform: translate(24px, -14px); } to { transform: translate(-24px, 16px); } }
+@media (prefers-reduced-motion: reduce) { body:has(.phone)::before, body:has(.phone)::after { animation: none; } body:has(.phone)::after { opacity: 0.75; } }
 
 /* 모바일 전용: 데스크톱에서도 폰 너비로만 보인다 */
 .phone {
@@ -51,13 +84,13 @@ body:has(.phone) { background: #020309; -webkit-tap-highlight-color: transparent
 .phone button { cursor: pointer; }
 .phone button:disabled { cursor: default; }
 @media (min-width: 721px) {
-  .phone { box-shadow: 0 0 0 1px #232b55, 0 30px 80px rgba(0, 0, 0, 0.6); }
+  .phone { box-shadow: 0 0 0 1px rgba(90, 99, 184, 0.28), 0 0 90px rgba(42, 63, 168, 0.16); } /* 테두리는 옅게, 그림자 대신 성운빛 번짐 */
 }
 
 /* 상세 영역 — 시트·서랍·뷰어는 이 안에서만 덮는다 */
 .phone .stage { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .phone .side { display: none; }
-/* PC 버전(1024px~): 왼쪽 메뉴 250px + 오른쪽 상세. 햄버거는 숨긴다 */
+/* PC 버전(1024px~): 왼쪽 메뉴 300px + 오른쪽 상세. 햄버거는 숨긴다 */
 @media (min-width: 1024px) {
   .phone.docked { flex-direction: row; max-width: 1274px; } /* 메뉴 250 + 상세 1024 */
   .phone.docked .side { display: flex; border-right: 1px solid var(--color-line); }
@@ -157,8 +190,23 @@ body:has(.phone) { background: #020309; -webkit-tap-highlight-color: transparent
 .phone .bg-ink:disabled { background: #2b3560; color: #6c77a6; border-bottom-color: #1d2648; }
 .phone .chunk-ghost { background: #1d2648; color: #f2f4ff; border-bottom: 3px solid #121833; }
 .phone .chunk-ghost:active { transform: translateY(2px); border-bottom-width: 1px; }
+.phone .chunk-danger { background: #ff5d73; color: #2a0209; border-bottom: 4px solid #a82a3e; transition: transform 0.06s, border-width 0.06s; }
+.phone .chunk-danger:active { transform: translateY(3px); border-bottom-width: 1px; }
+.phone .confirm-icon-danger { background: #3a1420; }
 .phone .chunk-card { background: #131a35; border: 2px solid #2b3560; border-bottom-width: 5px; transition: transform 0.06s, border-color 0.15s; }
 .phone .chunk-card:active { transform: translateY(3px); border-bottom-width: 2px; border-color: #ffc83d; }
+/* 설정 — 장착 슬롯 · 스위치 · 그룹 머리말 */
+.phone .slot { background: #131a35; border: 2px solid #2b3560; border-bottom-width: 4px; transition: transform 0.06s, border-color 0.15s, background 0.15s; }
+.phone .slot:active { transform: translateY(2px); border-bottom-width: 2px; }
+.phone .slot-on { border-color: #ffc83d; background: #33290a; }
+.phone .slot-icon { background: #1d2648; }
+.phone .slot-on .slot-icon { background: #4a3a0c; }
+.phone .slot-danger { border-color: #6b2434; color: #ff7a8a; }
+.phone .switch { position: relative; flex-shrink: 0; width: 44px; height: 26px; border-radius: 999px; background: #1d2648; border: 2px solid #2b3560; transition: background 0.15s, border-color 0.15s; }
+.phone .switch-knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 999px; background: #98a2cc; transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.15s; }
+.phone .switch-on { background: #5ad1b3; border-color: #5ad1b3; }
+.phone .switch-on .switch-knob { transform: translateX(18px); background: #06231f; }
+.phone .group-tag { background: #1d2648; color: #ffc83d; letter-spacing: 0.08em; }
 .phone .bg-clay { background: #ffc83d; color: #1d1600; box-shadow: none; }
 .phone .bg-clay.text-white, .phone .bg-clay .text-white { color: #1d1600; }
 .phone .glow { animation: none; }
@@ -316,6 +364,14 @@ body:has(.phone) { background: #020309; -webkit-tap-highlight-color: transparent
 .phone .tile { display: grid; place-items: center; flex-shrink: 0; border-radius: 12px; background: var(--color-sand); border-bottom: 3px solid #121833; }
 .phone .tile.on { background: var(--color-clay-soft); border-bottom-color: #1d1600; }
 
+/* 서랍 메뉴 — 지금 보고 있는 곳 하나만 금빛 테두리로 짚어 준다 */
+.phone .nav-pick { position: relative; border: 1.5px solid transparent; transition: background 0.15s, border-color 0.15s, box-shadow 0.15s; }
+.phone .nav-pick.dashed { border: 1.5px dashed var(--color-line); }
+.phone .nav-pick:hover { background: rgba(255, 255, 255, 0.04); }
+.phone .nav-pick:focus-visible { outline: 2px solid var(--color-clay); outline-offset: 2px; }
+.phone .nav-pick.on { background: var(--color-sand); border: 1.5px solid var(--color-clay); box-shadow: 0 0 0 3px rgba(255, 200, 61, 0.14), 0 0 18px rgba(255, 200, 61, 0.12); }
+.phone .nav-pick.on::before { content: ""; position: absolute; left: -1.5px; top: 22%; bottom: 22%; width: 4px; border-radius: 0 4px 4px 0; background: var(--color-clay); }
+
 /* 확장 사다리 지도 */
 .phone .journey { margin: 0 0 12px; padding: 14px 8px 10px; border-radius: 18px; background: radial-gradient(120% 140% at 0% 0%, #1b1f55 0%, #0b1030 60%); border: 1.5px solid #343c7a; overflow: hidden; }
 .phone .journey-track { position: relative; display: grid; gap: 4px; }
@@ -433,3 +489,17 @@ body:has(.phone) { background: #020309; -webkit-tap-highlight-color: transparent
   .phone .turn.open .turn-q .turn-body { order: 9; flex-basis: 100%; }
   .phone .turn.open .turn-q .turn-caret { margin-left: auto; margin-top: 0; }
 }
+
+/* 프로필 고르기 카드 — 캐릭터 그림 + 이름. 고르면 캐릭터 색으로 물든다 */
+.phone .pick { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px 8px; border-radius: 16px; border: 1.5px solid var(--color-line); border-bottom-width: 4px; background: var(--color-card); font-size: 12px; font-weight: 700; color: var(--color-sub); transition: transform 0.06s, border-color 0.2s, background 0.2s; }
+.phone .pick svg { opacity: 0.85; filter: saturate(0.75); transition: opacity 0.2s, filter 0.2s, transform 0.2s; }
+.phone .pick:active { transform: translateY(2px); border-bottom-width: 2px; }
+.phone .pick.on { border-color: var(--pick, var(--color-clay)); background: var(--pick-soft, var(--color-clay-soft)); color: var(--pick, var(--color-clay)); }
+.phone .pick.on svg { opacity: 1; filter: none; transform: scale(1.08); }
+.phone .pick.emoji { padding: 6px 0; font-size: 20px; line-height: 1.2; border-radius: 12px; color: inherit; }
+.phone .pick-check { position: absolute; top: -6px; right: -4px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 999px; background: var(--pick); color: #10142b; font-size: 11px; font-weight: 900; }
+/* 읽는 곳(설명)은 점선 · 평평하게, 누르는 곳(.pick)은 입체로 — 둘이 섞여 보이지 않게 */
+.phone .info { border: 1.5px dashed var(--color-line); border-radius: 16px; padding: 12px 14px; background: rgba(255, 255, 255, 0.025); }
+.phone .info-tag { flex-shrink: 0; font-size: 11px; font-weight: 800; color: var(--color-sub); background: var(--color-sand); border-radius: 999px; padding: 2px 8px; }
+.phone .act-tag { font-size: 11px; font-weight: 800; color: #1d1600; background: var(--color-clay); border-radius: 999px; padding: 1px 8px; }
+

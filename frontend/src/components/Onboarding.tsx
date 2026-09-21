@@ -6,6 +6,8 @@ import { createProject } from "@/lib/actions";
 import { write } from "@/lib/db";
 import Buddy from "./Buddy";
 import OnboardingScene, { type SceneEvent } from "./OnboardingScene";
+import { AstroKid } from "./Art";
+import { GRADE_TONE, GradeArt, INTEREST_TONE, InterestArt, ProjectPlanet } from "./ProfileArt";
 
 const INTRO = data.steps.length;
 
@@ -49,11 +51,13 @@ export default function Onboarding({ hasProfile, onDone, onDemo }: { hasProfile:
   const [interests, setInterests] = useState<string[]>([]);
   const [project, setProject] = useState("");
   const [desc, setDesc] = useState("");
+  const [emoji, setEmoji] = useState("🌱");
+  const [say, setSay] = useState(data.profileSay.start); // 별이가 방금 고른 것에 맞장구친다
 
   const finish = (free: boolean) => {
     write("profile", { name: name.trim() || "친구", grade, interests, createdAt: Date.now() });
     if (free || !project.trim()) createProject({ name: "자유 질문", desc: "", emoji: "💬", packs: [] });
-    else createProject({ name: project.trim(), desc: desc.trim(), emoji: "🌱", packs: [] });
+    else createProject({ name: project.trim(), desc: desc.trim(), emoji, packs: [] });
     onDone();
   };
 
@@ -68,6 +72,9 @@ export default function Onboarding({ hasProfile, onDone, onDemo }: { hasProfile:
     setUp(next > step);
     setStep(next);
   };
+
+  const ps = data.profileSay;
+  const heroSay = step === INTRO ? say : project.trim() ? ps.projectNamed.replace("{name}", project.trim()) : ps.project;
 
   const next = () => (last && hasProfile ? onDone() : go(step + 1));
 
@@ -115,7 +122,17 @@ export default function Onboarding({ hasProfile, onDone, onDemo }: { hasProfile:
           </button>
         </div>
 
-        {!intro && <div className="mb-8">{hud}</div>}
+        {!intro && (
+          <div className="mb-6 flex items-end gap-1.5">
+            <Buddy level={lv} size={84} />
+            <div className="mb-2 min-w-0 flex-1 rounded-[8px_22px_22px_22px] border-[1.5px] border-line bg-card px-4 py-3">
+              <p className="truncate text-[11px] font-extrabold text-sub">
+                <span className="text-gold">Lv.{lv}</span> {buddy.name}
+              </p>
+              <p key={heroSay} className="rise mt-0.5 text-[15px] font-bold leading-snug [word-break:keep-all]">{heroSay}</p>
+            </div>
+          </div>
+        )}
 
         {intro && (
           <div
@@ -172,29 +189,72 @@ export default function Onboarding({ hasProfile, onDone, onDemo }: { hasProfile:
       {step === INTRO && (
         <div className="rise flex flex-1 flex-col">
           <h1 className="text-2xl font-extrabold tracking-tight">뭐라고 부를까?</h1>
-          <input className={`${input} mt-7`} placeholder="이름이나 별명" value={name} onChange={(e) => setName(e.target.value)} maxLength={12} />
-          <p className="mb-3 mt-9 text-sm font-bold">몇 학년이야?</p>
-          <div className="flex flex-wrap gap-2.5">
-            {data.grades.map((g) => (
-              <button key={g} type="button" onClick={() => setGrade(g)} className={`rounded-full border px-4 py-2 text-sm ${grade === g ? "border-ink bg-ink text-paper" : "border-line bg-card"}`}>
-                {g}
-              </button>
-            ))}
+          <div className="mt-5 flex items-center gap-3">
+            <span className={`tile h-[54px] w-[54px] ${name.trim() ? "on" : ""}`}>
+              <AstroKid size={40} />
+            </span>
+            <input
+              className={input}
+              placeholder="이름이나 별명"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setSay(e.target.value.trim() ? ps.name.replace("{name}", e.target.value.trim()) : ps.start);
+              }}
+              maxLength={12}
+            />
           </div>
-          <p className="mb-3 mt-9 text-sm font-bold">요즘 뭘 만들어? <span className="font-normal text-sub">(여러 개)</span></p>
-          <div className="flex flex-wrap gap-2.5">
-            {data.interests.map((g) => {
-              const on = interests.includes(g);
+
+          <p className="mb-3 mt-8 text-sm font-bold">몇 학년이야? <span className="font-normal text-sub">— 우주에서 어디쯤?</span></p>
+          <div className="grid grid-cols-4 gap-2">
+            {data.grades.map((g) => {
+              const on = grade === g;
+              const [main, soft] = GRADE_TONE[g] ?? GRADE_TONE["기타"];
               return (
-                <button key={g} type="button" onClick={() => setInterests(on ? interests.filter((x) => x !== g) : [...interests, g])} className={`rounded-full border px-4 py-2 text-sm ${on ? "border-clay bg-clay-soft text-clay" : "border-line bg-card"}`}>
-                  {on ? "✓ " : ""}
-                  {g}
+                <button
+                  key={g}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => {
+                    setGrade(g);
+                    setSay((ps.grades as Record<string, string>)[g] ?? ps.start);
+                  }}
+                  className={`pick ${on ? "on" : ""}`}
+                  style={{ ["--pick" as string]: main, ["--pick-soft" as string]: soft }}
+                >
+                  <GradeArt grade={g} on={on} />
+                  <span>{g}</span>
                 </button>
               );
             })}
           </div>
-          <p className="mt-6 text-xs leading-relaxed text-sub">학년과 관심사는 말의 높이와 예시를 고르는 데만 써. 평가에는 쓰지 않아.</p>
-          <div className="mt-auto pt-10">
+
+          <p className="mb-3 mt-8 text-sm font-bold">요즘 뭘 만들어? <span className="font-normal text-sub">(여러 개)</span></p>
+          <div className="grid grid-cols-3 gap-2">
+            {data.interests.map((g) => {
+              const on = interests.includes(g);
+              const [main, soft] = INTEREST_TONE[g] ?? INTEREST_TONE["기타"];
+              return (
+                <button
+                  key={g}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => {
+                    setInterests(on ? interests.filter((x) => x !== g) : [...interests, g]);
+                    if (!on) setSay((ps.interests as Record<string, string>)[g] ?? ps.start);
+                  }}
+                  className={`pick ${on ? "on" : ""}`}
+                  style={{ ["--pick" as string]: main, ["--pick-soft" as string]: soft }}
+                >
+                  {on && <span className="pick-check ob-pop">✓</span>}
+                  <InterestArt kind={g} on={on} />
+                  <span>{g}</span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-5 text-xs leading-relaxed text-sub">🔒 학년과 관심사는 말의 높이와 예시를 고르는 데만 써. 평가에는 쓰지 않아.</p>
+          <div className="mt-auto pt-8">
             <button type="button" className={primary} onClick={() => setStep(INTRO + 1)}>
               다음
             </button>
@@ -205,15 +265,47 @@ export default function Onboarding({ hasProfile, onDone, onDemo }: { hasProfile:
       {step === INTRO + 1 && (
         <div className="rise flex flex-1 flex-col">
           <h1 className="text-2xl font-extrabold tracking-tight">지금 만들고 있는 게 있어?</h1>
-          <input className={`${input} mt-7`} placeholder="예: 스마트 화분" value={project} onChange={(e) => setProject(e.target.value)} maxLength={24} />
-          <p className="mb-3 mt-9 text-sm font-bold">한 줄로 설명하면? <span className="font-normal text-sub">(선택)</span></p>
+          <div className="mt-4 flex items-center gap-3">
+            <ProjectPlanet emoji={emoji} named={!!project.trim()} size={112} />
+            <div className="min-w-0 flex-1">
+              <p className="mb-2 text-xs font-bold text-sub">행성에 세울 아이콘</p>
+              <div className="grid grid-cols-4 gap-1.5">
+                {data.emojis.map((e) => (
+                  <button key={e} type="button" aria-pressed={emoji === e} onClick={() => setEmoji(e)} className={`pick emoji ${emoji === e ? "on" : ""}`}>
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <input className={`${input} mt-5`} placeholder="예: 스마트 화분" value={project} onChange={(e) => setProject(e.target.value)} maxLength={24} />
+          <p className="mb-3 mt-7 text-sm font-bold">한 줄로 설명하면? <span className="font-normal text-sub">(선택)</span></p>
           <input className={input} placeholder="예: 상추 화분 자동 급수" value={desc} onChange={(e) => setDesc(e.target.value)} maxLength={40} />
-          <div className="mt-auto space-y-3 pt-10">
+
+          <p className="mb-2.5 mt-7 text-xs font-bold text-sub">💡 떠오르지 않으면 눌러 봐 — 고쳐 써도 돼</p>
+          <div className="flex flex-wrap gap-2">
+            {data.ideas.map((it) => (
+              <button
+                key={it.name}
+                type="button"
+                onClick={() => {
+                  setProject(it.name);
+                  setDesc(it.desc);
+                  setEmoji(it.emoji);
+                }}
+                className={`rounded-full border px-3 py-1.5 text-[13px] font-semibold ${project === it.name ? "border-clay bg-clay-soft text-clay" : "border-line bg-card"}`}
+              >
+                {it.emoji} {it.name}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-auto space-y-3 pt-8">
             <button type="button" className={primary} disabled={!project.trim()} onClick={() => finish(false)}>
-              시작하기
+              {project.trim() ? `${emoji} 시작하기` : "시작하기"}
             </button>
             <button type="button" className="w-full py-3 text-sm font-semibold text-sub" onClick={() => finish(true)}>
-              아직 없어, 그냥 물어볼래
+              💬 아직 없어, 그냥 물어볼래
             </button>
           </div>
         </div>

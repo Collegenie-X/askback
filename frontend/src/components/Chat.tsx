@@ -249,7 +249,7 @@ function AnswerView({ m, project, isLast, streaming, embedded, onTick, onStreamD
 }
 
 export default function Chat({ project }: { project: Project }) {
-  const { go, openDrawer, openMd, openReport } = useApp();
+  const { go, openDrawer, openMd, openReport, confirm } = useApp();
   const all = useTable("messages");
   const rqs = useTable("rqs");
   const turns = useTable("turns");
@@ -721,7 +721,7 @@ export default function Chat({ project }: { project: Project }) {
               </button>
             ))}
             {format && (
-              <button type="button" onClick={() => { if (window.confirm("형식을 바꾸면 적어 둔 초안 칸이 비워져. 바꿀까?")) update("projects", (prev) => prev.map((p) => (p.id === project.id ? { ...p, format: undefined, checks: {} } : p))); }} className="shrink-0 whitespace-nowrap rounded-full border border-line px-3 py-1.5 text-[13px] text-sub">
+              <button type="button" onClick={async () => { if (await confirm({ emoji: "🔁", title: "형식을 바꿀까?", body: "적어 둔 초안 칸이 비워져.", ok: "바꾸기" })) update("projects", (prev) => prev.map((p) => (p.id === project.id ? { ...p, format: undefined, checks: {} } : p))); }} className="shrink-0 whitespace-nowrap rounded-full border border-line px-3 py-1.5 text-[13px] text-sub">
                 🔁 형식 바꾸기
               </button>
             )}

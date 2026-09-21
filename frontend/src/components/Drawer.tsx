@@ -20,7 +20,7 @@ let examplesOpenMemo = true; // 서랍은 열 때마다 새로 그려진다 — 
 
 // docked: PC(1024px~)에서 왼쪽에 늘 붙어 있는 메뉴. 아니면 모바일의 햄버거 서랍(덮어쓰기).
 export default function Drawer({ docked = false, onClose, onNewProject, onExample }: { docked?: boolean; onClose: () => void; onNewProject: () => void; onExample: (s: Scenario) => void }) {
-  const { go } = useApp();
+  const { go, view } = useApp();
   const profile = useTable("profile");
   const projects = useTable("projects");
   const turns = useTable("turns");
@@ -31,10 +31,13 @@ export default function Drawer({ docked = false, onClose, onNewProject, onExampl
   const windowCount = windowCountOf(current?.id, current?.name ?? "", turns, reports);
   const [examplesOpen, setExamplesOpen] = useState(examplesOpenMemo);
   const toggleExamples = () => setExamplesOpen((v) => (examplesOpenMemo = !v));
+  // 포커스는 늘 하나 — 메뉴 화면을 보고 있으면 메뉴에, 아니면 지금 프로젝트에
+  const navOn = (v: View) => v.name === view.name || (v.name === "reports" && view.name === "monthly");
+  const onNav = NAV.some((n) => navOn(n.view));
   const examples = scenarios.filter((s) => `prj_example_${s.id}` !== state.demoProjectId); // 지금 열린 예시는 위 목록에 있다
 
   const menu = (
-      <aside className={docked ? "side panel scroll relative z-10 w-[250px] shrink-0 flex-col px-3 pb-6 pt-5" : "drawer panel scroll relative z-10 flex w-[84%] max-w-[270px] flex-col px-3 pb-6 pt-5"}>
+      <aside className={docked ? "side panel scroll relative z-10 w-[300px] shrink-0 flex-col px-3 pb-6 pt-5" : "drawer panel scroll relative z-10 flex w-[84%] max-w-[320px] flex-col px-3 pb-6 pt-5"}>
         <div className="flex items-center gap-2.5">
           <LogoMark size={36} />
           <div className="min-w-0">
@@ -61,6 +64,7 @@ export default function Drawer({ docked = false, onClose, onNewProject, onExampl
           {[...projects].sort((a, b) => b.updatedAt - a.updatedAt).map((p) => {
             const mine = turns.filter((t) => t.projectId === p.id);
             const recent = mine.slice(-5).map((t) => (t.role ? roles.roles[t.role].emoji : "·")).join("");
+            const on = !onNav && state.currentProjectId === p.id;
             return (
               <li key={p.id}>
                 <button
@@ -70,10 +74,11 @@ export default function Drawer({ docked = false, onClose, onNewProject, onExampl
                     go({ name: "chat" });
                     onClose();
                   }}
-                  className={`block w-full rounded-xl px-3 py-2.5 text-left ${state.currentProjectId === p.id ? "bg-sand" : ""}`}
+                  aria-current={on ? "page" : undefined}
+                  className={`nav-pick block w-full rounded-xl px-3 py-2.5 text-left ${on ? "on" : ""}`}
                 >
                   <p className="flex items-center gap-2 text-sm font-bold">
-                    <span className={`tile h-8 w-8 text-base ${state.currentProjectId === p.id ? "on" : ""}`}>{p.emoji}</span>
+                    <span className={`tile h-8 w-8 text-base ${on ? "on" : ""}`}>{p.emoji}</span>
                     <span className="truncate">{p.name}</span>
                     {state.demoProjectId === p.id && <span className="shrink-0 rounded-full border border-dashed border-current px-1.5 py-px text-[10px] font-bold text-sub">예시</span>}
                   </p>
@@ -96,7 +101,7 @@ export default function Drawer({ docked = false, onClose, onNewProject, onExampl
             {examplesOpen && <ul className="fade mt-1.5 space-y-1">
               {examples.map((s) => (
                 <li key={s.id}>
-                  <button type="button" onClick={() => onExample(s)} className="block w-full rounded-xl border border-dashed border-line px-3 py-2 text-left active:bg-sand">
+                  <button type="button" onClick={() => onExample(s)} className="nav-pick dashed block w-full rounded-xl px-3 py-2 text-left active:bg-sand">
                     <span className="flex items-center gap-2">
                       <span className="tile h-8 w-8 text-base">{s.card.emoji}</span>
                       <span className="min-w-0">
@@ -114,8 +119,8 @@ export default function Drawer({ docked = false, onClose, onNewProject, onExampl
         {/* 메뉴는 늘 바닥에 붙어 있다 — 목록이 길어도 가려지지 않게 */}
         <nav className="sticky -bottom-6 z-10 -mx-3 mt-auto shrink-0 space-y-0.5 border-t border-line bg-[#0c1124] px-3 pb-3 pt-2">
           {NAV.map((n) => (
-            <button key={n.label} type="button" onClick={() => { go(n.view); onClose(); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-1.5 text-left text-sm font-semibold active:bg-sand">
-              <span className="tile h-8 w-8 text-base">{n.emoji}</span>
+            <button key={n.label} type="button" onClick={() => { go(n.view); onClose(); }} aria-current={navOn(n.view) ? "page" : undefined} className={`nav-pick flex w-full items-center gap-3 rounded-xl px-3 py-1.5 text-left text-sm font-semibold active:bg-sand ${navOn(n.view) ? "on text-clay" : ""}`}>
+              <span className={`tile h-8 w-8 text-base ${navOn(n.view) ? "on" : ""}`}>{n.emoji}</span>
               {n.label}
             </button>
           ))}
