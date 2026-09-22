@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import "./askback.css";
 import { loadExample } from "@/lib/example";
 import { scenarios } from "@/data/scenarios";
-import { read, useTable, write } from "@/lib/db";
+import { read, update, useTable, write } from "@/lib/db";
+import { parseRoute, routeToPath } from "@/lib/route";
 import { AppCtx, type View } from "./AppContext";
 import Chat from "./Chat";
 import ConfirmDialog, { type ConfirmOptions } from "./ConfirmDialog";
@@ -37,13 +38,42 @@ export default function App() {
   const [examples, setExamples] = useState(false);
   const [reportIndex, setReportIndex] = useState<number | null>(null); // 리포트 팝업 — 닫으면 보던 자리로 돌아온다
 
+  const [routed, setRouted] = useState(false); // 주소를 한 번 읽고 나서야 주소를 고쳐 쓴다
+
   const [ask, setAsk] = useState<(ConfirmOptions & { resolve: (yes: boolean) => void }) | null>(null);
+
+  // 주소 → 화면. 처음 들어올 때와 뒤로 가기(popstate) 때 주소를 읽어 화면을 맞춘다.
+  useEffect(() => {
+    const apply = () => {
+      const r = parseRoute(window.location.pathname, window.location.search);
+      const id = r.projectId ?? (r.exampleId ? `prj_example_${r.exampleId}` : null);
+      if (id) {
+        // 예시 링크(/p/prj_example_… 또는 /x/…)는 받는 사람 기기에 없어도 시나리오에서 바로 펼친다
+        const s = scenarios.find((x) => `prj_example_${x.id}` === id);
+        if (read("projects").some((p) => p.id === id)) update("state", (st) => ({ ...st, currentProjectId: id }));
+        else if (s) { loadExample(s); write("introSeen", true); }
+        setView({ name: "chat" });
+      } else setView(r.view);
+      setReportIndex(r.reportIndex);
+      setRouted(true);
+    };
+    apply();
+    window.addEventListener("popstate", apply);
+    return () => window.removeEventListener("popstate", apply);
+  }, []);
 
   const hideSplash = useCallback(() => setSplash(false), []);
   const confirm = useCallback((o: ConfirmOptions) => new Promise<boolean>((resolve) => setAsk({ ...o, resolve })), []);
   const answer = useCallback((yes: boolean) => setAsk((a) => { a?.resolve(yes); return null; }), []);
   const ctx = useMemo(() => ({ view, go: setView, openMd: setDoc, openReport: setReportIndex, openDrawer: () => setDrawer(true), confirm }), [view, confirm]);
   const project = projects.find((p) => p.id === state.currentProjectId) ?? projects[0];
+
+  // 화면 → 주소. 지금 보는 화면이 곧 링크가 된다 (새로고침·공유해도 같은 자리).
+  useEffect(() => {
+    if (!routed) return;
+    const path = routeToPath(view, view.name === "chat" ? project?.id ?? null : null, reportIndex);
+    if (path !== window.location.pathname + window.location.search) window.history.pushState(null, "", path);
+  }, [routed, view, project?.id, reportIndex]);
 
   // 예전 형식으로 저장된 예시(가짜 앞 리포트가 끼어 "7번째"로 보이던 것)는 지금 형식으로 다시 불러온다
   useEffect(() => {
@@ -71,6 +101,7 @@ export default function App() {
   let body;
   if (splash) body = <Splash onDone={hideSplash} />;
   else if (view.name === "idea") body = <IdeaLab />;
+  else if (view.name === "onboarding") body = <Onboarding hasProfile onDone={() => setView({ name: "chat" })} onDemo={runDemo} />; // 언제든 다시 보는 소개
   else if (!introSeen || !profile || !project) body = <Onboarding hasProfile={!!profile && !!project} onDone={() => { write("introSeen", true); setView({ name: "chat" }); }} onDemo={runDemo} />;
   else if (view.name === "reports") body = <ReportsView />;
   else if (view.name === "monthly") body = <MonthlyView key={view.ym} ym={view.ym} />;
@@ -80,7 +111,7 @@ export default function App() {
   else if (view.name === "settings") body = <Settings onDemo={runDemo} />;
   else body = <Chat key={project.id} project={project} />;
 
-  const docked = !splash && introSeen && !!profile && !!project; // 온보딩·스플래시에는 메뉴가 없다
+  const docked = !splash && introSeen && !!profile && !!project && view.name !== "onboarding"; // 온보딩·스플래시에는 메뉴가 없다
 
   return (
     <AppCtx.Provider value={ctx}>

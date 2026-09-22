@@ -7,6 +7,7 @@ import type { MdDoc } from "./MdViewer";
 export type View =
   | { name: "chat" }
   | { name: "idea" }
+  | { name: "onboarding" }
   | { name: "reports" }
   | { name: "monthly"; ym: string }
   | { name: "notes" }

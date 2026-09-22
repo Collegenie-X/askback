@@ -101,6 +101,19 @@ export function Settings({ onDemo }: { onDemo: () => void }) {
   const level = levelOf(reports.length);
   const windowCount = windowCountOf(project?.id, project?.name ?? "", turns, reports);
 
+  // 🔗 지금 보는 화면의 주소를 그대로 복사한다 — 화면마다 주소가 다르니 링크가 곧 이 자리다
+  const [copied, setCopied] = useState(false);
+  const demo = !!state.demoProjectId && state.currentProjectId === state.demoProjectId;
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+    } catch {
+      return; // 클립보드를 막아 둔 브라우저 — 주소창의 주소를 그대로 쓰면 된다
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+  };
+
   const download = () => {
     const url = URL.createObjectURL(new Blob([exportAll()], { type: "application/json" }));
     const a = document.createElement("a");
@@ -173,8 +186,20 @@ export function Settings({ onDemo }: { onDemo: () => void }) {
           <div className="grid grid-cols-3 gap-2">
             <Tile emoji="💡" label="아이디어 티키타카" sub="주고받기 구경" onClick={() => go({ name: "idea" })} />
             <Tile emoji="📂" label="예시 프로젝트" sub="한꺼번에 보기" onClick={onDemo} />
+            <Tile emoji="✨" label="소개 다시 보기" sub="처음 그 다섯 칸" onClick={() => go({ name: "onboarding" })} />
             <Tile emoji="📈" label="샘플 리포트" sub="7장 채우기" onClick={seed} />
           </div>
+        </Group>
+
+        <Group tag="LINK" title="🔗 링크로 공유하기" sub="화면마다 주소가 달라. 지금 보는 자리의 주소를 그대로 보내면 돼.">
+          <button type="button" onClick={copyLink} className="slot flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left text-sm font-semibold">
+            {copied ? "✅ 복사했어!" : "🔗 이 화면 링크 복사"}<span className="text-sub">›</span>
+          </button>
+          <p className="mt-2 text-[11px] text-sub">
+            {demo
+              ? "📂 예시 프로젝트 링크야 — 누구에게 보내도 그 사람 화면에서 똑같이 열려."
+              : "⚠️ 내 기록은 이 기기에만 있어서, 내 프로젝트 링크는 다른 기기에서 열면 비어 있어. 남에게 보낼 땐 예시 프로젝트 링크나 ⬇️ 내보내기를 써."}
+          </p>
         </Group>
 
         <Group tag="SAVE" title="💾 세이브 데이터" sub="모든 기록은 이 기기의 localStorage에만 있어. 가끔 내보내 둬.">
