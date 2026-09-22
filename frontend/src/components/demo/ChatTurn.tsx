@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import roles from "@/data/roles.json";
 import DemoMarkdown from "./DemoMarkdown";
 import { extrasOrder, type ChipKind, type RoleKey, type Scenario, type Turn } from "./types";
 
@@ -22,13 +23,7 @@ interface Props {
   onPlan: () => void;
 }
 
-const SIX_LABELS: [string, string][] = [
-  ["why", "왜"],
-  ["context", "맥"],
-  ["constraint", "제"],
-  ["criteria", "기"],
-  ["verify", "검"],
-];
+const SIX_KEYS = ["why", "context", "constraint", "criteria", "verify"] as const;
 
 export default function ChatTurn(p: Props) {
   const { turn, scenario } = p;
@@ -144,13 +139,14 @@ export default function ChatTurn(p: Props) {
                 이 질문은 <b className="text-stone-800">{turn.opennessLabel}</b>이었어
               </div>
               {turn.six && (
-                <div className="mt-1.5 flex gap-1.5">
-                  {SIX_LABELS.map(([key, label]) => (
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {SIX_KEYS.map((key) => (
                     <span
                       key={key}
+                      title={roles.six[key].name}
                       className={`rounded-md px-1.5 py-0.5 text-[12px] ${turn.six?.[key] ? "bg-emerald-100 text-emerald-900" : "bg-white text-stone-400"}`}
                     >
-                      {label} {turn.six?.[key] ? "✅" : "⬜"}
+                      {roles.six[key].name.replace(/ \(.*\)/, "")} {turn.six?.[key] ? "✅" : "⬜"}
                     </span>
                   ))}
                 </div>

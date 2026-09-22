@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import data from "@/data/onboarding.json";
+import flowSpec from "@/data/flow.json"; // 다섯 칸의 원본은 docs/다섯칸.md
 import { createProject } from "@/lib/actions";
 import { write } from "@/lib/db";
 import Buddy from "./Buddy";
@@ -160,6 +161,25 @@ export default function Onboarding({ hasProfile, onDone, onDemo }: { hasProfile:
             </div>
             <h1 className="rise mx-auto mt-1.5 max-w-[260px] text-xl font-extrabold leading-snug [word-break:keep-all]" style={{ animationDelay: "0.3s" }}>{marked(intro.title)}</h1>
             <Typed text={intro.desc} />
+
+            {/* 첫 화면에서만 — 앞으로 지나갈 다섯 칸을 미리 한 줄로 보여 준다 (/about 의 전체 흐름과 같은 순서) */}
+            {step === 0 && (
+              <div className="rise mt-5 w-full" style={{ animationDelay: "0.45s" }}>
+                <p className="text-[11px] font-extrabold text-sub">{data.flow.label}</p>
+                <ol className="noscroll mt-2 flex items-stretch gap-1.5 overflow-x-auto">
+                  {flowSpec.steps.map((f, i) => (
+                    <li key={f.no} className="flex items-center gap-1.5">
+                      <div className={`flex min-w-[62px] flex-col items-center gap-0.5 rounded-xl border px-2 py-2 ${f.core ? "border-gold bg-ink/40" : "border-line bg-card"}`}>
+                        <span className="text-[13px]" aria-hidden>{f.emoji}</span>
+                        <span className={`text-[10px] font-extrabold leading-tight ${f.core ? "text-gold" : "text-sub"}`}>{f.appLabel}</span>
+                      </div>
+                      {i < flowSpec.steps.length - 1 && <span aria-hidden className="text-[10px] text-sub">→</span>}
+                    </li>
+                  ))}
+                </ol>
+                <p className="mt-2 text-[11px] font-bold text-gold">★ {data.flow.note}</p>
+              </div>
+            )}
 
             <ul className="mt-5 flex flex-wrap justify-center gap-2">
               {intro.stats.map((st, i) => (

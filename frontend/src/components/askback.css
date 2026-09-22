@@ -354,6 +354,9 @@ body:has(.phone)::after {
 .phone .turn-n { margin-top: 0; background: #ffc83d; color: #1d1600; border-bottom: 2px solid #b98a12; }
 .phone .turn.closed .turn-n { background: rgba(255, 255, 255, 0.14); color: #dfe6ff; border-bottom-color: transparent; }
 .phone .turn-role { margin-top: 0; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px; background: rgba(4, 6, 15, 0.35); }
+.phone .turn-zoom { color: #fff; opacity: 0.85; background: rgba(255, 255, 255, 0.14); }
+.phone .turn-zoom:active { opacity: 1; background: rgba(255, 255, 255, 0.28); }
+.phone .turn.closed .turn-zoom { background: rgba(255, 255, 255, 0.08); }
 .phone .turn-caret { margin-top: 0; }
 .phone .coach-label { display: inline-flex; align-items: center; gap: 5px; }
 .phone .coach-label .mini { display: none; }

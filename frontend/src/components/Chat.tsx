@@ -80,10 +80,22 @@ function CoachBubble({ children, right }: { children: React.ReactNode; right?: R
 }
 
 // 턴 카드 — 내 질문(위, 파란 띠)과 코치의 답(아래)을 한 장으로 묶는다. 접으면 질문만 남는다.
-function TurnCard({ n, q, open, onToggle, tag, children }: { n: number; q: Extract<Message, { kind: "user" }>; open: boolean; onToggle: () => void; tag?: React.ReactNode; children: React.ReactNode }) {
+function TurnCard({ n, q, open, onToggle, tag, onZoom, children }: { n: number; q: Extract<Message, { kind: "user" }>; open: boolean; onToggle: () => void; tag?: React.ReactNode; onZoom?: () => void; children: React.ReactNode }) {
   return (
     <article className={`turn rise ${open ? "open" : "closed"}`}>
-      <button type="button" onClick={onToggle} aria-expanded={open} className="turn-q">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onToggle}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
+        aria-expanded={open}
+        className="turn-q"
+      >
         {open && <AstroKid size={38} />}
         <span className="turn-n">Q{n}</span>
         <span className="turn-body min-w-0 flex-1">
@@ -91,8 +103,24 @@ function TurnCard({ n, q, open, onToggle, tag, children }: { n: number; q: Extra
           <span className={`block whitespace-pre-wrap text-[15px] leading-relaxed ${open ? "" : "line-clamp-1"}`}>{q.text}</span>
         </span>
         {tag}
+        {onZoom && (
+          <button
+            type="button"
+            aria-label="크게 보기"
+            title="크게 보기"
+            onClick={(e) => {
+              e.stopPropagation();
+              onZoom();
+            }}
+            className="turn-zoom grid h-7 w-7 shrink-0 place-items-center rounded-full active:bg-white/20"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />
+            </svg>
+          </button>
+        )}
         <span className="turn-caret">{open ? "▴" : "▾"}</span>
-      </button>
+      </div>
       {open && q.images && q.images.length > 0 && (
         <div className="turn-img">
           <ImageStrip images={q.images} />
@@ -105,6 +133,11 @@ function TurnCard({ n, q, open, onToggle, tag, children }: { n: number; q: Extra
 
 function plainPreview(md: string) {
   return md.replace(/```[\s\S]*?```/g, " ").replace(/[#>*`|_-]/g, "").replace(/\s+/g, " ").trim().slice(0, 70);
+}
+
+// 기획서 카드 — "기획서에 「…」 칸을 담았어"에서 칸 이름만 뽑아 두 줄로 보여준다
+function planLine(note: string) {
+  return note.match(/「(.+?)」/)?.[1] ?? note;
 }
 
 function AnswerView({ m, project, isLast, streaming, embedded, onTick, onStreamDone, onChip, onDeep, onAskMe, onRole, onTasks, onPlan }: {
@@ -168,10 +201,13 @@ function AnswerView({ m, project, isLast, streaming, embedded, onTick, onStreamD
           )}
 
           {m.planNote && (
-            <button type="button" onClick={onPlan} disabled={!project.plan} className="flex w-full items-center gap-2 rounded-xl border border-mint bg-mint-soft px-3 py-2.5 text-left text-[13px] leading-relaxed">
-              <PlanArt size={28} />
-              <span className="min-w-0 flex-1">{m.planNote}</span>
-              {project.plan && <span className="shrink-0 text-xs font-bold text-mint">열기 ›</span>}
+            <button type="button" onClick={onPlan} disabled={!project.plan} className="flex w-full items-start gap-2.5 rounded-xl border border-mint bg-mint-soft px-3 py-2.5 text-left text-[13px] leading-relaxed">
+              <span className="mt-0.5 shrink-0"><PlanArt size={28} /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-bold text-mint">📝 기획서.md에 담았어</span>
+                <span className="mt-0.5 block font-semibold">{planLine(m.planNote)}</span>
+              </span>
+              {project.plan && <span className="mt-0.5 shrink-0 rounded-full border border-mint px-2 py-0.5 text-[11px] font-bold text-mint">전체 열기 ›</span>}
             </button>
           )}
 
@@ -224,8 +260,8 @@ function AnswerView({ m, project, isLast, streaming, embedded, onTick, onStreamD
                   </p>
                   <div className="mt-2 flex gap-1.5">
                     {SIX_KEYS.map((k) => (
-                      <span key={k} title={roles.six[k].name} className={`grid h-8 flex-1 place-items-center rounded-lg text-xs font-bold ${m.analysis.six[k] >= 0.5 ? "bg-mint text-void" : "bg-sand text-sub"}`}>
-                        {roles.six[k].short}
+                      <span key={k} title={roles.six[k].name} className={`grid min-h-[32px] flex-1 place-items-center rounded-lg px-1 py-1 text-center text-[10.5px] font-bold leading-tight ${m.analysis.six[k] >= 0.5 ? "bg-mint text-void" : "bg-sand text-sub"}`}>
+                        {roles.six[k].name.replace(/ \(.*\)/, "")}
                       </span>
                     ))}
                   </div>
@@ -283,6 +319,15 @@ export default function Chat({ project }: { project: Project }) {
 
   useEffect(() => {
     checkLive().then(setLive);
+  }, []);
+
+  // 소개 페이지에서 고른 "막힌 자리"를 첫 질문으로 받아 적는다 — 한 번 쓰고 지운다
+  useEffect(() => {
+    let seed: string | null = null;
+    try { seed = sessionStorage.getItem("ab.seed"); sessionStorage.removeItem("ab.seed"); } catch { /* 못 읽으면 그냥 빈 입력창 */ }
+    if (!seed) return;
+    setDraft(seed);
+    input.current?.focus();
   }, []);
 
   const isExample = state.demoProjectId === project.id; // 시나리오 JSON에서 한꺼번에 불러온 예시
@@ -609,6 +654,7 @@ export default function Chat({ project }: { project: Project }) {
           return (
             <TurnCard key={x.key} n={x.n} q={x.q} open={open} onToggle={() => setOpenTurns((o) => ({ ...o, [x.key]: !open }))}
               tag={role ? <span className="turn-role" title={roles.roles[role].name}>{roles.roles[role].emoji}</span> : undefined}
+              onZoom={x.a ? () => openMd({ title: `Q${x.n} 크게 보기`, md: `**🙋 내 질문**\n\n${x.q.text}\n\n---\n\n${x.a!.md}`, filename: `qa-${x.a!.turnId}.md` }) : undefined}
             >
               {x.a ? renderMessage(x.a, true) : (
                 <div className="flex items-center gap-1.5 py-1">

@@ -1,0 +1,55 @@
+{
+  "_doc": "원본은 docs/다섯칸.md — 직접 고치지 마세요. node scripts/build-flow.mjs 로 다시 만듭니다.",
+  "steps": [
+    {
+      "no": "01",
+      "emoji": "💬",
+      "label": "던진다",
+      "appLabel": "던진다",
+      "color": "#a78bfa",
+      "core": false,
+      "to": "how",
+      "toLabel": "STAGE 06 사용법"
+    },
+    {
+      "no": "02",
+      "emoji": "🙋",
+      "label": "답하고 되묻는다",
+      "appLabel": "답+되묻기",
+      "color": "#fbbf24",
+      "core": true,
+      "to": "askback",
+      "toLabel": "STAGE 07 되묻기"
+    },
+    {
+      "no": "03",
+      "emoji": "🧑‍🏫",
+      "label": "화이트보드 테스트",
+      "appLabel": "화이트보드",
+      "color": "#f472b6",
+      "core": true,
+      "to": "askback",
+      "toLabel": "STAGE 07 되묻기"
+    },
+    {
+      "no": "04",
+      "emoji": "📊",
+      "label": "리포트",
+      "appLabel": "리포트",
+      "color": "#67e8f9",
+      "core": false,
+      "to": "output",
+      "toLabel": "STAGE 09 남는 것"
+    },
+    {
+      "no": "05",
+      "emoji": "📄",
+      "label": ".md로 남는다",
+      "appLabel": ".md로 남기",
+      "color": "#86efac",
+      "core": false,
+      "to": "output",
+      "toLabel": "STAGE 09 남는 것"
+    }
+  ]
+}

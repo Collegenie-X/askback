@@ -10,6 +10,7 @@ import { BridgeArt, CompassArt, RhythmArt } from "./AboutArt3";
 import { DebtArt, GapArt, MiracleArt, MirrorArt, PositionArt, PrincipleArt } from "./AboutArt2";
 import { AudienceTabs, FormatExplorer, GrowStairs, OrbitCycle, SceneTabs } from "./AboutTabs";
 import { GateTabs, SecretArt } from "./AboutGate";
+import AboutFlow from "./AboutFlow";
 import AboutHero from "./AboutHero";
 import Reveal from "./Reveal";
 import { rich } from "./rich";
@@ -145,6 +146,10 @@ export default function About() {
           ))}
         </div>
       </Stage>
+      <Trail />
+
+      {/* ═══ 전체 흐름 — 한 번의 질문이 지나가는 다섯 칸 ═══ */}
+      <AboutFlow />
       <Trail />
 
       {/* ═══ STAGE 04 · 누구에게 ═══ */}

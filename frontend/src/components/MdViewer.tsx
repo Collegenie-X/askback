@@ -17,6 +17,12 @@ export default function MdViewer({ doc, onClose }: { doc: MdDoc; onClose: () => 
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  useEffect(() => {
     if (!doc.src) return;
     let alive = true;
     fetch(doc.src)
@@ -40,7 +46,8 @@ export default function MdViewer({ doc, onClose }: { doc: MdDoc; onClose: () => 
   };
 
   return (
-    <div className="sheet panel absolute inset-0 z-50 flex flex-col">
+    <div className="fade fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-0 backdrop-blur-sm sm:p-5" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="sheet panel flex h-full w-full flex-col overflow-hidden border-line shadow-2xl sm:h-[92dvh] sm:max-w-[1000px] sm:rounded-2xl sm:border">
       <header className="flex items-center gap-2 border-b border-line px-3 py-2.5">
         <button type="button" onClick={onClose} aria-label="닫기" className="grid h-9 w-9 place-items-center rounded-full text-lg active:bg-sand">
           ✕
@@ -83,6 +90,7 @@ export default function MdViewer({ doc, onClose }: { doc: MdDoc; onClose: () => 
           ⬇️ .md 저장
         </button>
       </footer>
+      </div>
     </div>
   );
 }
