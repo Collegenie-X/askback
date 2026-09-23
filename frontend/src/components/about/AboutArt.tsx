@@ -76,8 +76,8 @@ export function MiniFlow({ x = 0, y = 0 }: { x?: number; y?: number }) {
 }
 
 // 히어로 — 글 대신 그림 한 장. “코드 짜줘”가 코치를 지나 되물음이 되고, 설계도 위에서 화분이 자란다.
-export interface HeroScene { format: string; ask: string; back: string; result: string }
-const HERO_DEFAULT: HeroScene = { format: "product", ask: "“코드 짜줘”", back: "“그 400, 왜?”", result: "📝 네 말로 채운 기획서 한 장" };
+export interface HeroScene { format: string; ask: string; back: string; expand: string; result: string }
+const HERO_DEFAULT: HeroScene = { format: "product", ask: "“코드 짜줘”", back: "“그 400, 왜?”", expand: "“말고 둘 더, 각각 잃는 건?”", result: "📝 네 말로 채운 기획서 한 장" };
 
 // 설계도 위에서 자라는 작품 — 형식마다 다르다. 바닥 중심은 (230, 378).
 function HeroPiece({ format }: { format: string }) {
@@ -127,121 +127,111 @@ function HeroPiece({ format }: { format: string }) {
   );
 }
 
-// 히어로 그림 — scene 이 바뀌면 말풍선 · 가운데 작품 · 아래 라벨이 문구와 함께 바뀐다.
+// 히어로 그림 — 과정에서 결과로 올라가는 다섯 걸음. scene 이 바뀌면 각 걸음의 예시와 맨 위 결과 카드가 함께 바뀐다.
+interface HeroStop {
+  n: string;
+  x: number;
+  y: number;
+  color: string;
+  title: string;
+  line: string;
+  lx: number;
+  icon: ReactNode;
+}
+
+// 걸음 옆에 붙는 작은 팻말 — 걸음 이름 한 줄, 그 장면의 예시 한 줄.
+function StopLabel({ stop }: { stop: HeroStop }) {
+  const big = stop.line.length <= 12;
+  return (
+    <g transform={`translate(${stop.lx} ${stop.y - 21})`}>
+      <rect width="212" height="42" rx="12" fill={CARD} stroke={stop.color} strokeWidth="1.400" opacity="0.96" />
+      <rect width="3.500" height="42" rx="1.800" fill={stop.color} />
+      <text x="14" y="17" fill={stop.color} fontSize="11" fontWeight="800">{stop.n} · {stop.title}</text>
+      <text key={stop.line} x="14" y="33" fill={INK} fontSize={big ? 13 : 11.5} fontWeight="800" className="swap">{stop.line}</text>
+    </g>
+  );
+}
+
 export function HeroArt({ scene = HERO_DEFAULT }: { scene?: HeroScene }) {
   const code = scene.format === "product" || scene.format === "service";
-  const chips: [number, number, string, ReactNode][] = [
-    [112, 300, SKY, <path key="d" d="M0-8c5 6 7 9 7 12a7 7 0 0 1-14 0c0-3 2-6 7-12z" />],
-    [152, 248, MINT, <g key="c"><rect x="-6" y="-6" width="12" height="12" rx="2.500" /><path d="M-3-6v-3M3-6v-3M-3 6v3M3 6v3M-6-3h-3M-6 3h-3M6-3h3M6 3h3" /></g>],
-    [318, 272, GOLD, <g key="t"><circle r="7.500" /><path d="M0-4v4l3 2" /></g>],
+  const stops: HeroStop[] = [
+    {
+      n: "1", x: 62, y: 430, color: BLUE, title: "막연한 요청", line: scene.ask, lx: 100,
+      icon: code
+        ? <path d="M-8-5l-6 5 6 5M8-5l6 5-6 5M3-9l-6 18" />
+        : <><rect x="-11" y="-8" width="22" height="16" rx="4" /><path d="M-6-2h12M-6 3h7" /></>,
+    },
+    {
+      n: "2", x: 150, y: 352, color: GOLD, title: "코치가 되묻고", line: scene.back, lx: 188,
+      icon: <><path d="M-11-9h22v15h-13l-6 6v-6h-3z" /><path d="M-3-3.500a3.200 3.200 0 1 1 3.200 3.200v1.800" /><path d="M0.200 4.200h.01" /></>,
+    },
+    {
+      n: "3", x: 232, y: 272, color: SKY, title: "한 번 더 넓히고", line: scene.expand, lx: 8,
+      icon: <><circle r="4" /><path d="M-11-11l5.500 5.500M11-11l-5.500 5.500M-11 11l5.500-5.500M11 11l-5.500-5.500" /><path d="M-12-6v-6h6M12-6v-6h-6M-12 6v6h6M12 6v6h-6" /></>,
+    },
+    {
+      n: "4", x: 312, y: 194, color: MINT, title: "내 말로 설계", line: "선택 · 이유 · 뺀 것", lx: 72,
+      icon: <><rect x="-11" y="-10" width="22" height="20" rx="3.500" /><path d="M-6-4l2.500 2.500L1-6" /><path d="M4-4h5M-6 5h15" /></>,
+    },
   ];
   return (
-    <svg viewBox="0 0 460 492" role="img" aria-label="“코드 짜줘”라는 질문이 코치를 지나 “왜?”라는 되물음으로 돌아오고, 설계도 위에서 스마트 화분이 자라 기획서 한 장이 남는 그림" className="h-auto w-full" style={FONT}>
+    <svg viewBox="0 0 460 500" role="img" aria-label={`막연한 요청에서 시작해 코치의 되물음과 확장을 거쳐 내 말로 설계하고 ${scene.result} 가 남는 다섯 걸음 그림`} className="h-auto w-full" style={FONT}>
       <defs>
-        <linearGradient id="ha-coach" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#a78bfa" /><stop offset="1" stopColor={BLUE} /></linearGradient>
-        <radialGradient id="ha-glow"><stop offset="0" stopColor="#a78bfa" stopOpacity="0.5" /><stop offset="1" stopColor="#a78bfa" stopOpacity="0" /></radialGradient>
-        <linearGradient id="ha-beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#c4b5fd" stopOpacity="0.42" /><stop offset="1" stopColor="#c4b5fd" stopOpacity="0" /></linearGradient>
-        <linearGradient id="ha-plane" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#1e1b4b" /><stop offset="1" stopColor="#0b1030" /></linearGradient>
-        <linearGradient id="ha-pot" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fdba74" /><stop offset="1" stopColor="#c2410c" /></linearGradient>
-        <linearGradient id="ha-doc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#15152a" /><stop offset="1" stopColor={CARD} /></linearGradient>
+        <linearGradient id="ha-trail" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stopColor={BLUE} /><stop offset="0.5" stopColor={GOLD} /><stop offset="1" stopColor={PINK} /></linearGradient>
+        <radialGradient id="ha-glow"><stop offset="0" stopColor="#a78bfa" stopOpacity="0.45" /><stop offset="1" stopColor="#a78bfa" stopOpacity="0" /></radialGradient>
+        <radialGradient id="ha-end"><stop offset="0" stopColor={PINK} stopOpacity="0.55" /><stop offset="1" stopColor={PINK} stopOpacity="0" /></radialGradient>
+        <linearGradient id="ha-doc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1b1430" /><stop offset="1" stopColor={CARD} /></linearGradient>
       </defs>
 
-      <ellipse cx="230" cy="130" rx="212" ry="84" fill="none" stroke={LINE} strokeDasharray="3 7" />
-      {[[30, 22], [432, 20], [440, 250], [24, 236], [230, 14], [60, 430], [410, 440]].map(([x, y], i) => (
+      {[[30, 22], [432, 20], [440, 250], [24, 236], [230, 14], [60, 460], [410, 470]].map(([x, y], i) => (
         <path key={i} d={`M${x} ${y - 5}l1.500 3.500 3.500 1.500-3.500 1.500-1.500 3.500-1.500-3.500-3.500-1.500 3.500-1.500z`} fill={i % 2 ? "#ffd98a" : "#c7d2fe"} className="ab-tw" style={at(i * 0.5)} />
       ))}
 
-      {/* 설계도 — 비스듬히 누운 청사진 한 장 */}
-      <g className="stg" style={at(0.2)}>
-        <ellipse cx="230" cy="400" rx="170" ry="58" fill="url(#ha-glow)" opacity="0.7" />
-        <path d="M89 372L230 443L371 372v12L230 455L89 384z" fill="#312e81" />
-        <g transform="translate(230 372) scale(1 0.5) rotate(45)">
-          <rect x="-100" y="-100" width="200" height="200" rx="10" fill="url(#ha-plane)" stroke="#818cf8" strokeWidth="2" />
-          {[-60, -20, 20, 60].map((v) => (
-            <g key={v} stroke="#818cf8" strokeWidth="1" opacity="0.28"><path d={`M${v}-100v200`} /><path d={`M-100 ${v}h200`} /></g>
-          ))}
-          <g fill="none" stroke={MINT} strokeWidth="2.400" strokeLinejoin="round">
-            <rect x="-86" y="-86" width="50" height="28" rx="6" fill="#0a261f" />
-            <path d="M-36-72h30" className="draw" pathLength={1} />
-            <path d="M18-94l24 22-24 22-24-22z" fill="#0a261f" />
-            <path d="M42-72h26v50" className="draw" pathLength={1} />
-            <rect x="42" y="-22" width="52" height="28" rx="6" fill="#0a261f" />
-            <path d="M68 6v50h-30" className="draw" pathLength={1} />
-            <rect x="-14" y="42" width="52" height="28" rx="6" fill="#0a261f" />
-            <path d="M-14 56h-46v-114" className="draw" pathLength={1} strokeDasharray="4 5" opacity="0.6" />
-          </g>
-        </g>
-      </g>
+      {/* 과정 → 결과로 오르는 길 */}
+      <ellipse cx="62" cy="430" rx="120" ry="50" fill="url(#ha-glow)" opacity="0.55" />
+      <path d="M62 430L150 352L232 272L312 194L386 118" fill="none" stroke="url(#ha-trail)" strokeWidth="3" strokeLinecap="round" strokeDasharray="7 9" className="ab-dash" opacity="0.85" />
+      <circle r="4.500" fill="#fff"><animateMotion dur="4.600s" repeatCount="indefinite" path="M62 430L150 352L232 272L312 194L386 118" /></circle>
 
-      {/* 코치가 비추는 빛 — 설계 위에서 작품이 자란다 */}
-      <path d="M230 146L138 372h184z" fill="url(#ha-beam)" className="ab-pulse" />
-      <ellipse cx="230" cy="374" rx="52" ry="17" fill="#a78bfa" opacity="0.28" />
-      {chips.map(([x, y, c, icon], i) => (
-        <g key={i} className="stg-pop" style={at(1.6 + i * 0.3)}>
-          <path d={`M${x} ${y}L230 318`} stroke={c} strokeWidth="1.400" strokeDasharray="2 5" opacity="0.6" />
-          <g className="ab-float" style={at(i * 0.7)}>
-            <circle cx={x} cy={y} r="19" fill={CARD} stroke={c} strokeWidth="1.600" />
-            <g transform={`translate(${x} ${y})`} fill="none" stroke={c} strokeWidth="1.800" strokeLinecap="round" strokeLinejoin="round">{icon}</g>
-          </g>
+      {/* 왼쪽 아래는 과정, 오른쪽 위는 결과 */}
+      <text x="12" y="488" fill={SUB} fontSize="11.500" fontWeight="800">과정</text>
+      <path d="M46 484h18" stroke={SUB} strokeWidth="1.400" strokeDasharray="2 4" />
+      <text x="418" y="36" fill={PINK} fontSize="11.500" fontWeight="800" textAnchor="end">결과</text>
+
+      {/* 네 걸음 — 동그란 정거장과 팻말 */}
+      {stops.map((s, i) => (
+        <g key={s.n} className="stg" style={at(0.2 + i * 0.35)}>
+          <StopLabel stop={s} />
+          <circle cx={s.x} cy={s.y} r="27" fill={CARD} stroke={s.color} strokeWidth="2" />
+          <circle cx={s.x} cy={s.y} r="27" fill={s.color} opacity="0.14" className="ab-pulse" style={at(i * 0.4)} />
+          <g transform={`translate(${s.x} ${s.y})`} fill="none" stroke={s.color} strokeWidth="1.800" strokeLinecap="round" strokeLinejoin="round">{s.icon}</g>
+          <circle cx={s.x + 21} cy={s.y - 21} r="9.500" fill={s.color} />
+          <text x={s.x + 21} y={s.y - 17} fill="#04060f" fontSize="11" fontWeight="800" textAnchor="middle">{s.n}</text>
         </g>
       ))}
-      <g className="stg" style={at(1.2)}><g key={scene.format} className="swap" style={at(0.9)}><HeroPiece format={scene.format} /></g></g>
 
-      {/* 코치 */}
-      <circle cx="230" cy="106" r="80" fill="url(#ha-glow)" className="ab-pulse" />
-      <g className="ab-float">
-        <circle cx="230" cy="106" r="40" fill="url(#ha-coach)" stroke="#c7d2fe" strokeWidth="1.500" />
-        <path d="M218 96a12 12 0 1 1 18 10.300c-4.300 2.600-6 4.600-6 8.600" fill="none" stroke="#fff" strokeWidth="5" strokeLinecap="round" />
-        <circle cx="230" cy="125" r="3.200" fill="#fff" />
-        <ellipse cx="230" cy="106" rx="58" ry="13" fill="none" stroke={GOLD} strokeWidth="1.600" opacity="0.8" transform="rotate(-18 230 106)" />
-      </g>
-
-      {/* 묻고 */}
-      <g className="stg" style={at(0.5)}>
-        <rect x="6" y="44" width="150" height="60" rx="18" fill={BLUE} stroke="#818cf8" />
-        <path d="M128 103l16 16-3-17z" fill={BLUE} />
-        {code
-          ? <path d="M32 64l-10 10 10 10M50 64l10 10-10 10M45 60l-8 28" fill="none" stroke="#c7d2fe" strokeWidth="2.600" strokeLinecap="round" strokeLinejoin="round" />
-          : <path d="M24 64h32M24 74h32M24 84h20" fill="none" stroke="#c7d2fe" strokeWidth="2.600" strokeLinecap="round" />}
-        <text key={scene.ask} x="108" y="80" fill="#fff" fontSize={scene.ask.length > 8 ? 13 : 15} fontWeight="800" textAnchor="middle" className="swap">{scene.ask}</text>
-      </g>
-      <path d="M158 78c14 2 24 8 34 18" fill="none" stroke="#c7d2fe" strokeWidth="2" strokeLinecap="round" strokeDasharray="1 6" />
-      <circle r="4" fill="#fff"><animateMotion dur="1.800s" repeatCount="indefinite" path="M158 78c14 2 24 8 34 18" /></circle>
-
-      {/* 되묻고 */}
-      <path d="M268 96c10-10 20-16 34-18" fill="none" stroke={GOLD} strokeWidth="2" strokeLinecap="round" strokeDasharray="1 6" />
-      <circle r="4" fill={GOLD}><animateMotion dur="1.800s" repeatCount="indefinite" path="M268 96c10-10 20-16 34-18" /></circle>
-      <g className="stg" style={at(0.9)}>
-        <rect x="304" y="44" width="150" height="60" rx="18" fill="#2a2108" stroke={GOLD} strokeWidth="1.600" />
-        <path d="M332 103l-16 16 3-17z" fill="#2a2108" stroke={GOLD} strokeWidth="1.600" strokeLinejoin="round" />
-        <path d="M318 102h16" stroke="#2a2108" strokeWidth="3" />
-        <text key={scene.back} x="379" y="80" fill={GOLD} fontSize={scene.back.length > 9 ? 13 : 15} fontWeight="800" textAnchor="middle" className="swap" style={at(0.5)}>{scene.back}</text>
-      </g>
-
-      {/* 남긴다 — 되물음이 설계도로 내려앉는다 */}
-      <path d="M404 112c30 90-12 190-56 234" fill="none" stroke={GOLD} strokeWidth="2.600" strokeLinecap="round" className="ab-dash" />
-      <path d="M351.500 332.700L348 346l13.300-3.500" fill="none" stroke={GOLD} strokeWidth="2.600" strokeLinecap="round" strokeLinejoin="round" />
-      <circle r="4.500" fill={GOLD}><animateMotion dur="2.600s" repeatCount="indefinite" path="M404 112c30 90-12 190-56 234" /></circle>
-
-      <g className="stg" style={at(2.4)}>
-        <g className="ab-float" style={at(0.9)}>
-          <path d="M74 384h46l14 14v62H74z" fill="url(#ha-doc)" stroke={PINK} strokeWidth="1.600" strokeLinejoin="round" />
-          <path d="M120 384v14h14" fill="#2a1030" stroke={PINK} strokeWidth="1.600" strokeLinejoin="round" />
-          {[0, 1, 2].map((i) => (
-            <g key={i} transform={`translate(83 ${406 + i * 17})`}>
-              <rect width="11" height="11" rx="3" fill="none" stroke={SUB} strokeWidth="1.300" />
-              {i < 2 && (
-                <g className="stg-pop" style={at(3 + i * 0.5)}>
-                  <rect width="11" height="11" rx="3" fill={MINT} />
-                  <path d="M2.700 5.700l2 2 3.600-4" fill="none" stroke="#04060f" strokeWidth="1.800" strokeLinecap="round" strokeLinejoin="round" />
-                </g>
-              )}
-              <path d="M17 5.500h24" stroke={i < 2 ? INK : SUB} strokeWidth="2.400" strokeLinecap="round" opacity={i < 2 ? 0.85 : 0.5} />
-            </g>
-          ))}
+      {/* 다섯 걸음째 — 남는 것 */}
+      <g className="stg" style={at(1.6)}>
+        <circle cx="386" cy="118" r="60" fill="url(#ha-end)" className="ab-pulse" />
+        <circle cx="386" cy="118" r="30" fill={CARD} stroke={PINK} strokeWidth="2.200" />
+        <ellipse cx="386" cy="118" rx="44" ry="12" fill="none" stroke={GOLD} strokeWidth="1.500" opacity="0.75" transform="rotate(-20 386 118)" />
+        <g transform="translate(386 118)" fill="none" stroke={PINK} strokeWidth="1.800" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M-9-12h11l7 7v17h-18z" /><path d="M2-12v7h7M-5 1h10M-5 6h10" />
         </g>
-        <rect x="150" y="462" width="226" height="28" rx="14" fill="#2a1030" stroke={PINK} />
-        <text key={scene.result} x="263" y="481" fill="#fbcfe8" fontSize="13" fontWeight="800" textAnchor="middle" className="swap" style={at(1.4)}>{scene.result}</text>
+        <circle cx="407" cy="97" r="9.500" fill={PINK} />
+        <text x="407" y="101" fill="#04060f" fontSize="11" fontWeight="800" textAnchor="middle">5</text>
+
+        {/* 결과 카드 — 그 장면의 작품과 남는 한 줄 */}
+        <g className="ab-float" style={at(0.6)}>
+          <rect x="24" y="56" width="268" height="94" rx="16" fill="url(#ha-doc)" stroke={PINK} strokeWidth="1.600" />
+          <g transform="translate(-68.600 -94.400) scale(0.620)">
+            <g key={scene.format} className="swap" style={at(0.9)}><HeroPiece format={scene.format} /></g>
+          </g>
+          <text x="128" y="84" fill={SUB} fontSize="11" fontWeight="800">남는 것</text>
+          <text key={scene.result} x="128" y="107" fill="#fbcfe8" fontSize={scene.result.length > 13 ? 11.500 : 13} fontWeight="800" className="swap" style={at(1.2)}>{scene.result}</text>
+          <path d="M128 120h140" stroke={LINE} strokeWidth="1.200" />
+          <text x="128" y="138" fill={MINT} fontSize="10.500" fontWeight="800">내가 고른 이유까지 함께</text>
+        </g>
+        <path d="M296 108c28-2 42 2 56 6" fill="none" stroke={PINK} strokeWidth="1.600" strokeDasharray="2 5" />
       </g>
     </svg>
   );
