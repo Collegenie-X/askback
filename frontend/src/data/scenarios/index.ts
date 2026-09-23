@@ -2,12 +2,10 @@
 import type { Scenario } from "@/components/demo/types";
 import common from "./common.json";
 import smartpot from "./smartpot.json";
-import lunch from "./lunch-leftover.json";
 import safeRoute from "./safe-route.json";
 import turtleNeck from "./turtle-neck.json";
-import recycleLens from "./recycle-lens.json";
 import petDiary from "./pet-diary.json";
 
 const build = (s: unknown) => ({ ...common, ...(s as object) }) as unknown as Scenario;
 
-export const scenarios: Scenario[] = [smartpot, turtleNeck, recycleLens, petDiary, lunch, safeRoute].map(build);
+export const scenarios: Scenario[] = [smartpot, turtleNeck, petDiary, safeRoute].map(build);

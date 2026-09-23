@@ -79,6 +79,10 @@ export interface ReverseQuestion {
   pack: PackKey | null;
   form: Form;
   question: string;
+  /** 이 되묻기가 확인하는 축 — 기획 · 알고리즘 · 전체 구조 */
+  axis?: "plan" | "algo" | "arch";
+  /** 답하면 내 아이템이 뭐가 세지는지 한 줄 */
+  benefit?: string;
   options?: RQOption[];
   hint: string;
   example: string;
@@ -140,7 +144,7 @@ export interface Mission {
   key: string;
   text: string;
   basis: string;
-  check: { type: "openness" | "six" | "rq"; key: string; target: number };
+  check: { type: "openness" | "six" | "rq" | "axis"; key: string; target: number };
   editedByStudent: boolean;
 }
 

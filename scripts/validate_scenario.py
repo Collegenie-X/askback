@@ -6,8 +6,9 @@ import json, re, sys
 
 ROLES = {"typist", "coder", "engineer", "architect", "encyclopedia"}
 ROLE_OF = {"O1": "typist", "O2": "coder", "O3": "engineer", "O4": "architect", "O5": "encyclopedia"}
-CHIPS = {"widen", "narrow", "alt", "expand"}
-ELEMENTS = {f"E{i}" for i in range(1, 9)} | {f"{p}{i}" for p in "MSCA" for i in range(1, 5)}
+CHIPS = {"widen", "narrow", "alt", "expand", "plan", "algo", "arch"}
+ELEMENTS = {f"E{i}" for i in range(1, 13)} | {f"{p}{i}" for p in "MSCA" for i in range(1, 5)}
+AXES = {"plan", "algo", "arch"}  # 🧭 기획 · 🔀 알고리즘 · 🏗 전체 구조 — 되묻기는 언제나 이 셋 중 하나를 확인한다
 SIX = ["why", "context", "constraint", "criteria", "verify"]
 
 def check(path, full):
@@ -64,6 +65,8 @@ def check(path, full):
             need(bool(rq) == (i % 2 == 1), f"{tag}: 역질문은 짝수 번째 턴(2·4·6…)에만")
         if rq:
             need(rq["element"] in ELEMENTS, f"{tag}: rq.element {rq['element']}")
+            need(rq.get("axis") in AXES, f"{tag}: rq.axis 는 plan · algo · arch 중 하나 (지금 {rq.get('axis')!r})")
+            need(bool(rq.get("benefit")), f"{tag}: rq.benefit — 답하면 내 아이템의 어디가 세지는지 한 줄")
             need(rq["form"] in ("F1", "F3"), f"{tag}: rq.form")
             for k in ["elementIcon", "elementLabel", "formLabel", "question", "hints", "scoreReason", "dontKnowFeedback"]:
                 need(k in rq, f"{tag}: rq.{k} 없음")
@@ -75,6 +78,16 @@ def check(path, full):
             else:
                 need(all(k in rq for k in ["demoAnswer", "demoFeedback", "demoScore"]), f"{tag}: F3 demoAnswer/Feedback/Score")
         prev = t
+    if full:
+        # 📐 설계 묻기 — 세 축을 학생이 직접 묻는 칩에서 자란 질문이 둘 이상, 그중 기획이 하나 이상
+        design = [t["fromChip"]["kind"] for t in turns if t.get("fromChip") and t["fromChip"]["kind"] in AXES]
+        need(len(design) >= 2, f"📐 설계 묻기 칩에서 자란 질문이 {len(design)}개 — 둘 이상이어야 한다 (fromChip.kind = plan · algo · arch)")
+        need("plan" in design, "📐 설계 묻기 중 🧭 기획(plan) 칩에서 자란 질문이 없음")
+        # 세 축 고루 — 리포트 한 장(10문)마다 기획 · 알고리즘 · 전체 구조가 다 한 번은 확인돼야 한다
+        for w, block in enumerate([turns[:10], turns[10:20]], start=1):
+            got = {t["reverseQuestion"]["axis"] for t in block if t.get("reverseQuestion") and t["reverseQuestion"].get("axis")}
+            for ax, label in [("plan", "🧭 기획"), ("algo", "🔀 알고리즘"), ("arch", "🏗 전체 구조")]:
+                need(ax in got, f"{w}번째 리포트 구간에 {label} 을(를) 확인하는 역질문이 없음")
     first = turns[: s["window"]["size"] - s["window"]["startCount"]]  # 리포트가 세는 구간
     roles = [t["answer"]["role"] for t in first]
     if s["window"]["startCount"] == 0:

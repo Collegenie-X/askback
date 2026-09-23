@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { answerRQ, hintRQ, idkRQ, laterRQ } from "@/lib/actions";
-import { colorOf, elementById, FORM_LABEL } from "@/lib/rq";
+import { AXIS, colorOf, elementById, FORM_LABEL } from "@/lib/rq";
 import type { ReverseQuestion } from "@/lib/types";
 import { CompassArt } from "./Art";
 
@@ -13,6 +13,7 @@ export default function RQCard({ rq, inChat }: { rq: ReverseQuestion; inChat: bo
   const [busy, setBusy] = useState(false);
   const [why, setWhy] = useState(false);
   const el = elementById(rq.element);
+  const axis = rq.axis ?? (el && "axis" in el ? (el.axis as keyof typeof AXIS) : undefined);
   const answered = rq.status === "answered";
   const [reopen, setReopen] = useState(false); // [나중에]로 넘긴 질문은 그 자리에서 다시 연다
   const canAnswer = rq.status === "open" || (rq.status === "later" && (!inChat || reopen)) || (!inChat && answered && (rq.score ?? 0) <= 1);
@@ -29,6 +30,11 @@ export default function RQCard({ rq, inChat }: { rq: ReverseQuestion; inChat: bo
     <div className="rise rounded-2xl border border-[#8a6a1f] bg-amber-soft p-4">
       <div className="mb-2 flex items-center gap-2 text-[11px] font-bold text-gold">
         <span className="rounded-full bg-[#5a4312] px-2 py-0.5">🧭 되묻기</span>
+        {axis && (
+          <span className="rounded-full border border-[#8a6a1f] px-2 py-0.5" title={AXIS[axis].desc}>
+            {AXIS[axis].emoji} {AXIS[axis].name}
+          </span>
+        )}
         <span>
           {el?.icon} {el?.name} · {FORM_LABEL[rq.form]}
         </span>
@@ -44,6 +50,8 @@ export default function RQCard({ rq, inChat }: { rq: ReverseQuestion; inChat: bo
         <CompassArt size={40} />
         <p className="min-w-0 flex-1 whitespace-pre-line text-[15px] font-semibold leading-relaxed">{rq.question}</p>
       </div>
+      {/* 왜 묻는지 — 답하면 내 아이템의 어디가 세지는지 한 줄 */}
+      {rq.benefit && <p className="mt-1.5 pl-[52px] text-xs leading-relaxed text-sub">↳ {rq.benefit}</p>}
 
       {answered && rq.answer && (
         <p className="mt-3 rounded-xl bg-card/70 px-3 py-2 text-sm text-sub">

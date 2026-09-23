@@ -5,7 +5,7 @@ import { useState } from "react";
 import roles from "@/data/roles.json";
 import { update, useTable } from "@/lib/db";
 import { buildTextStats, LENGTH_INFO, LENGTH_KEYS, O_KEYS, REPORT_SECTIONS, reportRange, ROLE_KEYS, seqOf, SIX_KEYS, textComment } from "@/lib/report";
-import { colorOf, elementById, FORM_LABEL } from "@/lib/rq";
+import { AXES, axisOf, colorOf, elementById, FORM_LABEL } from "@/lib/rq";
 import type { Openness, WindowReport } from "@/lib/types";
 import { ReportArt, RingGauge, StampArt, TargetArt, TrophyArt } from "./Art";
 import { RolePlanet } from "./Space";
@@ -178,6 +178,30 @@ export default function ReportBody({ r, readOnly = false }: { r: WindowReport; r
                   </div>
                 );
               })}
+            </div>
+            {/* 세 축 — 코드보다 먼저 정할 세 가지 중 이번에 무엇을 확인했나 */}
+            <div className="mt-3 rounded-xl border border-line px-3 py-2.5">
+              <p className="text-[11px] font-bold text-sub">📐 이번에 확인한 세 축</p>
+              <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+                {AXES.map((a) => {
+                  const n = r.elements.filter((e) => axisOf(e.element) === a.key).length;
+                  return (
+                    <span key={a.key} className={n ? "font-bold" : "text-sub"} title={a.desc}>
+                      {a.emoji} {a.name} <span className="tabular-nums">{n}</span>
+                    </span>
+                  );
+                })}
+              </div>
+              {(() => {
+                const thin = AXES.filter((a) => !r.elements.some((e) => axisOf(e.element) === a.key));
+                return thin.length ? (
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-sub">
+                    {thin.map((a) => `${a.emoji} ${a.name}`).join(" · ")}는 이번에 한 번도 안 물었어 — {thin[0].desc}. 입력창의 💡 → 📐 설계 묻기에서 그 칸부터 채워 봐.
+                  </p>
+                ) : (
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-sub">세 축을 다 확인했어. 기획 · 알고리즘 · 전체 구조를 네 말로 설명할 수 있다는 뜻이야.</p>
+                );
+              })()}
             </div>
             <p className="mt-2 text-[11px] text-sub">🟢 네 말로 설명함 · 🟡 힌트를 보고 답함 · ⚪ 아직 모름 — 점수가 아니라 다음에 어떤 모양으로 물을지 정하는 표시야.</p>
           </>

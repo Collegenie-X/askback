@@ -1,5 +1,6 @@
 export type RoleKey = "typist" | "coder" | "engineer" | "architect" | "encyclopedia";
-export type ChipKind = "widen" | "narrow" | "alt" | "expand";
+// 앞의 넷은 답을 넓히고 좁히는 칩, 뒤의 셋은 📐 설계 묻기 — 기획 · 알고리즘 · 전체 구조를 학생이 직접 묻게 하는 빈칸 초안
+export type ChipKind = "widen" | "narrow" | "alt" | "expand" | "plan" | "algo" | "arch";
 
 export interface Guide {
   title: string;
@@ -14,9 +15,21 @@ export interface Stage {
   desc: string;
 }
 
-// 답이 끝날 때마다 기획서.md에 한 칸씩 쌓인다. 코드가 아니라 알고리즘 · 기획 · 차별점이 남는다.
-export interface PlanAdd {
+// 기획서는 쌓이기만 하지 않는다 — 같은 칸을 다시 연다.
+// add: 새 칸이 생김 · revise: 있던 칸을 고쳐 씀 · fill: 비워 둔 ___ 를 학생의 말로 채움
+export type PlanOp = "add" | "revise" | "fill";
+
+export interface PlanChange {
+  op: PlanOp;
+  /** 칸 ID — v1 · v2 · v3가 같은 칸임을 이걸로 안다 */
+  slot: string;
   section: string;
+  /** 무엇이 무엇으로 바뀌었나 — 한 줄씩 */
+  changed?: string[];
+  /** 무엇을 보고 바꿨나 — 고쳐 쓰게 만든 것 */
+  why?: string;
+  /** 이 판을 정한 사람 — 학생 이름이면 학생이 정한 칸 */
+  from?: string;
   md: string;
 }
 
@@ -38,6 +51,8 @@ export interface ReverseQuestion {
   element: string;
   elementIcon: string;
   elementLabel: string;
+  /** 이 되묻기가 확인하는 축 — 🧭 기획 · 🔀 알고리즘 · 🏗 전체 구조 */
+  axis?: "plan" | "algo" | "arch";
   form: "F1" | "F3";
   formLabel: string;
   question: string;
@@ -74,7 +89,7 @@ export interface Turn {
   six: Record<string, boolean> | null;
   chips: ChipKind[];
   review?: { carried: string; missing: string; because: string[] };
-  plan?: PlanAdd;
+  plan?: PlanChange;
   planSkip?: string; // 기획서에 보탤 게 없었던 답 — 왜 없었는지 한 줄
   reverseQuestion?: ReverseQuestion;
   guide: Partial<Record<"ask" | "answer" | "rq" | "hint" | "feedback", Guide>>;
@@ -159,8 +174,52 @@ export const extrasOrder = (t: Turn): string[] =>
     Boolean,
   ) as string[];
 
+/** 기획서의 한 칸과, 그 칸이 지금까지 고쳐진 자취 */
+export interface PlanSlot {
+  id: string;
+  /** 칸 번호 — 처음 생긴 순서 */
+  no: number;
+  section: string;
+  /** 이 칸이 열린 모든 판. 마지막이 지금 모습 */
+  history: { turnNumber: number; version: number; change: PlanChange }[];
+}
+
+/** uptoTurn번째 답까지 진행했을 때의 기획서 — 칸마다 고쳐진 자취를 묶는다 */
+export const planSlots = (s: Scenario, uptoTurn: number): PlanSlot[] => {
+  const slots: PlanSlot[] = [];
+  s.turns.slice(0, uptoTurn).forEach((t) => {
+    if (!t.plan) return;
+    let slot = slots.find((x) => x.id === t.plan!.slot);
+    if (!slot) {
+      slot = { id: t.plan.slot, no: slots.length + 1, section: t.plan.section, history: [] };
+      slots.push(slot);
+    }
+    slot.section = t.plan.section;
+    slot.history.push({ turnNumber: t.number, version: slot.history.length + 1, change: t.plan });
+  });
+  return slots;
+};
+
+/** 그 칸이 몇 번째 판인지 — 답 아래 배지와 타임라인이 같은 숫자를 쓴다 */
+export const planVersionOf = (s: Scenario, turn: Turn): number =>
+  turn.plan ? s.turns.filter((t) => t.number <= turn.number && t.plan?.slot === turn.plan!.slot).length : 0;
+
+export const PLAN_OP_LABEL: Record<PlanOp, string> = {
+  add: "새 칸이 생김",
+  revise: "고쳐 씀",
+  fill: "빈칸을 내 말로",
+};
+
+/** 내보내는 .md — 칸마다 지금 모습만, 고쳐 쓴 자취는 제목 옆에 */
 export const planMarkdown = (s: Scenario, uptoTurn: number) =>
-  [s.planDoc.base, ...s.turns.slice(0, uptoTurn).flatMap((t) => (t.plan ? [`## ${t.plan.section}\n\n${t.plan.md}`] : []))].join("\n\n");
+  [
+    s.planDoc.base,
+    ...planSlots(s, uptoTurn).map((slot) => {
+      const last = slot.history[slot.history.length - 1];
+      const trail = slot.history.map((h) => `v${h.version}·Q${h.turnNumber}`).join(" → ");
+      return `## ${slot.no}. ${slot.section}\n\n*${trail}*\n\n${last.change.md}`;
+    }),
+  ].join("\n\n");
 
 // 답은 언제나 열린 되묻기 한 줄로 끝난다 — 답하고, 되묻고, 다음 단으로
 export const answerMarkdown = (t: Turn) => (t.answer.ask ? `${t.answer.md}\n\n---\n\n🙋 **하나만 되물을게** — ${t.answer.ask}` : t.answer.md);

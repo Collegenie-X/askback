@@ -9,6 +9,8 @@ export interface MdDoc {
   md?: string;
   src?: string; // public 아래의 .md 경로
   filename?: string;
+  variant?: "question" | "report";
+  subtitle?: string;
 }
 
 export default function MdViewer({ doc, onClose }: { doc: MdDoc; onClose: () => void }) {
@@ -48,13 +50,26 @@ export default function MdViewer({ doc, onClose }: { doc: MdDoc; onClose: () => 
   return (
     <div className="fade fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-0 backdrop-blur-sm sm:p-5" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="sheet panel flex h-full w-full flex-col overflow-hidden border-line shadow-2xl sm:h-[92dvh] sm:max-w-[1000px] sm:rounded-2xl sm:border">
-      <header className="flex items-center gap-2 border-b border-line px-3 py-2.5">
-        <button type="button" onClick={onClose} aria-label="닫기" className="grid h-9 w-9 place-items-center rounded-full text-lg active:bg-sand">
+      <header
+        className="flex items-center gap-2 border-b px-3 py-2.5"
+        style={
+          doc.variant === "question"
+            ? { borderColor: "#3f5be0", background: "linear-gradient(100deg, #2f49c9 0%, #3b3fd0 55%, #5a3fd6 100%)", color: "#fff" }
+            : doc.variant === "report"
+              ? { borderColor: "#8a6a1f", background: "#1a1400", color: "#ffd98a" }
+              : undefined
+        }
+      >
+        <button type="button" onClick={onClose} aria-label="닫기" className="grid h-9 w-9 place-items-center rounded-full text-lg" style={{ color: doc.variant === "question" ? "#fff" : doc.variant === "report" ? "#ffd98a" : undefined }}>
           ✕
         </button>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold">{doc.title}</p>
-          <p className="text-[11px] text-sub">Markdown 뷰어</p>
+          <p className="text-[11px] font-extrabold" style={{ opacity: 0.8, color: doc.variant === "question" ? "#fff" : doc.variant === "report" ? "#ffd98a" : "var(--color-sub)" }}>
+            {doc.variant === "question" ? `🙋 내 질문 · ${doc.title}` : doc.variant === "report" ? `📄 ${doc.title}` : doc.title}
+          </p>
+          <p className="truncate text-sm font-bold" style={{ color: doc.variant === "question" ? "#fff" : doc.variant === "report" ? "#ffd98a" : undefined }}>
+            {doc.subtitle || doc.title}
+          </p>
         </div>
         <div className="flex rounded-full bg-sand p-0.5 text-xs font-semibold">
           <button type="button" onClick={() => setRaw(false)} className={`rounded-full px-3 py-1 ${!raw ? "bg-card shadow-sm" : "text-sub"}`}>

@@ -12,7 +12,8 @@ export type SceneEvent =
   | { t: "project"; emoji: string; name: string }
   | { t: "user"; text: string }
   | { t: "answer"; text: string; role?: string; roleText?: string }
-  | { t: "rq"; text: string }
+  | { t: "draft"; text: string }
+  | { t: "rq"; text: string; label?: string }
   | { t: "reply"; text: string; verdict: string }
   | { t: "xp"; to: number }
   | { t: "banner"; text: string }
@@ -21,11 +22,13 @@ export type SceneEvent =
   | { t: "packs"; items: { emoji: string; name: string; text: string }[] };
 
 const TICK = 38; // ms — 한 글자
-const PAUSE: Record<SceneEvent["t"], number> = { project: 6, user: 10, answer: 22, rq: 16, reply: 30, xp: 8, banner: 18, report: 50, levelup: 90, packs: 70 };
+const PAUSE: Record<SceneEvent["t"], number> = { project: 6, user: 10, answer: 22, draft: 34, rq: 16, reply: 30, xp: 8, banner: 18, report: 50, levelup: 90, packs: 70 };
 const BARS = [["typist", 10], ["coder", 30], ["engineer", 40], ["architect", 20]] as const;
 
 const textOf = (e: SceneEvent) => ("text" in e ? e.text : "");
 const Caret = () => <span className="ob-caret" />;
+// 질문 초안의 ___ 빈칸은 금색으로 — "여기만 네 말로 바꾸면 된다"
+const blanks = (t: string) => t.split(/(___)/g).map((part, i) => (part === "___" ? <b key={i} className="text-gold">___</b> : part));
 
 export default function OnboardingScene({ events, level }: { events: SceneEvent[]; level: number }) {
   // at: 지금 재생 중인 이벤트, n: 그 이벤트에서 찍힌 글자 수, rest: 다 찍고 쉬는 틱
@@ -60,9 +63,10 @@ export default function OnboardingScene({ events, level }: { events: SceneEvent[
   const leveled = played.some((e) => e.t === "levelup");
   const current = events[pos.at];
   const typingUser = current?.t === "user" && pos.n < current.text.length ? current.text.slice(0, pos.n) : "";
+  const drafting = current?.t === "draft" ? current.text.slice(0, pos.n) : ""; // 📐 버튼이 채워 준 초안 — 입력창에서 한 글자씩 찬다
 
   return (
-    <div className="flex h-[252px] w-full flex-col overflow-hidden rounded-3xl border border-[#3d3399] bg-[#0b0827] text-left shadow-[0_0_40px_rgba(124,92,255,0.25)]">
+    <div className="flex h-full min-h-[118px] w-full flex-col overflow-hidden rounded-3xl border border-[#3d3399] bg-[#0b0827] text-left shadow-[0_0_40px_rgba(124,92,255,0.25)]">
       {/* 헤더 — 실제 채팅 헤더와 같은 구성 */}
       <div className="border-b border-line px-3 pb-1.5 pt-2">
         <div className="flex items-center gap-2">
@@ -91,7 +95,8 @@ export default function OnboardingScene({ events, level }: { events: SceneEvent[
           const live = i === pos.at;
           const text = live ? textOf(e).slice(0, pos.n) : textOf(e);
           const done = !live || pos.n >= textOf(e).length;
-          if (leveled && (e.t === "user" || e.t === "banner")) return null; // 레벨업 순간엔 리포트와 별이만 남긴다
+          if (leveled && e.t === "user") return null; // 레벨업 순간엔 질문은 걷어내고 리포트 · 미션 · 별이만 남긴다
+          if (e.t === "draft") return null; // 초안은 대화가 아니라 입력창에 뜬다
           if (e.t === "user")
             return live && !done ? null : (
               <div key={i} className="rise flex justify-end">
@@ -123,7 +128,7 @@ export default function OnboardingScene({ events, level }: { events: SceneEvent[
           if (e.t === "rq")
             return (
               <div key={i} className="ob-pop glow rounded-2xl border border-[#8a6a1f] bg-amber-soft p-2.5">
-                <span className="rounded-full bg-[#5a4312] px-1.5 py-0.5 text-[9.5px] font-bold text-gold">🧭 되묻기</span>
+                <span className="rounded-full bg-[#5a4312] px-1.5 py-0.5 text-[9.5px] font-bold text-gold">{e.label ?? "🧭 되묻기"}</span>
                 <p className="mt-1.5 font-semibold">
                   {text}
                   {!done && <Caret />}
@@ -185,19 +190,22 @@ export default function OnboardingScene({ events, level }: { events: SceneEvent[
         })}
       </div>
 
-      {/* 입력창 — 질문이 여기서 한 글자씩 찍힌다 */}
-      <div className="flex items-center gap-2 border-t border-line px-3 py-2">
-        <p className="min-w-0 flex-1 rounded-2xl border border-line bg-card px-3 py-1.5 text-[11px]">
-          {typingUser ? (
-            <>
-              {typingUser}
-              <Caret />
-            </>
-          ) : (
-            <span className="text-sub">무엇이든 물어봐</span>
-          )}
-        </p>
-        <span className={`grid h-6 w-6 place-items-center rounded-full bg-clay text-[11px] font-bold text-white ${typingUser ? "" : "opacity-40"}`}>↑</span>
+      {/* 입력창 — 질문이 여기서 한 글자씩 찍힌다. 📐 초안을 누른 순간에는 빈칸이 채워진 문장이 뜬다 */}
+      <div className="border-t border-line px-3 py-2">
+        {drafting && <p className="rise mb-1 text-[9.500px] font-bold text-gold">💡 초안이 채워졌어 — ___ 만 네 말로 바꾸면 돼</p>}
+        <div className="flex items-center gap-2">
+          <p className={`min-w-0 flex-1 rounded-2xl border bg-card px-3 py-1.5 text-[11px] ${drafting ? "border-gold" : "border-line"}`}>
+            {drafting || typingUser ? (
+              <>
+                {drafting ? blanks(drafting) : typingUser}
+                <Caret />
+              </>
+            ) : (
+              <span className="text-sub">무엇이든 물어봐</span>
+            )}
+          </p>
+          <span className={`grid h-6 w-6 place-items-center rounded-full bg-clay text-[11px] font-bold text-white ${drafting || typingUser ? "" : "opacity-40"}`}>↑</span>
+        </div>
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ import DemoMarkdown from "./DemoMarkdown";
 import PlanView from "./PlanView";
 import ReportView from "./ReportView";
 import ReverseQuestionBubble from "./ReverseQuestionBubble";
-import { answerMarkdown, extrasOrder, planMarkdown, type ChipKind, type Guide, type Phase, type RoleKey, type RqRecord, type Scenario } from "./types";
+import { answerMarkdown, extrasOrder, planMarkdown, planSlots, type ChipKind, type Guide, type Phase, type RoleKey, type RqRecord, type Scenario } from "./types";
 
 type PrimaryKind =
   | "closeReport" | "deepNext" | "deepDeeper" | "saveNote" | "start" | "chip" | "send" | "option"
@@ -331,8 +331,9 @@ export default function DemoPlayer({ scenario }: { scenario: Scenario }) {
   const stageNow = phase === "intro" ? -1 : turn.stage;
   // 기획서.md — 답이 끝난 턴까지만 쌓인다
   const answeredCount = phase === "intro" || phase === "ask" || phase === "thinking" || phase === "streaming" ? turnIndex : sentCount;
-  const planFilled = turns.slice(0, answeredCount).filter((t) => t.plan).length;
-  const planTotal = turns.filter((t) => t.plan).length;
+  const currentSlots = planSlots(scenario, answeredCount);
+  const planFilled = currentSlots.length;
+  const planTotal = planSlots(scenario, turns.length).length;
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const landed = useRef(false);
@@ -588,8 +589,7 @@ export default function DemoPlayer({ scenario }: { scenario: Scenario }) {
               <PlanView
                 filename={scenario.planDoc.filename}
                 markdown={planMarkdown(scenario, answeredCount)}
-                filled={planFilled}
-                total={planTotal}
+                slots={currentSlots}
                 onClose={() => setPlanOpen(false)}
               />
             )}

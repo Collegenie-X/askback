@@ -5,7 +5,7 @@
 import { answerMarkdown, planMarkdown, type Scenario, type Turn as ScriptTurn } from "@/components/demo/types";
 import { clearAll, write } from "./db";
 import { buildTextStats } from "./report";
-import type { Analysis, Form, LensKey, Message, Mission, Note, Openness, PackKey, Project, ReverseQuestion, RoleKey, SixKey, Turn, WindowReport } from "./types";
+import type { Analysis, ChipKind, Form, LensKey, Message, Mission, Note, Openness, PackKey, Project, ReverseQuestion, RoleKey, SixKey, Turn, WindowReport } from "./types";
 
 const MIN = 60000;
 const PACK_OF: Record<string, PackKey> = { M: "maker", S: "share", C: "collab", A: "ai" };
@@ -118,7 +118,8 @@ export function loadExample(s: Scenario) {
     const turnId = `t_ex_${t.id}`;
     const analysis = analysisOf(t);
     const role = ROLE_OF[t.openness] ?? null;
-    const chip = t.fromChip && t.fromChip.kind !== "expand" ? t.fromChip.kind : undefined;
+    // 넓히기 · 좁히기 · 대안만 질문 분석에 남는다. 한 단 키우기와 📐 설계 묻기(기획 · 알고리즘 · 구조)는 다른 묶음의 칩이다
+    const chip = t.fromChip && (["widen", "narrow", "alt"] as string[]).includes(t.fromChip.kind) ? (t.fromChip.kind as ChipKind) : undefined;
     turns.push({ id: turnId, projectId, n: i + 1, windowIndex: windowOf(i), barIndex: Math.floor(i / s.project.rhythm), question: t.question, analysis, role, chipUsed: chip ?? null, source: "local", createdAt: clock });
     push({ kind: "user", text: t.question, chip });
     push({
@@ -137,7 +138,7 @@ export function loadExample(s: Scenario) {
     rqs.push({
       id: rqId, projectId, turnId, windowIndex: windowOf(i), barIndex: Math.floor(i / s.project.rhythm),
       element: q.element, pack: PACK_OF[q.element[0]] ?? null, form: q.form as Form,
-      question: q.benefit ? `${q.question}\n\n${q.benefit}` : q.question,
+      question: q.question, axis: q.axis, benefit: q.benefit,
       options: q.options?.filter((o) => !o.dontKnow).map((o) => ({ label: o.label, score: o.score })),
       hint: q.hints.hint, example: q.hints.example, coachView: q.hints.coachView, expectedPoints: [], selectionScores: {},
       status: "answered", hintStage,

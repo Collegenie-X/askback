@@ -8,6 +8,7 @@ import { draftContext, formatOf } from "./draft";
 import type { AnswerOut, DeepOut, FeedbackOut, RQOut } from "./schemas";
 import type { Analysis, Chip, TurnScript, LensKey, Message, Openness, Profile, Project, ReverseQuestion, RoleKey, Turn } from "./types";
 import { similarity } from "./analyzer";
+import { AXIS } from "./rq";
 
 type Task = "answer" | "rq" | "feedback" | "deep";
 let live: boolean | null = null;
@@ -195,12 +196,19 @@ export function chipsFor(analysis: Analysis, recentTurns: Turn[], project: Proje
 /* ---------- 역질문 생성 · 피드백 ---------- */
 
 export async function refineRQ(base: ReverseQuestion, bar: { q: string; a: string }[], project: Project, profile: Profile | null, elementName: string): Promise<ReverseQuestion> {
-  const input = JSON.stringify({ 마디: bar, 평가요소: `${base.element} ${elementName}`, 형태: base.form });
+  const axis = base.axis ? AXIS[base.axis] : null;
+  const input = JSON.stringify({
+    마디: bar,
+    평가요소: `${base.element} ${elementName}`,
+    형태: base.form,
+    확인할_축: axis ? `${axis.emoji} ${axis.name} — ${axis.desc}` : "설계 전반",
+  });
   const out = await callClaude<RQOut>("rq", input, contextOf(project, profile));
   if (!out) return base;
   return {
     ...base,
     question: out.question,
+    benefit: out.benefit || base.benefit,
     options: base.form === "F1" && out.options.length >= 2 ? out.options.slice(0, 3) : base.options,
     hint: out.hint,
     example: out.example,

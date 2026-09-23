@@ -13,8 +13,18 @@ export type ElementDef = BaseEl | PackEl | FormatEl;
 const FORMAT_ELEMENTS: FormatEl[] = (Object.keys(formats.formats) as FormatKey[]).flatMap((k) => formats.formats[k].rq.map((e) => ({ ...e, format: k, icon: formats.formats[k].emoji })));
 export const ALL_ELEMENTS: ElementDef[] = [...elements.base, ...elements.packs, ...FORMAT_ELEMENTS];
 
+// 세 축 — 소개 페이지의 빈칸 그대로. 되묻기는 언제나 이 셋 중 하나를 확인한다
+export type Axis = "plan" | "algo" | "arch";
+export const AXES = formats.principle.axes as { key: Axis; emoji: string; name: string; desc: string }[];
+export const AXIS = Object.fromEntries(AXES.map((a) => [a.key, a])) as Record<Axis, (typeof AXES)[number]>;
+
 export function elementById(id: string): ElementDef | undefined {
   return ALL_ELEMENTS.find((e) => e.id === id);
+}
+
+export function axisOf(id: string): Axis | null {
+  const el = elementById(id);
+  return el && "axis" in el ? (el.axis as Axis) : null;
 }
 
 export function elementAdd(id: string) {
@@ -38,6 +48,12 @@ function relevance(id: string, bar: Turn[], project: Project, projectTurns: numb
     case "E6": return bar.every((t) => t.analysis.six.criteria < 0.5) ? 0.8 : 0.4;
     case "E7": return building || stage === "검증" ? 0.8 : 0.3;
     case "E8": return /(바꿔|고쳐|수정|다시|버전|전에는)/.test(text) ? 0.8 : 0.2;
+    // 기획 — 사람과 범위. 만들기 시작할 때 오히려 세게 묻는다 (누구의 문제인지 흐려진 채로 코드가 쌓이는 걸 막는다)
+    case "E9": return projectTurns <= 2 || /(누구|사용자|쓸 사람|대상|왜)/.test(text) ? 0.9 : 0.55;
+    case "E10": return building || /(기능|추가|더 넣|다 만들|욕심)/.test(text) ? 0.8 : 0.5;
+    // 전체 구조 — 칸이 둘 이상 생긴 뒤에
+    case "E11": return projectTurns >= 3 ? (/(서버|저장|연결|보내|구조|화면|올려)/.test(text) ? 0.9 : 0.6) : 0.3;
+    case "E12": return projectTurns >= 3 ? (/(서버|인터넷|와이파이|전원|꺼|끊|멈추|맡)/.test(text) ? 0.9 : 0.5) : 0;
     case "M1": case "M2": case "M3": case "M4": return stage === "구현" || stage === "설계" ? 0.6 : 0.35;
     case "S1": case "S2": case "S3": case "S4": return /(발표|시연|제출|공유|보여|친구)/.test(text) ? 0.8 : 0.35;
     case "C1": return stage === "탐색" || stage === "설계" ? 0.6 : 0.4;
@@ -93,6 +109,8 @@ export function pickElement(bar: Turn[], project: Project, allTurns: Turn[], rqs
   const packAsked = inWindow.filter((r) => r.pack).length;
   const formatAsked = inWindow.filter((r) => FORMAT_ELEMENTS.some((e) => e.id === r.element)).length;
   const projectTurns = allTurns.filter((t) => t.projectId === project.id).length;
+  // 세 축 고루 묻기 — 한 리포트(10문) 안에서 기획 · 알고리즘 · 전체 구조가 다 한 번은 확인되게 한다
+  const axisAsked = new Set(inWindow.map((r) => axisOf(r.element)).filter(Boolean) as Axis[]);
   const scores: Record<string, number> = {};
   let best: ElementDef | null = null;
 
@@ -107,6 +125,9 @@ export function pickElement(bar: Turn[], project: Project, allTurns: Turn[], rqs
     if (inWindow.some((r) => r.element === el.id)) score *= 0.3;
     if ("pack" in el) score *= packAsked < 2 ? 1.25 : 0.3; // 10문당 팩 2개 목표
     if ("format" in el) score *= formatAsked < 3 ? 1.3 : 0.6; // 설계를 묻는 게 먼저 — 10문당 3개까지 앞세운다
+    const ax = "axis" in el ? (el.axis as Axis) : null;
+    if (ax && !axisAsked.has(ax)) score *= 1.35; // 아직 안 물은 축을 앞으로
+    if (ax && axisAsked.has(ax) && axisAsked.size < AXES.length) score *= 0.75; // 같은 축만 파고들지 않게
     scores[el.id] = Math.round(score * 100) / 100;
     if (!best || score > scores[best.id]) best = el;
   }
@@ -129,6 +150,8 @@ export function buildRQ(p: Picked, lastTurn: Turn, ids: { id: string; now: numbe
     pack: p.pack,
     form: p.form,
     question: tpl.q.replace("{{topic}}", topicOf(lastTurn.question)),
+    axis: axisOf(el.id) ?? undefined,
+    benefit: "benefit" in tpl ? (tpl as { benefit?: string }).benefit : undefined,
     options: p.form === "F1" ? tpl.options : undefined,
     hint: el.hint,
     example: el.example,

@@ -18,6 +18,8 @@ export const AnswerSchema = z.object({
 
 export const RQSchema = z.object({
   question: z.string(),
+  /** 답하면 내 아이템의 어디가 세지는지 한 줄 — 되묻기 카드 밑에 ↳ 로 붙는다 */
+  benefit: z.string(),
   options: z.array(z.object({ label: z.string(), score: z.number() })),
   hint: z.string(),
   example: z.string(),

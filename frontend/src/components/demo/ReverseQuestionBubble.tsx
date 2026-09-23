@@ -3,6 +3,13 @@
 import { useState } from "react";
 import { scoreDot, type ReverseQuestion, type RqRecord } from "./types";
 
+// 세 축 — 소개 페이지의 빈칸 그대로 (기획 · 알고리즘 · 전체 구조)
+const AXIS = {
+  plan: { emoji: "🧭", name: "기획", desc: "누구의 무엇을 왜 바꾸는지" },
+  algo: { emoji: "🔀", name: "알고리즘", desc: "어떤 순서와 규칙으로 돌아가는지" },
+  arch: { emoji: "🏗", name: "전체 구조", desc: "무엇이 무엇과 어떻게 이어지는지" },
+} as const;
+
 interface Props {
   rq: ReverseQuestion;
   studentName: string;
@@ -42,9 +49,16 @@ export default function ReverseQuestionBubble(p: Props) {
   return (
     <div className="fade-up space-y-2">
       <div className="rounded-2xl border border-orange-200 bg-[#FFF3E1] px-3.5 py-3 text-[14px] leading-relaxed">
-        <div className="mb-1.5 flex items-center justify-between text-[11.5px] text-orange-800">
-          <span className="font-semibold">🧭 돌아보기</span>
-          <span>
+        <div className="mb-1.5 flex items-center justify-between gap-2 text-[11.5px] text-orange-800">
+          <span className="flex min-w-0 items-center gap-1 font-semibold">
+            🧭 돌아보기
+            {rq.axis && (
+              <span className="truncate rounded-full border border-orange-300 bg-white/70 px-1.5 py-px font-semibold" title={AXIS[rq.axis].desc}>
+                {AXIS[rq.axis].emoji} {AXIS[rq.axis].name}
+              </span>
+            )}
+          </span>
+          <span className="shrink-0">
             {rq.elementIcon} {rq.elementLabel} · {rq.formLabel}
           </span>
         </div>

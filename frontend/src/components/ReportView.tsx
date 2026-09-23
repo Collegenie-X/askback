@@ -22,14 +22,14 @@ export default function ReportView({ index, report, owner, onClose }: { index: n
   return (
     <div className="scrim fade fixed inset-0 z-[110] grid place-items-center p-0 sm:p-5" onClick={onClose} role="dialog" aria-modal="true" aria-label={title}>
       <div className="panel popup flex h-full w-full max-w-[1000px] flex-col overflow-hidden sm:h-[92dvh] sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
-        <header className="flex items-center gap-2 border-b border-line px-3 py-2.5">
+        <header className="flex items-center gap-2 border-b border-[#8a6a1f] bg-amber-soft px-3 py-2.5">
           <div className="min-w-0 flex-1 px-1">
             <p className="truncate text-[11px] font-extrabold text-gold">📄 {title}</p>
-            <h1 className="truncate text-[15px] font-bold">“{reportHeadline(r)}”</h1>
+            <h1 className="truncate text-[15px] font-bold">"{reportHeadline(r)}"</h1>
             <p className="truncate text-[11px] text-sub">{name} · {reportSub(r, reports)}</p>
           </div>
-          <button type="button" onClick={() => openMd({ title: `📄 ${title}`, md: reportToMd(r, reports, name), filename: `report-${seqOf(r, reports)}.md` })} className="shrink-0 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-bold">⬇️ .md</button>
-          <button type="button" onClick={onClose} aria-label="닫기" className="chunk-ghost grid h-9 w-9 shrink-0 place-items-center rounded-full text-base font-bold">✕</button>
+          <button type="button" onClick={() => openMd({ title: title, md: reportToMd(r, reports, name), filename: `report-${seqOf(r, reports)}.md`, variant: "report" })} className="shrink-0 rounded-full border border-[#8a6a1f] bg-[#5a4312]/40 px-3 py-1.5 text-xs font-bold text-gold">⬇️ .md</button>
+          <button type="button" onClick={onClose} aria-label="닫기" className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-base font-bold text-gold active:bg-[#5a4312]/40">✕</button>
         </header>
         <div className="scroll flex-1 px-4 py-4">
           <ReportBody r={r} readOnly={!!report} />

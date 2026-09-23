@@ -34,6 +34,15 @@ export default function ReportView({ scenario, records, onClose }: Props) {
   });
   const rows = [...report.elementsBefore.map((e) => ({ icon: e.icon, label: e.label, dot: scoreDot(e.score), detail: e.form })), ...sessionRows];
 
+  // 📐 세 축 — 이번 열 문에서 기획 · 알고리즘 · 전체 구조를 각각 몇 번 확인했나
+  const axes = [
+    { key: "plan", emoji: "🧭", name: "기획", desc: "누구의 무엇을 왜 바꾸는지" },
+    { key: "algo", emoji: "🔀", name: "알고리즘", desc: "어떤 순서와 규칙으로 돌아가는지" },
+    { key: "arch", emoji: "🏗", name: "전체 구조", desc: "무엇이 무엇과 어떻게 이어지는지" },
+  ] as const;
+  const asked = turns.slice(0, 10).flatMap((t) => (t.reverseQuestion?.axis ? [t.reverseQuestion.axis] : []));
+  const thin = axes.filter((a) => !asked.includes(a.key));
+
   return (
     <div className="absolute inset-0 z-20 flex flex-col bg-white">
       <header className="flex items-center gap-2 border-b border-stone-200 px-3 py-3">
@@ -90,9 +99,27 @@ export default function ReportView({ scenario, records, onClose }: Props) {
         </Section>
 
         <Section no="④" title="돌아보기 결과">
+          <div className="mb-2.5 rounded-lg border border-stone-200 px-2.5 py-2">
+            <div className="text-[11.5px] font-semibold text-stone-500">📐 이번에 확인한 세 축</div>
+            <div className="mt-1 flex flex-wrap gap-x-3.5 gap-y-1">
+              {axes.map((a) => {
+                const n = asked.filter((k) => k === a.key).length;
+                return (
+                  <span key={a.key} className={n ? "font-semibold" : "text-stone-400"} title={a.desc}>
+                    {a.emoji} {a.name} <span className="tabular-nums">{n}</span>
+                  </span>
+                );
+              })}
+            </div>
+            <div className="mt-1 text-[11.5px] leading-relaxed text-stone-500">
+              {thin.length
+                ? `${thin.map((a) => `${a.emoji} ${a.name}`).join(" · ")}는 아직 한 번도 안 물었어 — 💡 → 📐 설계 묻기에서 그 칸부터 채우면 돼.`
+                : "세 축을 다 확인했어. 코드보다 먼저 정할 세 가지를 네 말로 설명할 수 있다는 뜻이야."}
+            </div>
+          </div>
           <div className="space-y-1">
-            {rows.map((r) => (
-              <div key={r.label} className="flex items-center gap-2">
+            {rows.map((r, i) => (
+              <div key={`${r.label}-${i}`} className="flex items-center gap-2">
                 <span className="w-[84px] shrink-0">
                   {r.icon} {r.label}
                 </span>

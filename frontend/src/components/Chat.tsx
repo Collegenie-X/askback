@@ -28,8 +28,9 @@ const PACK_QUICK = (on: Project["packs"]) => {
   return [...keys.filter((k) => on.includes(k)), ...keys.filter((k) => !on.includes(k))].flatMap((k) => roles.packs[k].quick);
 };
 // 칩 줄의 묶음 — 버튼 하나를 누르면 심화처럼 카드 트레이로 펼쳐진다
-type GroupKey = "format" | "expand" | "refine";
+type GroupKey = "design" | "format" | "expand" | "refine";
 const GROUP: Record<GroupKey, { emoji: string; name: string; tip: string; box: string; text: string }> = {
+  design: { emoji: "📐", name: "설계 묻기", tip: "코드보다 먼저 — 기획 · 알고리즘 · 전체 구조", box: "border-[#7a5fd0] bg-[#1c1640]", text: "text-[#c6b5ff]" },
   format: { emoji: "🧩", name: "형식 질문", tip: "이 형식에서 자주 막히는 곳", box: "border-line bg-card", text: "text-ink" },
   expand: { emoji: "🚀", name: "확장", tip: "한 단씩 키우기 — 누르면 빈칸 질문이 채워져", box: "border-[#2f6f8f] bg-[#0f2a3a]", text: "text-[#7fdcff]" },
   refine: { emoji: "🧭", name: "다듬기", tip: "방금 답을 넓히고 · 좁히고 · 되묻기", box: "border-line bg-card", text: "text-ink" },
@@ -414,8 +415,11 @@ export default function Chat({ project }: { project: Project }) {
     setDeep({ lens, level: 0, awaiting: true, next: null });
   };
 
-  const group = tray === "format" || tray === "expand" || tray === "refine" ? tray : null;
-  const groupItems: Record<GroupKey, { emoji: string; label: string; draft: string; chip?: string }[]> = {
+  const group = tray === "design" || tray === "format" || tray === "expand" || tray === "refine" ? tray : null;
+  // 📐 설계 묻기 — 세 축(기획 · 알고리즘 · 전체 구조)의 빈칸 초안. 형식을 골랐으면 그 형식의 '설계로 돌아가기' 한 줄이 붙는다
+  const designItems = formats.design.map((d) => (d.key === "back" ? { ...d, draft: format?.design.back ?? "" } : d)).filter((d) => d.draft);
+  const groupItems: Record<GroupKey, { emoji: string; label: string; draft: string; chip?: string; tip?: string }[]> = {
+    design: designItems,
     format: format?.quick ?? [],
     expand: PACK_QUICK(project.packs),
     refine: formats.common.filter((q) => lastAnswerId || !q.draft.startsWith("방금")),
@@ -536,7 +540,7 @@ export default function Chat({ project }: { project: Project }) {
   const shown = blocks.filter((x) => (filter === "all" ? true : filter === "q" ? x.kind === "turn" : x.kind === "single" && x.m.kind === "rq"));
   const openReportDoc = (r: WindowReport) => {
     update("reports", (prev) => prev.map((x) => (x.index === r.index ? { ...x, opened: true } : x)));
-    openMd({ title: `📄 ${reportTitle(r, reports)}`, md: reportToMd(r, reports, profile?.name ?? "나"), filename: `report-${seqOf(r, reports)}.md` });
+    openMd({ title: reportTitle(r, reports), md: reportToMd(r, reports, profile?.name ?? "나"), filename: `report-${seqOf(r, reports)}.md`, variant: "report" });
   };
   const ordered = sortNew ? [...shown].reverse() : shown;
 
@@ -618,7 +622,8 @@ export default function Chat({ project }: { project: Project }) {
         <button
           type="button"
           onClick={() => {
-            openReportDoc(unread);
+            update("reports", (prev) => prev.map((x) => (x.index === unread.index ? { ...x, opened: true } : x)));
+            openReport(unread.index);
           }}
           className="report-pill ob-point rise mx-4 mt-2 rounded-full bg-ink px-4 py-1.5 text-[13px] font-bold text-paper"
         >
@@ -654,7 +659,7 @@ export default function Chat({ project }: { project: Project }) {
           return (
             <TurnCard key={x.key} n={x.n} q={x.q} open={open} onToggle={() => setOpenTurns((o) => ({ ...o, [x.key]: !open }))}
               tag={role ? <span className="turn-role" title={roles.roles[role].name}>{roles.roles[role].emoji}</span> : undefined}
-              onZoom={x.a ? () => openMd({ title: `Q${x.n} 크게 보기`, md: `**🙋 내 질문**\n\n${x.q.text}\n\n---\n\n${x.a!.md}`, filename: `qa-${x.a!.turnId}.md` }) : undefined}
+              onZoom={x.a ? () => openMd({ title: `Q${x.n} 크게 보기`, subtitle: x.q.text, md: `${x.q.text}\n\n---\n\n${x.a!.md}`, filename: `qa-${x.a!.turnId}.md`, variant: "question" }) : undefined}
             >
               {x.a ? renderMessage(x.a, true) : (
                 <div className="flex items-center gap-1.5 py-1">
@@ -742,6 +747,7 @@ export default function Chat({ project }: { project: Project }) {
                 <button key={q.label} type="button" disabled={busy} title={q.draft} onClick={() => { setTray(null); fillDraft(q.draft.replaceAll("{goal}", project.desc || "___"), ("chip" in q ? (q.chip as ChipKind) : null)); }} className="chunk-card rounded-xl px-2 py-2 text-center disabled:opacity-40">
                   <span className="block text-xl">{q.emoji}</span>
                   <b className="block text-xs">{q.label}</b>
+                  {q.tip && <span className="mt-0.5 block text-[10px] leading-tight text-sub">{q.tip}</span>}
                 </button>
               ))}
               {group === "refine" && lastAnswerId && (

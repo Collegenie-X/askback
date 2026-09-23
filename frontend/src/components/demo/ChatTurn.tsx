@@ -3,7 +3,7 @@
 import { useState } from "react";
 import roles from "@/data/roles.json";
 import DemoMarkdown from "./DemoMarkdown";
-import { extrasOrder, type ChipKind, type RoleKey, type Scenario, type Turn } from "./types";
+import { extrasOrder, planVersionOf, PLAN_OP_LABEL, type ChipKind, type RoleKey, type Scenario, type Turn } from "./types";
 
 interface Props {
   turn: Turn;
@@ -38,7 +38,11 @@ export default function ChatTurn(p: Props) {
       {/* 학생 질문 */}
       <div className="flex justify-end">
         <div className="max-w-[82%] rounded-2xl rounded-br-md bg-stone-800 px-3.5 py-2.5 text-[14.5px] leading-relaxed text-white">
-          {turn.fromChip && <div className="mb-1 text-[11px] text-stone-300">{scenario.chips[turn.fromChip.kind].emoji} 칩으로 시작 · 빈칸은 직접 채움</div>}
+          {turn.fromChip && (
+            <div className="mb-1 text-[11px] text-stone-300">
+              {scenario.chips[turn.fromChip.kind].emoji} {scenario.chips[turn.fromChip.kind].label} 칩으로 시작 · 빈칸은 직접 채움
+            </div>
+          )}
           {turn.question}
         </div>
       </div>
@@ -96,7 +100,14 @@ export default function ChatTurn(p: Props) {
           <button onClick={p.onPlan} className="fade-up flex w-full items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-left text-[13px] text-emerald-900">
             <span>📝</span>
             <span className="min-w-0 flex-1">
-              기획서.md에 <b>{turn.plan.section}</b> 칸을 담았어
+              {turn.plan.op === "add" ? (
+                <>기획서에 <b>{turn.plan.section}</b> 칸이 생겼어</>
+              ) : turn.plan.op === "fill" ? (
+                <>기획서 <b>{turn.plan.section}</b>의 빈칸을 채웠어</>
+              ) : (
+                <>기획서 <b>{turn.plan.section}</b> v{planVersionOf(scenario, turn)}으로 고쳐 썼어</>
+              )}
+              {turn.plan.why && <span className="block mt-0.5 text-[11.5px] text-emerald-700">← {turn.plan.why}</span>}
             </span>
             <span className="shrink-0 text-emerald-700">열기 ›</span>
           </button>

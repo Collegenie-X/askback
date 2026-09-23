@@ -1,9 +1,112 @@
 [
-  { "key": "criteria", "text": "새 기능을 만들기 전에 \"잘 됐다는 건 ___로 알 수 있다\" 한 줄을 질문에 넣어보기.", "small": "다음 질문 1번만, '잘 됐다는 건 ___' 한 줄을 넣어보기.", "basisLabel": "'기준'", "check": { "type": "six", "key": "criteria", "target": 2 } },
-  { "key": "verify", "text": "10번 중 2번은 \"이게 맞는지 어떻게 확인해?\"를 질문에 붙여보기.", "small": "다음 질문 1번만, 확인하는 법을 같이 물어보기.", "basisLabel": "'검증'", "check": { "type": "six", "key": "verify", "target": 2 } },
-  { "key": "constraint", "text": "10번 중 3번은 시간·부품·조건 같은 '제약'을 질문에 적어보기.", "small": "다음 질문 1번만, 제약 하나를 적어보기.", "basisLabel": "'제약'", "check": { "type": "six", "key": "constraint", "target": 3 } },
-  { "key": "why", "text": "10번 중 3번은 '왜 이걸 하려는지'를 질문 첫 줄에 적어보기.", "small": "다음 질문 1번만, 목적을 첫 줄에 적어보기.", "basisLabel": "'왜'", "check": { "type": "six", "key": "why", "target": 3 } },
-  { "key": "O4", "text": "10번 중 2번은 \"말고 다른 방법은? 각각 잃는 건?\"으로 물어보기.", "small": "다음 판에 딱 1번만 \"말고 다른 방법은?\" 물어보기.", "basisLabel": "대안 질문(O4)", "check": { "type": "openness", "key": "O4", "target": 2 } },
-  { "key": "O3", "text": "10번 중 3번은 목표·제약을 주고 \"어떻게 하면 좋을까?\"로 물어보기.", "small": "다음 판에 딱 1번만 목표와 제약을 주고 방법을 물어보기.", "basisLabel": "열린 질문(O3)", "check": { "type": "openness", "key": "O3", "target": 3 } },
-  { "key": "rq", "text": "돌아보기 질문 3개에 네 말로 답해보기. '잘 모르겠어'도 답이야.", "small": "돌아보기 질문 1개에만 답해보기.", "basisLabel": "돌아보기", "check": { "type": "rq", "key": "answered", "target": 3 } }
+  {
+    "key": "criteria",
+    "text": "새 기능을 만들기 전에 \"잘 됐다는 건 ___로 알 수 있다\" 한 줄을 질문에 넣어보기.",
+    "small": "다음 질문 1번만, '잘 됐다는 건 ___' 한 줄을 넣어보기.",
+    "basisLabel": "'기준'",
+    "check": {
+      "type": "six",
+      "key": "criteria",
+      "target": 2
+    }
+  },
+  {
+    "key": "verify",
+    "text": "10번 중 2번은 \"이게 맞는지 어떻게 확인해?\"를 질문에 붙여보기.",
+    "small": "다음 질문 1번만, 확인하는 법을 같이 물어보기.",
+    "basisLabel": "'검증'",
+    "check": {
+      "type": "six",
+      "key": "verify",
+      "target": 2
+    }
+  },
+  {
+    "key": "constraint",
+    "text": "10번 중 3번은 시간·부품·조건 같은 '제약'을 질문에 적어보기.",
+    "small": "다음 질문 1번만, 제약 하나를 적어보기.",
+    "basisLabel": "'제약'",
+    "check": {
+      "type": "six",
+      "key": "constraint",
+      "target": 3
+    }
+  },
+  {
+    "key": "why",
+    "text": "10번 중 3번은 '왜 이걸 하려는지'를 질문 첫 줄에 적어보기.",
+    "small": "다음 질문 1번만, 목적을 첫 줄에 적어보기.",
+    "basisLabel": "'왜'",
+    "check": {
+      "type": "six",
+      "key": "why",
+      "target": 3
+    }
+  },
+  {
+    "key": "O4",
+    "text": "10번 중 2번은 \"말고 다른 방법은? 각각 잃는 건?\"으로 물어보기.",
+    "small": "다음 판에 딱 1번만 \"말고 다른 방법은?\" 물어보기.",
+    "basisLabel": "대안 질문(O4)",
+    "check": {
+      "type": "openness",
+      "key": "O4",
+      "target": 2
+    }
+  },
+  {
+    "key": "O3",
+    "text": "10번 중 3번은 목표·제약을 주고 \"어떻게 하면 좋을까?\"로 물어보기.",
+    "small": "다음 판에 딱 1번만 목표와 제약을 주고 방법을 물어보기.",
+    "basisLabel": "열린 질문(O3)",
+    "check": {
+      "type": "openness",
+      "key": "O3",
+      "target": 3
+    }
+  },
+  {
+    "key": "rq",
+    "text": "돌아보기 질문 3개에 네 말로 답해보기. '잘 모르겠어'도 답이야.",
+    "small": "돌아보기 질문 1개에만 답해보기.",
+    "basisLabel": "돌아보기",
+    "check": {
+      "type": "rq",
+      "key": "answered",
+      "target": 3
+    }
+  },
+  {
+    "key": "axis:plan",
+    "text": "다음 열 문 중 한 번은 💡 → 📐 설계 묻기 → 🧭 기획으로 물어보기 — \"이건 ___(한 사람)의 ___ 문제를 풀어\"의 빈칸을 채워서.",
+    "small": "딱 한 번만, 이걸 제일 먼저 쓸 사람 한 명을 적어서 물어보기.",
+    "basisLabel": "🧭 기획",
+    "check": {
+      "type": "axis",
+      "key": "plan",
+      "target": 1
+    }
+  },
+  {
+    "key": "axis:algo",
+    "text": "다음 열 문 중 한 번은 💡 → 📐 설계 묻기 → 🔀 알고리즘으로 물어보기 — \"___가 들어오면 → ___를 확인해서 → ___한다\"를 네 말로 채워서.",
+    "small": "딱 한 번만, 네 규칙을 '들어오면 → 확인해서 → 한다' 세 칸으로 적어서 물어보기.",
+    "basisLabel": "🔀 알고리즘",
+    "check": {
+      "type": "axis",
+      "key": "algo",
+      "target": 1
+    }
+  },
+  {
+    "key": "axis:arch",
+    "text": "다음 열 문 중 한 번은 💡 → 📐 설계 묻기 → 🏗 전체 구조로 물어보기 — 칸을 서넛으로 나누고, 하나가 멈추면 어디까지 멈추는지까지.",
+    "small": "딱 한 번만, 전체를 칸 셋으로 나눠서 물어보기.",
+    "basisLabel": "🏗 전체 구조",
+    "check": {
+      "type": "axis",
+      "key": "arch",
+      "target": 1
+    }
+  }
 ]

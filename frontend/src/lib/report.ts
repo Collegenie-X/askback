@@ -2,7 +2,7 @@
 import missions from "@/data/missions.json";
 import roles from "@/data/roles.json";
 import type { LengthKey, Mission, Note, Openness, Project, ReverseQuestion, RoleKey, SixKey, Stage, TextStats, Turn, WindowReport } from "./types";
-import { colorOf, elementById, FORM_LABEL } from "./rq";
+import { AXES, axisOf, colorOf, elementById, FORM_LABEL } from "./rq";
 
 export const O_KEYS: Openness[] = ["O1", "O2", "O3", "O4", "O5"];
 export const SIX_KEYS: SixKey[] = ["why", "context", "constraint", "criteria", "verify", "discard"];
@@ -110,12 +110,15 @@ function evalMission(m: Mission, turns: Turn[], rqs: ReverseQuestion[]): WindowR
   if (m.check.type === "openness") got = turns.filter((t) => t.analysis.openness === m.check.key).length;
   if (m.check.type === "six") got = turns.filter((t) => t.analysis.six[m.check.key as SixKey] >= 0.5).length;
   if (m.check.type === "rq") got = rqs.filter((r) => r.status === "answered").length;
+  if (m.check.type === "axis") got = rqs.filter((r) => axisOf(r.element) === m.check.key).length;
   const result = got >= m.check.target ? "done" : got > 0 ? "partial" : "missed";
   const detail = result === "done" ? `${got}번 해냈어. ✅` : result === "partial" ? `${got}번 해봤어. 목표는 ${m.check.target}번이었어. ➖` : "이번엔 못 했어. 괜찮아 — 더 작게 쪼개 볼게.";
   return { text: m.text, result, detail };
 }
 
-function pickMission(six: Record<SixKey, number>, mix: Record<Openness, number>, answered: number, prev: WindowReport | null, prevResult: string | null): Mission {
+function pickMission(six: Record<SixKey, number>, mix: Record<Openness, number>, answered: number, prev: WindowReport | null, prevResult: string | null, elements: WindowReport["elements"] = []): Mission {
+  // 코드보다 먼저 정할 세 가지 중, 이번 열 문에서 한 번도 확인 안 한 칸
+  const thinAxis = elements.length ? AXES.find((a) => !elements.some((e) => axisOf(e.element) === a.key)) : undefined;
   const sixOrder: SixKey[] = ["criteria", "verify", "constraint", "why"];
   const lowest = [...sixOrder].sort((a, b) => six[a] - six[b])[0];
   let key: string;
@@ -123,6 +126,10 @@ function pickMission(six: Record<SixKey, number>, mix: Record<Openness, number>,
   if (six[lowest] <= 3) {
     key = lowest;
     basis = `6요소 중 ${roles.six[lowest].name}이(가) 이번 리포트에서 ${six[lowest]}/10으로 가장 비어 있어.`;
+  } else if (thinAxis) {
+    // 📐 코드보다 먼저 정할 세 가지 중, 이번에 한 번도 확인 안 한 칸부터
+    key = `axis:${thinAxis.key}`;
+    basis = `이번 리포트에서 ${thinAxis.emoji} ${thinAxis.name}(${thinAxis.desc})를 확인한 되묻기가 0번이었어.`;
   } else if (mix.O4 === 0) {
     key = "O4";
     basis = "이번 리포트에 대안을 물은 질문(O4)이 0번이었어.";
@@ -182,6 +189,7 @@ export function buildWindowReport(index: number, seq: number, projectId: string,
   }
 
   const lastMission = prev ? evalMission(prev.nextMission, turns, rqs) : null;
+  const elements: WindowReport["elements"] = rqs.map((r) => ({ element: r.element, form: r.form, score: r.status === "answered" ? (r.score ?? 0) : null, hintStage: r.hintStage, status: r.status }));
   const answered = rqs.filter((r) => r.status === "answered").length;
   const open = mix.O3 + mix.O4;
   const prevOpen = prev ? prev.mix.O3 + prev.mix.O4 : 0;
@@ -208,12 +216,12 @@ export function buildWindowReport(index: number, seq: number, projectId: string,
     mix,
     roles: roleCount,
     six,
-    elements: rqs.map((r) => ({ element: r.element, form: r.form, score: r.status === "answered" ? (r.score ?? 0) : null, hintStage: r.hintStage, status: r.status })),
+    elements,
     stuck,
     lastMission,
     mixComment,
     best,
-    nextMission: pickMission(six, mix, answered, prev, lastMission?.result ?? null),
+    nextMission: pickMission(six, mix, answered, prev, lastMission?.result ?? null, elements),
     opened: false,
   };
 }
@@ -274,6 +282,12 @@ export function reportToMd(r: WindowReport, reports: WindowReport[], name: strin
     const el = elementById(e.element);
     L.push(`- ${el?.icon ?? ""} ${el?.name ?? e.element} ${e.status === "answered" ? colorOf(e.score) : "➖ 나중에"} ${FORM_LABEL[e.form]}(${e.form})${e.hintStage ? " · 힌트 후" : ""}`);
   });
+  // 📐 세 축 — 코드보다 먼저 정할 세 가지 중 이번에 무엇을 확인했나
+  if (r.elements.length) {
+    const thin = AXES.filter((a) => !r.elements.some((e) => axisOf(e.element) === a.key));
+    L.push(``, `**📐 이번에 확인한 세 축** — ${AXES.map((a) => `${a.emoji} ${a.name} ${r.elements.filter((e) => axisOf(e.element) === a.key).length}`).join(" · ")}`);
+    L.push(thin.length ? `> ${thin.map((a) => `${a.emoji} ${a.name}`).join(" · ")}는 이번에 한 번도 안 물었어 — ${thin[0].desc}.` : `> 세 축을 다 확인했어.`);
+  }
   L.push(``);
 
   L.push(h(5));

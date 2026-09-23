@@ -13,8 +13,6 @@ import type { Scenario } from "./demo/types";
 
 const NAV: { view: View; emoji: string; label: string }[] = [
   { view: { name: "reports" }, emoji: "📊", label: "리포트" },
-  { view: { name: "space" }, emoji: "🌌", label: "우주 배경" },
-  { view: { name: "onboarding" }, emoji: "✨", label: "소개 다시 보기" },
   { view: { name: "settings" }, emoji: "⚙️", label: "설정" },
 ];
 
