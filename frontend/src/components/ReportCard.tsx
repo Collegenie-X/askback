@@ -6,6 +6,7 @@ import { update, useTable } from "@/lib/db";
 import { reportHeadline, reportSub, reportTitle, ROLE_KEYS } from "@/lib/report";
 import type { WindowReport } from "@/lib/types";
 import { ReportArt } from "./Art";
+import ReportDocs from "./ReportDocs";
 
 export default function ReportCard({ r, onDoc, onDetail }: { r: WindowReport; onDoc: () => void; onDetail: () => void }) {
   const reports = useTable("reports");
@@ -37,6 +38,13 @@ export default function ReportCard({ r, onDoc, onDetail }: { r: WindowReport; on
         </span>
         <span className="rcard-toggle">📖 열기 ▸</span>
       </button>
+      {/* 리포트가 남기는 두 장 — 그래프를 열지 않아도 바로 집을 수 있게 */}
+      <div className="border-t border-[#8a6a1f]/50 px-3 py-2.5">
+        <ReportDocs r={r} compact />
+        <button type="button" onClick={onDoc} className="mt-1.5 text-[11px] font-bold text-sub underline-offset-2 hover:underline">
+          📄 리포트 자체도 .md로 보기
+        </button>
+      </div>
     </section>
   );
 }

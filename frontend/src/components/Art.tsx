@@ -6,15 +6,20 @@ export function LogoMark({ size = 30 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden className="shrink-0">
       <defs>
-        <linearGradient id="ts-bolt" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#FF8C55" />
-          <stop offset="1" stopColor="#FF4D00" />
+        <linearGradient id="ts-bolt" x1="0.2" y1="1" x2="0.55" y2="0">
+          <stop offset="0" stopColor="#FF4D00" />
+          <stop offset="0.5" stopColor="#FF6B35" />
+          <stop offset="1" stopColor="#FFA35C" />
         </linearGradient>
       </defs>
       <rect x="2" y="2" width="36" height="36" rx="11" fill="#111119" />
-      <path d="M21.5 6 11 22h7l-1.5 12L27 17h-7z" fill="url(#ts-bolt)" />
-      <circle cx="29" cy="10" r="2.4" fill="none" stroke="#FF6B35" strokeWidth="1.4" />
-      <circle cx="29" cy="10" r="0.9" fill="#FF6B35" className="tw" />
+      {/* 불씨에서 봉화까지 — 혀가 둘인 불꽃 (src/app/icon.svg 와 같은 모양) */}
+      <g transform="scale(0.625)">
+        <path d="M31 6c7 11 14 19 14 30a14 14 0 0 1-28 0c0-9 4-14 7-21 1 7 4 6 7-9z" fill="url(#ts-bolt)" />
+        <path d="M30.5 29c3 5 6 7 6 11.5a6 6 0 0 1-12 0c0-4 3-6.5 6-11.5z" fill="#FFE3C2" />
+      </g>
+      <circle cx="31.5" cy="9" r="2.4" fill="none" stroke="#FF6B35" strokeWidth="1.4" />
+      <circle cx="31.5" cy="9" r="0.9" fill="#FFA35C" className="tw" />
     </svg>
   );
 }
@@ -147,7 +152,13 @@ const STOP = [
   ["#c58bff", "#2a1a4a"],
 ];
 
-export function JourneyMap({ stages, caption }: { stages: { emoji: string; label: string; desc: string }[]; caption?: string }) {
+export function JourneyMap({ stages, caption, spans, onPick }: {
+  stages: { emoji: string; label: string; desc: string }[];
+  caption?: string;
+  /** 단마다 몇 번째 질문부터 몇 번째까지인가 — 있으면 칸에 Q범위가 뜨고 누르면 그 자리로 간다 */
+  spans?: ({ from: number; to: number } | null)[];
+  onPick?: (stage: number) => void;
+}) {
   return (
     <figure className="journey">
       <div className="journey-track" style={{ gridTemplateColumns: `repeat(${stages.length}, minmax(0, 1fr))` }}>
@@ -157,15 +168,31 @@ export function JourneyMap({ stages, caption }: { stages: { emoji: string; label
         {stages.map((st, i) => {
           const [main, soft] = STOP[i % STOP.length];
           const [step, name] = st.label.includes(" · ") ? st.label.split(" · ") : [`${i + 1}단`, st.label];
-          return (
-            <div key={st.label} className="journey-stop rise" style={{ animationDelay: `${i * 0.12}s` }}>
+          const span = spans?.[i] ?? null;
+          const go = onPick && span ? () => onPick(i) : undefined;
+          const body = (
+            <>
               <span className="journey-planet" style={{ background: `radial-gradient(circle at 32% 28%, ${main}, ${soft} 78%)`, borderColor: main }}>
                 <span className="journey-emoji">{st.emoji}</span>
                 {i === stages.length - 1 && <span className="journey-rocket float"><Rocket size={22} /></span>}
               </span>
               <b className="journey-step" style={{ color: main }}>{step}</b>
               <span className="journey-name">{name}</span>
+              {span && (
+                <span className="journey-jump" style={{ borderColor: `${main}66`, color: main }}>
+                  Q{span.from}{span.to > span.from ? `–${span.to}` : ""} {go ? "›" : ""}
+                </span>
+              )}
               <span className="journey-desc">{st.desc}</span>
+            </>
+          );
+          return go ? (
+            <button key={st.label} type="button" onClick={go} title={`${step} ${name} — Q${span!.from}로 가기`} className="journey-stop journey-link rise" style={{ animationDelay: `${i * 0.12}s` }}>
+              {body}
+            </button>
+          ) : (
+            <div key={st.label} className="journey-stop rise" style={{ animationDelay: `${i * 0.12}s` }}>
+              {body}
             </div>
           );
         })}

@@ -109,6 +109,8 @@ export function loadExample(s: Scenario) {
       `- 답마다 끝에 **🙋 열린 되묻기**가 있고, 다음 질문은 거기에 답하면서 시작해`,
       `- 두 번 묻고 나면 한 번 **🧭 되묻기** — 순서도와 핵심을 진짜 아는지 확인해 (${rqCount}번)`,
       ...(count > reportSpan ? [`- 답이 **10개** 쌓일 때마다 📄 리포트가 1장씩 나와 (지금 ${Math.floor((s.window.startCount + count) / s.window.size)}장). ${reportSpan + 1}번째 질문부터는 1번째 리포트의 **미션을 해내는** 구간이야`] : []),
+      ...(s.spark ? [`- 답마다 **🫵 네가 정할 것**이 붙어 — 코치가 일부러 안 정하고 남긴 **열린 질문**이야`] : []),
+      ...(s.spark ? [`- 대화가 도는 동안 **🔥 ${s.spark.title}**의 일곱 칸이 하나씩 차. 두 칸마다 한 단 — 🕯 불씨 → 🔥 불꽃 → 🔦 횃불 → 🚀 봉화`] : []),
       `- 위의 **📝** 을 누르면 지금까지 쌓인 **${s.planDoc.filename}** 이 열려`,
     ].join("\n"),
   });
@@ -124,7 +126,7 @@ export function loadExample(s: Scenario) {
     push({ kind: "user", text: t.question, chip });
     push({
       kind: "answer", md: answerMarkdown(t), turnId, role, roleReason: t.answer.roleReason, riskNote: t.answer.riskNote,
-      assumptions: t.answer.assumptions, yourCall: [], chips: [], analysis, source: "local",
+      assumptions: t.answer.assumptions, yourCall: t.answer.yourCall ?? [], chips: [], analysis, source: "local",
       planNote: t.plan ? `기획서에 「${t.plan.section}」 칸을 담았어` : t.planSkip,
     });
 

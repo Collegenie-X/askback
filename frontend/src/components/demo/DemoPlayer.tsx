@@ -8,7 +8,7 @@ import DemoMarkdown from "./DemoMarkdown";
 import PlanView from "./PlanView";
 import ReportView from "./ReportView";
 import ReverseQuestionBubble from "./ReverseQuestionBubble";
-import { answerMarkdown, extrasOrder, planMarkdown, planSlots, type ChipKind, type Guide, type Phase, type RoleKey, type RqRecord, type Scenario } from "./types";
+import { sparkStateOf, answerMarkdown, extrasOrder, planMarkdown, planSlots, type ChipKind, type Guide, type Phase, type RoleKey, type RqRecord, type Scenario } from "./types";
 
 type PrimaryKind =
   | "closeReport" | "deepNext" | "deepDeeper" | "saveNote" | "start" | "chip" | "send" | "option"
@@ -329,6 +329,8 @@ export default function DemoPlayer({ scenario }: { scenario: Scenario }) {
   const reviewBox = Object.values(records).filter((r) => r.status === "later" || (r.score ?? 0) <= 1).length;
   const scene = phase === "afterTurns" ? turns.length + (deepDone ? 1 : 0) : turnIndex;
   const stageNow = phase === "intro" ? -1 : turn.stage;
+  // 🔥 7단계 기획 가이드 — 지금까지 몇 칸이 찼나
+  const sparkNow = sparkStateOf(scenario, phase === "intro" ? 0 : turnIndex + 1);
   // 기획서.md — 답이 끝난 턴까지만 쌓인다
   const answeredCount = phase === "intro" || phase === "ask" || phase === "thinking" || phase === "streaming" ? turnIndex : sentCount;
   const currentSlots = planSlots(scenario, answeredCount);
@@ -390,6 +392,43 @@ export default function DemoPlayer({ scenario }: { scenario: Scenario }) {
               ))}
             </ol>
           </div>
+
+          {/* 🔥 7단계 기획 가이드 — 불씨에서 봉화까지 */}
+          {scenario.spark && sparkNow && (
+            <div className="mt-3 rounded-2xl border border-orange-200 bg-white px-3 py-2.5">
+              <div className="text-[11.5px] font-semibold" style={{ color: "#c2410c" }}>
+                🔥 {scenario.spark.title} — 기획서 {sparkNow.count}/{scenario.spark.steps.length}칸
+              </div>
+              <ol className="mt-2 flex gap-1.5">
+                {scenario.spark.levels.map((lv, i) => {
+                  const on = sparkNow.count > 0 && i <= sparkNow.level;
+                  return (
+                    <li key={lv.name} title={lv.done} className="flex flex-1 flex-col items-center text-center">
+                      <span className="grid h-7 w-7 place-items-center rounded-full text-[15px]" style={{ background: on ? `${lv.color}33` : "#f5f5f4", border: `2px solid ${on ? lv.color : "#e7e5e4"}`, filter: on ? undefined : "grayscale(1)" }}>{lv.emoji}</span>
+                      <b className="mt-1 text-[10.5px] leading-none" style={{ color: on ? "#9a3412" : "#a8a29e" }}>Lv.{i + 1} {lv.name}</b>
+                    </li>
+                  );
+                })}
+              </ol>
+              <ol className="mt-2 space-y-0.5">
+                {scenario.spark.steps.map((st, i) => {
+                  const at = sparkNow.filled[i];
+                  return (
+                    <li key={st.no} className={`flex items-baseline gap-1.5 rounded-lg px-2 py-0.5 text-[12px] ${at ? "text-stone-700" : "text-stone-400"}`}>
+                      <span className="shrink-0">{at ? "✅" : "⬜"}</span>
+                      <span className="shrink-0 font-semibold">{st.no}. {st.name}</span>
+                      <span className="truncate text-[11.5px]">{at ? `Q${at}에서 참` : st.goal}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+              {sparkNow.nextStep && (
+                <p className="mt-1.5 rounded-lg bg-orange-50 px-2 py-1.5 text-[11.5px] leading-relaxed text-orange-900">
+                  🙋 다음 빈칸 <b>{sparkNow.nextStep.no}단계 {sparkNow.nextStep.name}</b> — “{sparkNow.nextStep.opens[0]}”
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="mt-3 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
             <div className="flex items-start justify-between gap-2">

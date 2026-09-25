@@ -301,6 +301,108 @@ export function reportToMd(r: WindowReport, reports: WindowReport[], name: strin
   return L.join("\n");
 }
 
+/* ---------- 🔎 질문 분석 .md — 내가 매번 뭘 물었고, 그 질문이 답을 어떻게 바꿨나 ---------- */
+
+/** 빠진 칸을 채우는 한 줄 초안 — 다음에 같은 걸 물을 때 이 줄만 보태면 된다 */
+const SIX_FIX: Record<SixKey, string> = {
+  why: "이건 ___를 위한 거야 — ___가 되면 성공이야.",
+  context: "지금 상황은 ___이고, 쓰는 사람은 ___야.",
+  constraint: "___까지 해야 하고, ___는 못 써.",
+  criteria: "잘 됐다는 건 ___로 재서 ___일 때야.",
+  verify: "맞는지 확인하려면 ___를 해보면 돼.",
+  discard: "이번엔 ___는 안 할래.",
+};
+
+export interface QuestionDocInput {
+  turns: Turn[];
+  rqs: ReverseQuestion[];
+  /** 그 질문의 답이 기획서에 남긴 한 줄 (있으면) */
+  planNoteOf?: (turnId: string) => string | undefined;
+}
+
+/** 리포트 한 장이 덮는 질문들을, 한 개씩 뜯어 본 문서. 숫자는 전부 그 질문에서 직접 센 것이다. */
+export function questionsToMd(r: WindowReport, reports: WindowReport[], name: string, src: QuestionDocInput): string {
+  const [from, to] = r.turnRange;
+  const mine = src.turns.filter((t) => (r.projectId ? t.projectId === r.projectId : true) && t.n >= from && t.n <= to).sort((a, b) => a.n - b.n);
+  const seq = seqOf(r, reports);
+  const L: string[] = [
+    `# 🔎 질문 분석 — ${r.projects[0] ?? "내 프로젝트"} · ${seq}번째 리포트`,
+    ``,
+    `> ${name} · 질문 Q${from}~Q${to} · ${mine.length}개`,
+    `>`,
+    `> 답이 아니라 **내가 한 질문**을 본다. 질문의 폭이 AI를 어느 자리에 앉혔고, 무엇을 실었고 무엇을 빠뜨렸는지 — 하나씩.`,
+    ``,
+    `## 한눈에`,
+    ``,
+    `| # | 질문 | 유형 → AI의 자리 | 실은 것 | 글자 | 🧭 되묻기 |`,
+    `|---|---|---|---|---|---|`,
+  ];
+
+  const rqOf = (t: Turn) => src.rqs.find((q) => q.turnId === t.id);
+  mine.forEach((t) => {
+    const o = t.analysis.openness;
+    const info = o === "NA" ? null : roles.openness[o];
+    const role = info ? roles.roles[info.role as RoleKey] : null;
+    const six = SIX_KEYS.filter((k) => t.analysis.six[k] >= 0.5);
+    const chars = t.question.replace(/\s+/g, " ").trim().length;
+    const q = rqOf(t);
+    L.push(
+      `| Q${t.n} | ${t.question.replace(/\s+/g, " ").trim().slice(0, 28)}… | ${info ? `${info.short} → ${role?.emoji} ${role?.name}` : "판별 불가"} | ${six.length}/6 | ${chars}자 | ${q ? `${colorOf(q.score ?? null)} ${elementById(q.element)?.name ?? q.element}` : "—"} |`,
+    );
+  });
+  L.push(``, `---`, ``);
+
+  mine.forEach((t) => {
+    const o = t.analysis.openness;
+    const info = o === "NA" ? null : roles.openness[o];
+    const role = info ? roles.roles[info.role as RoleKey] : null;
+    const got = SIX_KEYS.filter((k) => t.analysis.six[k] >= 0.5);
+    const miss = SIX_KEYS.filter((k) => t.analysis.six[k] < 0.5);
+    const chars = t.question.replace(/\s+/g, " ").trim().length;
+    const len = LENGTH_INFO[lengthKeyOf(chars)];
+    const plan = src.planNoteOf?.(t.id);
+    const q = rqOf(t);
+
+    L.push(`## Q${t.n}`, ``, `> ${t.question.replace(/\n+/g, "\n> ")}`, ``);
+    L.push(
+      `| 본 것 | 값 |`,
+      `|---|---|`,
+      `| 질문의 폭 | ${info ? `**${info.label}** (${o}) — ${info.shape}` : "코드·에러만 붙인 질문이라 폭을 판별하지 않았어"} |`,
+      `| 그래서 AI는 | ${role ? `${role.emoji} **${role.name}** 자리에 앉았다 — 얻는 것 ${info!.gain} · 잃는 것 ${info!.lose}` : "—"} |`,
+      `| 글자 수 | ${chars}자 (${len.emoji} ${len.name}) |`,
+      `| 실은 것 | ${SIX_KEYS.map((k) => `${roles.six[k].name} ${t.analysis.six[k] >= 0.5 ? "✅" : "⬜"}`).join(" · ")} |`,
+      `| 이 질문이 남긴 것 | ${plan ?? "기획서에 새로 담긴 칸은 없었어"} |`,
+      ``,
+    );
+    L.push(got.length ? `**잘한 것** — ${got.map((k) => roles.six[k].name).join(" · ")}을(를) 실어서, 답이 네 프로젝트 쪽으로 좁혀졌어.` : `**잘한 것** — 아직 실은 칸이 없어. 한 칸만 보태도 답이 달라져.`);
+    if (miss.length) {
+      L.push(``, `**빠진 것** — ${miss.map((k) => roles.six[k].name).join(" · ")}`, ``, `다음에 같은 걸 물을 땐 이 한 줄만 보태 봐:`, ``, ...miss.slice(0, 2).map((k) => `- ${roles.six[k].name} — \`${SIX_FIX[k]}\``));
+    } else L.push(``, `**빠진 것** — 없어. 여섯 칸을 다 실었어.`);
+
+    if (q) {
+      const el = elementById(q.element);
+      const ax = axisOf(q.element);
+      const axis = AXES.find((a) => a.key === (q.axis ?? ax));
+      L.push(
+        ``,
+        `### 🧭 이 질문 뒤의 되묻기 — ${el?.icon ?? ""} ${el?.name ?? q.element}${axis ? ` (${axis.emoji} ${axis.name})` : ""} · ${FORM_LABEL[q.form]}`,
+        ``,
+        `- **물음** — ${q.question}`,
+        ...(q.benefit ? [`- **왜 묻나** — ${q.benefit}`] : []),
+        `- **내 답** — ${q.status === "answered" ? (q.answer ?? "(적지 않음)") : q.status === "later" ? "나중에로 넘김" : "아직 안 답함"}`,
+        `- **판정** — ${colorOf(q.score ?? null)}${q.hintStage ? ` · 힌트 ${q.hintStage}단까지 열고` : ""} ${q.reason ?? ""}`,
+      );
+    }
+    L.push(``, `---`, ``);
+  });
+
+  L.push(`## 이번 구간을 한 줄로`, ``, `> 💬 ${r.mixComment}`, ``);
+  if (r.text) L.push(`> 📏 ${textComment(r.text)}`, ``);
+  if (r.best) L.push(`**🏅 이번의 베스트 질문** — Q${r.best.turnN} “${r.best.text}”`, ``, `💬 ${r.best.reason}`, ``);
+  L.push(`**🚩 다음 미션** — ${r.nextMission.text}`, `  ← ${r.nextMission.basis}`);
+  return L.join("\n");
+}
+
 /* ---------- 월간 (§7.5) ---------- */
 
 export interface Prescription {

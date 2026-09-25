@@ -3,7 +3,7 @@
 import { useState } from "react";
 import roles from "@/data/roles.json";
 import DemoMarkdown from "./DemoMarkdown";
-import { extrasOrder, planVersionOf, PLAN_OP_LABEL, type ChipKind, type RoleKey, type Scenario, type Turn } from "./types";
+import { extrasOrder, planVersionOf, PLAN_OP_LABEL, sparkLevelOf, type ChipKind, type RoleKey, type Scenario, type Turn } from "./types";
 
 interface Props {
   turn: Turn;
@@ -32,6 +32,9 @@ export default function ChatTurn(p: Props) {
 
   const order = extrasOrder(turn);
   const shown = (key: string) => order.indexOf(key) > -1 && order.indexOf(key) < p.extrasShown;
+  // 🔥 7단계 기획 가이드 — 이 답이 선 칸
+  const step = turn.spark && scenario.spark?.steps.find((x) => x.no === turn.spark!.step);
+  const stepColor = step && scenario.spark ? scenario.spark.levels[sparkLevelOf(step.no)].color : "#FF6B35";
 
   return (
     <div className="space-y-3">
@@ -58,7 +61,28 @@ export default function ChatTurn(p: Props) {
       {/* 답 — 말풍선이 아니라 본문처럼 넓게 */}
       {p.answerText && (
         <div className="rounded-2xl border border-stone-200 bg-white px-3.5 py-3 text-[14.5px] leading-relaxed">
+          {step && turn.spark && (
+            <div className="mb-2.5 rounded-xl px-2.5 py-2 text-[12px] leading-relaxed" style={{ background: `${stepColor}14`, border: `1px solid ${stepColor}55` }}>
+              <div className="font-extrabold" style={{ color: stepColor }}>
+                {step.emoji} {step.no}단계 · {step.name}
+                {turn.spark.fills && <span className="ml-1 rounded-full px-1.5 py-0.5 text-[10.5px]" style={{ background: `${stepColor}2e` }}>✅ 이 답으로 칸이 찼어</span>}
+              </div>
+              <div className="mt-0.5 text-stone-700"><b>지금</b> — {turn.spark.now}</div>
+              <div className="text-stone-500"><b className="text-stone-700">다음</b> — {turn.spark.next}</div>
+            </div>
+          )}
           <DemoMarkdown streaming={!p.answerDone}>{p.answerText}</DemoMarkdown>
+
+          {p.answerDone && (turn.answer.yourCall?.length ?? 0) > 0 && (
+            <div className="fade-up mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[13px]">
+              <div className="font-extrabold text-emerald-800">🫵 네가 정할 것 — 여기부턴 내가 대신 못 정해</div>
+              <ul className="mt-1.5 space-y-1 text-emerald-950">
+                {turn.answer.yourCall!.map((y) => (
+                  <li key={y}>🙋 {y}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {p.answerDone && (
             <div className="fade-up mt-3 rounded-xl bg-stone-50 px-3 py-2 text-[13px]">

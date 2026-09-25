@@ -6,6 +6,7 @@ import type { WindowReport } from "@/lib/types";
 import { useApp } from "./AppContext";
 import { Sparkle } from "./Art";
 import ReportBody from "./ReportBody";
+import ReportDocs from "./ReportDocs";
 import { Empty } from "./ui";
 
 // 팝업으로 뜬다 — 대화든 리포트 목록이든 보던 화면 위에 열리고, 닫으면 그 자리로 돌아온다. 본문은 대화 속 카드와 같은 ReportBody.
@@ -32,6 +33,8 @@ export default function ReportView({ index, report, owner, onClose }: { index: n
           <button type="button" onClick={onClose} aria-label="닫기" className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-base font-bold text-gold active:bg-[#5a4312]/40">✕</button>
         </header>
         <div className="scroll flex-1 px-4 py-4">
+          {/* 리포트가 남기는 두 장 — 📝 기획 .md · 🔎 질문 분석 .md */}
+          <ReportDocs r={r} />
           <ReportBody r={r} readOnly={!!report} />
           <p className="flex items-center justify-center gap-1.5 py-4 text-[11px] text-sub"><Sparkle size={10} /> 비교 대상은 언제나 예전의 너야. <Sparkle size={10} color="#8fe9ff" /></p>
         </div>

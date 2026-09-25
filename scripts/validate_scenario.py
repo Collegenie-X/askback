@@ -78,6 +78,43 @@ def check(path, full):
             else:
                 need(all(k in rq for k in ["demoAnswer", "demoFeedback", "demoScore"]), f"{tag}: F3 demoAnswer/Feedback/Score")
         prev = t
+    # 🔥 7단계 기획 가이드를 얹은 시나리오 — 불씨 → 봉화. 얹은 것에만 엄격히 검사한다.
+    if "spark" in s:
+        sp = s["spark"]
+        for k in ["title", "caption", "rule", "levels", "steps"]:
+            need(k in sp, f"spark.{k} 없음")
+        need(len(sp.get("levels", [])) == 4, "spark.levels 는 4단 (🕯 불씨 · 🔥 불꽃 · 🔦 횃불 · 🚀 봉화)")
+        need(len(sp.get("steps", [])) == 7, "spark.steps 는 7칸")
+        fills = {}
+        for i, t in enumerate(turns, start=1):
+            tag = f"turn[{i-1}] {t.get('id')}"
+            ts = t.get("spark")
+            need(bool(ts), f"{tag}: spark(7단계 중 어느 칸인가) 없음")
+            if not ts:
+                continue
+            need(any(x["no"] == ts.get("step") for x in sp["steps"]), f"{tag}: spark.step {ts.get('step')} 가 7칸에 없음")
+            need(bool(ts.get("now")) and bool(ts.get("next")), f"{tag}: spark.now · spark.next — 지금과 다음 방향 한 줄씩")
+            if ts.get("fills"):
+                need(ts["step"] not in fills, f"{tag}: {ts['step']}단계가 두 번 찬다 (이미 Q{fills.get(ts['step'])})")
+                fills[ts["step"]] = i
+            # 답 안의 열린 질문 — 코치가 정하지 않고 남긴 칸
+            yc = t["answer"].get("yourCall") or []
+            need(len(yc) >= 2, f"{tag}: answer.yourCall — 답 속 열린 질문이 둘 이상이어야 한다 (지금 {len(yc)})")
+            need(all(q.rstrip().endswith("?") for q in yc), f"{tag}: answer.yourCall 은 모두 물음표로 끝나는 열린 질문")
+        for st in sp["steps"]:
+            for k in ["no", "emoji", "name", "goal", "check", "opens", "filledBy", "line"]:
+                need(k in st, f"spark.steps[{st.get('no')}].{k} 없음")
+            need(len(st.get("opens", [])) >= 2, f"{st.get('no')}단계: opens — 빈칸을 여는 열린 질문이 둘 이상")
+            need(all(q.rstrip().endswith("?") for q in st.get("opens", [])), f"{st.get('no')}단계: opens 는 모두 물음표로 끝난다")
+            need(fills.get(st["no"]) == st.get("filledBy"), f"{st.get('no')}단계: filledBy {st.get('filledBy')} ≠ 실제로 찬 질문 {fills.get(st['no'])}")
+        # 힌트 3단은 답이 아니라 질문으로 끝난다
+        for i, t in enumerate(turns, start=1):
+            rq = t.get("reverseQuestion")
+            if not rq:
+                continue
+            for k in ["hint", "example", "coachView"]:
+                need(rq["hints"][k].rstrip().endswith("?"), f"turn[{i-1}] {t.get('id')}: hints.{k} 는 열린 질문으로 끝나야 한다 (물음표)")
+
     if full:
         # 📐 설계 묻기 — 세 축을 학생이 직접 묻는 칩에서 자란 질문이 둘 이상, 그중 기획이 하나 이상
         design = [t["fromChip"]["kind"] for t in turns if t.get("fromChip") and t["fromChip"]["kind"] in AXES]

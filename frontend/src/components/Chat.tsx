@@ -11,6 +11,8 @@ import { reportTitle, reportToMd, seqOf, SIX_KEYS, windowCountOf } from "@/lib/r
 import { draftProgress, exportFilename, formatOf, projectMd } from "@/lib/draft";
 import type { ChipKind, LensKey, Message, Project, WindowReport } from "@/lib/types";
 import { scenarios } from "@/data/scenarios";
+import { sparkStateOf, type Guide, type Scenario, type TurnSpark } from "./demo/types";
+import { SparkChecklist, SparkLadder, SparkPanel, SparkStepBadge } from "./Spark";
 import { useApp } from "./AppContext";
 import { AstroKid, JourneyMap, PlanArt, ReportArt, Sparkle, TelescopeArt } from "./Art";
 import Buddy, { buddyName, levelOf } from "./Buddy";
@@ -83,7 +85,7 @@ function CoachBubble({ children, right }: { children: React.ReactNode; right?: R
 // 턴 카드 — 내 질문(위, 파란 띠)과 코치의 답(아래)을 한 장으로 묶는다. 접으면 질문만 남는다.
 function TurnCard({ n, q, open, onToggle, tag, onZoom, children }: { n: number; q: Extract<Message, { kind: "user" }>; open: boolean; onToggle: () => void; tag?: React.ReactNode; onZoom?: () => void; children: React.ReactNode }) {
   return (
-    <article className={`turn rise ${open ? "open" : "closed"}`}>
+    <article id={`q-${n}`} className={`turn rise scroll-mt-3 ${open ? "open" : "closed"}`}>
       <div
         role="button"
         tabIndex={0}
@@ -132,6 +134,28 @@ function TurnCard({ n, q, open, onToggle, tag, onZoom, children }: { n: number; 
   );
 }
 
+// 단 구분 띠 — 확장 사다리의 한 단이 여기서 시작한다. 지도에서 누르면 이 자리로 온다.
+const STAGE_TONE = ["#5ad1b3", "#5c9dff", "#ff7ac8", "#ffc83d", "#c58bff"];
+function StageBand({ i, stage, span, total }: { i: number; stage: { emoji: string; label: string; desc: string }; span: { from: number; to: number }; total: number }) {
+  const tone = STAGE_TONE[i % STAGE_TONE.length];
+  const [step, name] = stage.label.includes(" · ") ? stage.label.split(" · ") : [`${i + 1}단`, stage.label];
+  return (
+    <div id={`stage-${i}`} className="stage-band rise scroll-mt-3" style={{ borderColor: `${tone}55`, background: `${tone}12` }}>
+      <span className="stage-band-dot" style={{ borderColor: tone, background: `${tone}22` }}>{stage.emoji}</span>
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-baseline gap-x-1.5 text-[13px] font-extrabold" style={{ color: tone }}>
+          {step} · {name}
+          <span className="text-[10.5px] font-bold text-sub">여기서부터 · {i + 1}/{total}단</span>
+        </span>
+        <span className="mt-0.5 block text-[11.5px] leading-relaxed text-sub">{stage.desc}</span>
+      </span>
+      <span className="shrink-0 rounded-full border px-2 py-0.5 text-[10.5px] font-extrabold" style={{ borderColor: `${tone}66`, color: tone }}>
+        Q{span.from}{span.to > span.from ? `–${span.to}` : ""}
+      </span>
+    </div>
+  );
+}
+
 function plainPreview(md: string) {
   return md.replace(/```[\s\S]*?```/g, " ").replace(/[#>*`|_-]/g, "").replace(/\s+/g, " ").trim().slice(0, 70);
 }
@@ -141,12 +165,37 @@ function planLine(note: string) {
   return note.match(/「(.+?)」/)?.[1] ?? note;
 }
 
-function AnswerView({ m, project, isLast, streaming, embedded, onTick, onStreamDone, onChip, onDeep, onAskMe, onRole, onTasks, onPlan }: {
+// 🧭 코치 노트 — 예시 프로젝트에만 붙는 가이드. 답 자체는 건드리지 않고, "여기서 뭘 보면 되는지"만 접어 둔다.
+function CoachNote({ note }: { note: Guide }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-xl border border-[#4a3f8f] bg-[#1a1640]">
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center gap-2 px-3 py-2.5 text-left">
+        <span className="shrink-0 text-[14px]">🧭</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[10.5px] font-extrabold text-[#a99bff]">코치 노트 — 이 답에서 볼 것</span>
+          <span className="mt-0.5 block truncate text-[12.5px] font-bold">{note.title}</span>
+        </span>
+        <span className="shrink-0 text-[11px] text-sub">{open ? "접기 ▴" : "읽기 ▾"}</span>
+      </button>
+      {open && (
+        <div className="fade border-t border-[#3a3170] px-3 py-2.5">
+          <Markdown>{note.body}</Markdown>
+          {note.ref && <p className="mt-1.5 text-[10.5px] font-semibold text-sub">📎 {note.ref}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AnswerView({ m, project, isLast, streaming, embedded, spark, note, onTick, onStreamDone, onChip, onDeep, onAskMe, onRole, onTasks, onPlan, onSpark }: {
   m: Extract<Message, { kind: "answer" }>;
   project: Project;
   isLast: boolean;
   streaming: boolean;
   embedded?: boolean;
+  spark?: { scenario: Scenario; turn: TurnSpark } | null; // 🔥 이 답이 선 7단계 칸
+  note?: Guide; // 🧭 코치 노트 — 이 답에서 무엇을 보면 되는지
   onTick: () => void;
   onStreamDone: () => void;
   onChip: (kind: ChipKind, draft: string) => void;
@@ -155,6 +204,7 @@ function AnswerView({ m, project, isLast, streaming, embedded, onTick, onStreamD
   onRole: () => void;
   onTasks: () => void;
   onPlan: () => void;
+  onSpark?: () => void;
 }) {
   const { openMd } = useApp();
   const [override, setOverride] = useState<boolean | null>(null); // 지난 답은 핵심 한 줄로 접힌다
@@ -191,8 +241,26 @@ function AnswerView({ m, project, isLast, streaming, embedded, onTick, onStreamD
 
       {!streaming && (
         <div className="coach-extra fade mt-3 space-y-2.5">
+          {/* ⓪ 방향성 — 지금 7단계의 어느 칸이고, 다음은 어디인가 */}
+          {spark?.scenario.spark && <SparkStepBadge spark={spark.scenario.spark} turnSpark={spark.turn} onOpen={onSpark} />}
+
           {/* ① 핵심: 위험 한 줄 · 역할 배지 · 다음 질문 칩 */}
           {m.riskNote && <p className="rounded-xl border border-[#8a6a1f] bg-amber-soft px-3 py-2.5 text-sm leading-relaxed">💬 {m.riskNote}</p>}
+
+          {/* 답 안에 같이 놓인 열린 질문 — 코치가 일부러 안 정하고 남긴 칸 */}
+          {yourCall.length > 0 && (
+            <div className="rounded-xl border border-mint bg-mint-soft px-3 py-2.5">
+              <p className="text-[11px] font-extrabold text-mint">🫵 네가 정할 것 — 여기부턴 내가 대신 못 정해</p>
+              <ul className="mt-1.5 space-y-1.5 text-[13px] leading-relaxed">
+                {yourCall.map((y) => (
+                  <li key={y} className="flex gap-1.5">
+                    <span className="shrink-0 text-mint">🙋</span>
+                    <span>{y}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {m.role && (
             <button type="button" onClick={onRole} className="flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left text-[13px] leading-relaxed" style={{ background: `${roleColor}1f`, borderColor: `${roleColor}55` }}>
@@ -226,7 +294,6 @@ function AnswerView({ m, project, isLast, streaming, embedded, onTick, onStreamD
           <div className="rounded-xl border border-line bg-card">
             <button type="button" onClick={() => setDetail((v) => !v)} aria-expanded={detail} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-bold">
               <span className="flex-1 truncate">
-                {yourCall.length > 0 && <span className="mr-2 text-mint">🫵 정할 것 {yourCall.length}</span>}
                 {m.assumptions.length > 0 && <span className="mr-2">📌 가정 {m.assumptions.length}</span>}
                 <span className="text-sub">🔎 {o === "NA" ? "판별 불가" : roles.openness[o].short}</span>
               </span>
@@ -234,16 +301,6 @@ function AnswerView({ m, project, isLast, streaming, embedded, onTick, onStreamD
             </button>
             {detail && (
               <div className="fade space-y-3 border-t border-line px-3 py-3 text-[13px] leading-relaxed">
-                {yourCall.length > 0 && (
-                  <div>
-                    <p className="font-bold text-mint">🫵 네가 정할 것 — 여기부턴 내가 대신 못 정해</p>
-                    <ul className="mt-1 space-y-0.5">
-                      {yourCall.map((y) => (
-                        <li key={y}>· {y}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
                 {m.assumptions.length > 0 && (
                   <div>
                     <p className="font-bold">📌 내가 가정한 것</p>
@@ -271,6 +328,9 @@ function AnswerView({ m, project, isLast, streaming, embedded, onTick, onStreamD
               </div>
             )}
           </div>
+
+          {/* 🧭 코치 노트 — 예시를 읽는 사람에게, 이 답에서 무엇을 보면 되는지 */}
+          {note && <CoachNote note={note} />}
 
           {/* ③ 도구 */}
           <div className="flex flex-wrap gap-1.5 text-xs font-semibold">
@@ -314,6 +374,7 @@ export default function Chat({ project }: { project: Project }) {
   const quickOpen = tray === "quick";
   const [toolsOpen, setToolsOpen] = useState(false); // 보기 도구 줄 — 필요할 때만
   const [checksOpen, setChecksOpen] = useState(false); // 헤더의 형식 체크 칸 — 기본은 접힘
+  const [sparkOpen, setSparkOpen] = useState(false); // 🔥 7단계 기획 가이드 시트
   const [live, setLive] = useState<boolean | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
@@ -334,6 +395,26 @@ export default function Chat({ project }: { project: Project }) {
   const isExample = state.demoProjectId === project.id; // 시나리오 JSON에서 한꺼번에 불러온 예시
   const example = isExample ? scenarios.find((x) => `prj_example_${x.id}` === project.id) : undefined;
   const openPlan = () => project.plan && openMd({ title: `📝 ${project.plan.filename}`, md: project.plan.md, filename: project.plan.filename });
+  // 🔥 7단계 기획 가이드 — 지금까지 채운 칸으로 레벨과 다음 빈칸을 센다
+  const sparkState = example ? sparkStateOf(example, turns.filter((t) => t.projectId === project.id).length) : null;
+  // 🪜 확장 사다리 — 단마다 몇 번째 질문부터 몇 번째까지인가. 지도와 단 구분 띠가 같은 숫자를 쓴다.
+  const stageSpans = (example?.stages ?? []).map((_, i) => {
+    const ns = (example?.turns ?? []).flatMap((t, k) => (t.stage === i ? [k + 1] : []));
+    return ns.length ? { from: ns[0], to: ns[ns.length - 1] } : null;
+  });
+  const stageStartsAt = new Map(stageSpans.flatMap((sp, i) => (sp ? [[sp.from, i] as const] : [])));
+  // 지도·체크리스트에서 누르면 그 자리로 굴러가고, 잠깐 밝아진다
+  const jumpTo = useCallback((id: string) => {
+    const el = document.getElementById(id);
+    const box = scroller.current;
+    if (!el || !box) return;
+    const top = box.scrollTop + el.getBoundingClientRect().top - box.getBoundingClientRect().top - 12;
+    box.scrollTo({ top, behavior: "smooth" });
+    setTimeout(() => { if (Math.abs(box.scrollTop - top) > 8) box.scrollTop = top; }, 400); // 부드러운 스크롤이 막힌 기기 대비
+    el.classList.add("flash-target");
+    setTimeout(() => el.classList.remove("flash-target"), 1900);
+  }, []);
+  const jumpToStage = (i: number) => jumpTo(document.getElementById(`stage-${i}`) ? `stage-${i}` : `q-${stageSpans[i]?.from ?? 1}`);
   const seen = useRef(0);
   const acted = useRef(false); // 이 화면에서 내가 질문 · 답을 보낸 적이 있나
 
@@ -437,6 +518,13 @@ export default function Chat({ project }: { project: Project }) {
     });
   };
 
+  // 예시 프로젝트는 시나리오 JSON 한 장에서 왔다 — 턴 번호로 가이드와 7단계 칸을 되찾는다
+  const scriptTurnOf = (turnId: string) => {
+    if (!example) return undefined;
+    const id = turnId.replace(/^t_ex_/, "");
+    return example.turns.find((t) => t.id === id);
+  };
+
   const renderMessage = (m: Message, embedded = false) => {
       if (m.kind === "user") {
         return (
@@ -454,8 +542,10 @@ export default function Chat({ project }: { project: Project }) {
         );
       }
       if (m.kind === "answer") {
+        const st = scriptTurnOf(m.turnId);
         return (
           <AnswerView key={m.id} m={m} project={project} embedded={embedded} isLast={m.id === lastAnswerId && !busy} streaming={m.id === streamId} onTick={toBottom} onStreamDone={endStream}
+            spark={example && st?.spark ? { scenario: example, turn: st.spark } : null} note={st?.guide?.answer} onSpark={() => setSparkOpen(true)}
             onChip={(kind, text) => fillDraft(text, kind)} onDeep={() => setTray("lens")} onRole={() => setRoleSheet(true)} onTasks={() => setCheckKey("")} onPlan={openPlan}
             onAskMe={async () => {
               setBusy(true);
@@ -467,7 +557,9 @@ export default function Chat({ project }: { project: Project }) {
       }
       if (m.kind === "rq") {
         const rq = rqs.find((r) => r.id === m.rqId);
-        return rq ? <RQCard key={m.id} rq={rq} inChat /> : null;
+        if (!rq) return null;
+        const st = scriptTurnOf(rq.turnId);
+        return <RQCard key={m.id} rq={rq} inChat note={st?.guide?.rq} hintNote={st?.guide?.hint} />;
       }
       if (m.kind === "deepPick") return null; // 예전 기록에 남은 고르기 카드는 그리지 않는다 (중복 방지)
       if (m.kind === "deepQ") {
@@ -564,6 +656,11 @@ export default function Chat({ project }: { project: Project }) {
               <span className="text-sub">{checksOpen ? "▴" : "▾"}</span>
             </button>
           )}
+          {example?.spark && sparkState && (
+            <button type="button" onClick={() => setSparkOpen(true)} title={`${example.spark.title} — ${sparkState.count}/${example.spark.steps.length}칸`} className="flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs font-bold" style={{ borderColor: "#8a4a1f", background: "#2a1408", color: sparkState.levelMeta?.color ?? "#FF8C55" }}>
+              {sparkState.levelMeta?.emoji ?? "🔥"}<span className="max-[400px]:hidden"> {sparkState.count}/{example.spark.steps.length}</span>
+            </button>
+          )}
           {project.plan && (
             <button type="button" onClick={openPlan} title={project.plan.filename} className="shrink-0 rounded-full border border-mint bg-mint-soft px-2.5 py-1.5 text-xs font-bold text-mint">
               📝<span className="max-[400px]:hidden"> 기획서</span>
@@ -642,7 +739,12 @@ export default function Chat({ project }: { project: Project }) {
               return (
                 <div key={x.key} className="rise">
                   <CoachBubble>
-                    <JourneyMap stages={example.stages} caption="작게 시작해서, 질문으로 한 단씩 키워" />
+                    <JourneyMap stages={example.stages} spans={stageSpans} onPick={jumpToStage} caption="한 단을 누르면 그 단이 시작되는 질문으로 가" />
+                    {example.spark && sparkState && (
+                      <div className="mb-3">
+                        <SparkPanel spark={example.spark} state={sparkState} onAsk={(q) => fillDraft(q, null)} onGo={(n) => jumpTo(`q-${n}`)} />
+                      </div>
+                    )}
                     <Markdown>{x.m.md.split("\n").filter((l) => !l.includes("작게 시작해서 한 단씩 키워")).join("\n")}</Markdown>{/* 예전에 불러 둔 예시에는 글 사다리가 남아 있다 */}
                   </CoachBubble>
                 </div>
@@ -656,7 +758,9 @@ export default function Chat({ project }: { project: Project }) {
           }
           const open = filter === "q" ? (openTurns[x.key] ?? false) : isOpen(x.key) || x.a?.id === streamId;
           const role = x.a?.role;
-          return (
+          // 단이 바뀌는 첫 질문 앞에 띠 하나 — 시간순으로 읽을 때만 뜻이 있다
+          const bandAt = !sortNew && example ? stageStartsAt.get(x.n) : undefined;
+          const card = (
             <TurnCard key={x.key} n={x.n} q={x.q} open={open} onToggle={() => setOpenTurns((o) => ({ ...o, [x.key]: !open }))}
               tag={role ? <span className="turn-role" title={roles.roles[role].name}>{roles.roles[role].emoji}</span> : undefined}
               onZoom={x.a ? () => openMd({ title: `Q${x.n} 크게 보기`, subtitle: x.q.text, md: `${x.q.text}\n\n---\n\n${x.a!.md}`, filename: `qa-${x.a!.turnId}.md`, variant: "question" }) : undefined}
@@ -669,6 +773,14 @@ export default function Chat({ project }: { project: Project }) {
                 </div>
               )}
             </TurnCard>
+          );
+          return bandAt === undefined ? (
+            card
+          ) : (
+            <div key={`band-${x.key}`} className="space-y-6">
+              <StageBand i={bandAt} stage={example!.stages[bandAt]} span={stageSpans[bandAt]!} total={example!.stages.length} />
+              {card}
+            </div>
           );
         })}
         {filter !== "all" && ordered.length === 0 && <p className="py-10 text-center text-sm text-sub">{filter === "rq" ? "아직 되묻기가 없어." : "아직 질문이 없어."}</p>}
@@ -878,6 +990,19 @@ export default function Chat({ project }: { project: Project }) {
       )}
 
       {checkKey !== null && <CheckSheet project={project} initialKey={checkKey || undefined} onClose={() => setCheckKey(null)} />}
+
+      {sparkOpen && example?.spark && sparkState && (
+        <Sheet title={`🔥 ${example.spark.title}`} onClose={() => setSparkOpen(false)}>
+          <p className="mb-3 text-[13px] leading-relaxed text-sub">{example.spark.caption}. {example.spark.rule}</p>
+          <div className="mb-4">
+            <SparkLadder spark={example.spark} state={sparkState} />
+          </div>
+          <SparkChecklist spark={example.spark} state={sparkState} onAsk={(q) => { setSparkOpen(false); fillDraft(q, null); }} onGo={(n) => { setSparkOpen(false); jumpTo(`q-${n}`); }} />
+          <p className="mt-3 text-[11.5px] leading-relaxed text-sub">
+            ⬜ 빈칸의 열린 질문을 누르면 입력창에 초안으로 들어와. 칸을 채우는 건 언제나 너야 — 코치는 묻기만 해.
+          </p>
+        </Sheet>
+      )}
 
       {roleSheet && (
         <Sheet title="네 질문이 나를 앉힌 자리" onClose={() => setRoleSheet(false)}>

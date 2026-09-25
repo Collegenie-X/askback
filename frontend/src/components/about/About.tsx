@@ -12,6 +12,7 @@ import { AudienceTabs, FormatExplorer, GrowStairs, OrbitCycle, SceneTabs } from 
 import { GateTabs, SecretArt } from "./AboutGate";
 import AboutFlow from "./AboutFlow";
 import AboutHero from "./AboutHero";
+import AboutLadder from "./AboutLadder";
 import Reveal from "./Reveal";
 import { rich } from "./rich";
 import TopNav from "./TopNav";
@@ -63,6 +64,10 @@ export default function About() {
         </div>
         <AboutHero />
       </section>
+
+      {/* ═══ 7단계 — 불씨에서 봉화까지, 한 칸씩 ═══ */}
+      <AboutLadder />
+      <Trail />
 
       {/* ═══ STAGE 01 · 몰래 쓰는 AI → 인정받는 AI ═══ */}
       <Stage id="gate" no="01">

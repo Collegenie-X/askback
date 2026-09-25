@@ -15,6 +15,48 @@ export interface Stage {
   desc: string;
 }
 
+// 🔥 7단계 기획 가이드 — 불씨에서 봉화까지. 대화가 도는 동안 기획서의 일곱 칸이 하나씩 찬다.
+export interface SparkStep {
+  no: number;
+  emoji: string;
+  name: string;
+  /** 이 칸의 목표 한 줄 */
+  goal: string;
+  /** 스파크 체크 — 무엇이 되면 이 칸이 찬 건가 */
+  check: string;
+  /** 빈칸일 때 코치가 건네는 열린 질문 — 누르면 입력창 초안이 된다 */
+  opens: string[];
+  /** 몇 번째 질문에서 찼나 */
+  filledBy: number;
+  /** 찼을 때 그 칸에 적힌 한 줄 */
+  line: string;
+}
+
+export interface SparkLevel {
+  emoji: string;
+  name: string;
+  range: string;
+  color: string;
+  done: string;
+}
+
+export interface Spark {
+  title: string;
+  caption: string;
+  rule: string;
+  levels: SparkLevel[];
+  steps: SparkStep[];
+}
+
+/** 턴 하나가 7단계 중 어디에 있는지 — 지금 채운 것과 다음에 열 칸 */
+export interface TurnSpark {
+  step: number;
+  /** 이 턴에서 그 칸이 찼는가 */
+  fills: boolean;
+  now: string;
+  next: string;
+}
+
 // 기획서는 쌓이기만 하지 않는다 — 같은 칸을 다시 연다.
 // add: 새 칸이 생김 · revise: 있던 칸을 고쳐 씀 · fill: 비워 둔 ___ 를 학생의 말로 채움
 export type PlanOp = "add" | "revise" | "fill";
@@ -81,6 +123,8 @@ export interface Turn {
   answer: {
     md: string;
     ask?: string; // 답한 뒤 코치가 던지는 열린 되묻기 — 다음 질문은 여기서 자란다
+    /** 답 안에 함께 놓이는 열린 질문 — 코치가 정하지 않고 학생에게 남긴 판단 */
+    yourCall?: string[];
     assumptions: string[];
     riskNote?: string;
     role: RoleKey;
@@ -91,6 +135,7 @@ export interface Turn {
   review?: { carried: string; missing: string; because: string[] };
   plan?: PlanChange;
   planSkip?: string; // 기획서에 보탤 게 없었던 답 — 왜 없었는지 한 줄
+  spark?: TurnSpark; // 7단계 기획 가이드에서 지금 어디쯤인가
   reverseQuestion?: ReverseQuestion;
   guide: Partial<Record<"ask" | "answer" | "rq" | "hint" | "feedback", Guide>>;
 }
@@ -111,6 +156,7 @@ export interface Scenario {
   turnGuides?: Partial<Record<"ask" | "answer" | "rq" | "hint" | "feedback", Guide>>; // 턴에 guide가 없을 때 쓰는 공통 안내 (common.json)
   card: { emoji: string; title: string; oneLine: string; origin: string; tags: string[] };
   stages: Stage[];
+  spark?: Spark; // 🔥 7단계 기획 가이드 — 불씨 → 불꽃 → 횃불 → 봉화
   planDoc: { filename: string; base: string };
   meta: { title: string; subtitle: string; note: string };
   student: { name: string; grade: string };
@@ -223,3 +269,35 @@ export const planMarkdown = (s: Scenario, uptoTurn: number) =>
 
 // 답은 언제나 열린 되묻기 한 줄로 끝난다 — 답하고, 되묻고, 다음 단으로
 export const answerMarkdown = (t: Turn) => (t.answer.ask ? `${t.answer.md}\n\n---\n\n🙋 **하나만 되물을게** — ${t.answer.ask}` : t.answer.md);
+
+/** 7단계 기획 가이드 — uptoTurn번째 답까지 왔을 때 어느 칸이 찼나 */
+export interface SparkState {
+  /** 칸마다: 찼으면 그 칸을 채운 질문 번호, 아직이면 null */
+  filled: (number | null)[];
+  /** 찬 칸 수 */
+  count: number;
+  /** 지금 레벨 (0부터) — 칸 2개마다 한 단 */
+  level: number;
+  levelMeta: SparkLevel | null;
+  /** 아직 비어 있는 칸 중 첫 칸 */
+  nextStep: SparkStep | null;
+}
+
+/** 칸 수 → 레벨 (1–2칸 불씨 · 3–4칸 불꽃 · 5–6칸 횃불 · 7칸 봉화) */
+export const sparkLevelOf = (count: number) => (count <= 0 ? 0 : Math.min(3, Math.ceil(count / 2) - 1));
+
+export const sparkStateOf = (s: Scenario, uptoTurn: number): SparkState | null => {
+  if (!s.spark) return null;
+  const filled = s.spark.steps.map((st) => {
+    const hit = s.turns.findIndex((t, i) => i < uptoTurn && t.spark?.fills && t.spark.step === st.no);
+    return hit < 0 ? null : hit + 1;
+  });
+  const count = filled.filter((x) => x !== null).length;
+  const level = sparkLevelOf(count);
+  const nextIndex = filled.findIndex((x) => x === null);
+  return { filled, count, level, levelMeta: count ? s.spark.levels[level] : null, nextStep: nextIndex < 0 ? null : s.spark.steps[nextIndex] };
+};
+
+/** 그 턴이 서 있는 칸 */
+export const sparkStepOf = (s: Scenario, t: Turn): SparkStep | null =>
+  (t.spark && s.spark?.steps.find((x) => x.no === t.spark!.step)) || null;
