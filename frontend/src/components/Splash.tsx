@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Galaxy } from "./Space";
+import { Wordmark } from "./Art";
 
 export default function Splash({ onDone }: { onDone: () => void }) {
   useEffect(() => {
@@ -15,9 +16,9 @@ export default function Splash({ onDone }: { onDone: () => void }) {
         <Galaxy size={230} />
       </div>
       <div className="rise text-center" style={{ animationDelay: "0.4s" }}>
-        <p className="bg-gradient-to-r from-[#8fe9ff] via-[#c9b8ff] to-[#ffd98a] bg-clip-text text-4xl font-extrabold tracking-tight text-transparent">AskBack</p>
-        <p className="mt-2 text-sm text-sub">열고 · 좁히고 · 되묻는다</p>
-        <p className="mt-1 text-xs text-gold">✦ 질문의 폭이 우주의 크기를 정한다 ✦</p>
+        <Wordmark size={40} />
+        <p className="mt-3 text-sm text-sub">아이디어에 불꽃, 설계는 내가</p>
+        <p className="mt-1 text-xs text-gold">✦ 열린 질문 하나가 제품의 설계도로 ✦</p>
       </div>
       <div className="rise mt-8 flex gap-1.5" style={{ animationDelay: "0.8s" }}>
         <span className="dot" />

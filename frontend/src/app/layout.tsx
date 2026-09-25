@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AskBack — 열고, 좁히고, 되묻는다",
-  description: "답하고, 되묻고, 코칭하는 AI 역질문 코치",
+  title: "틴스파크AI — 아이디어에 불꽃, 설계는 내가",
+  description: "답은 끝까지 주면서, 코칭과 되묻기로 학생이 직접 기획서를 완성하는 AI 코치",
 };
 
 export const viewport: Viewport = {
@@ -11,7 +11,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   viewportFit: "cover",
-  themeColor: "#0a0820",
+  themeColor: "#111119",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

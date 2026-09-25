@@ -7,7 +7,7 @@ import { scenarios } from "@/data/scenarios";
 import { update, useTable } from "@/lib/db";
 import { windowCountOf } from "@/lib/report";
 import { useApp, type View } from "./AppContext";
-import { LogoMark } from "./Art";
+import { LogoMark, Wordmark } from "./Art";
 import Buddy, { buddyName, levelOf } from "./Buddy";
 import type { Scenario } from "./demo/types";
 
@@ -41,10 +41,10 @@ export default function Drawer({ docked = false, onClose, onNewProject, onExampl
         <div className="flex items-center gap-2.5">
           <LogoMark size={36} />
           <div className="min-w-0">
-            <p className="text-lg font-extrabold leading-tight">AskBack</p>
+            <Wordmark size={18} />
             <p className="truncate text-xs text-sub">🧑‍🚀 {profile?.name}의 프로젝트</p>
           </div>
-          {/* 소개 페이지(/about) — AskBack이 무엇인지 한 장으로 */}
+          {/* 소개 페이지(/about) — 틴스파크AI가 무엇인지 한 장으로 */}
           <Link href="/about" className="ml-auto shrink-0 rounded-full border border-line bg-sand px-3 py-1.5 text-xs font-bold text-clay active:bg-line">✨ 소개</Link>
         </div>
 

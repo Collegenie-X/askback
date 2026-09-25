@@ -182,7 +182,7 @@ export function Settings({ onDemo }: { onDemo: () => void }) {
           </div>
         </Group>
 
-        <Group tag="LAB" title="🧪 연습장" sub="내 기록 없이도 AskBack이 어떻게 돌아가는지 볼 수 있어.">
+        <Group tag="LAB" title="🧪 연습장" sub="내 기록 없이도 틴스파크AI가 어떻게 돌아가는지 볼 수 있어.">
           <div className="grid grid-cols-3 gap-2">
             <Tile emoji="💡" label="아이디어 티키타카" sub="주고받기 구경" onClick={() => go({ name: "idea" })} />
             <Tile emoji="📂" label="예시 프로젝트" sub="한꺼번에 보기" onClick={onDemo} />

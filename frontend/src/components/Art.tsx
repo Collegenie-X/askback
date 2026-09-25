@@ -1,23 +1,35 @@
 // 손그림 느낌의 커스텀 SVG — 글자만 있던 자리에 작은 그림을 놓는다. 색은 askback.css 의 밤하늘 팔레트를 따른다.
 import { Rocket } from "./Space";
 
-// 로고 — 물음표 말풍선과, 되돌아오는 화살표(AskBack)
+// 로고 — 다크 라운드 사각 안 기하학적 번개 + 궤도 점 (틴스파크AI)
 export function LogoMark({ size = 30 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden className="shrink-0">
       <defs>
-        <linearGradient id="lg-b" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#8b6cff" />
-          <stop offset="1" stopColor="#2f49c9" />
+        <linearGradient id="ts-bolt" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#FF8C55" />
+          <stop offset="1" stopColor="#FF4D00" />
         </linearGradient>
       </defs>
-      <path d="M8 5h19a6 6 0 0 1 6 6v9a6 6 0 0 1-6 6H18l-7 6v-6H8a6 6 0 0 1-6-6v-9a6 6 0 0 1 6-6z" fill="url(#lg-b)" stroke="#b9c4ff" strokeWidth="1.2" strokeLinejoin="round" />
-      <path d="M13.500 12.500a4.200 4.200 0 1 1 6.300 3.600c-1.500.9-2.100 1.600-2.100 3" fill="none" stroke="#fff" strokeWidth="2.600" strokeLinecap="round" />
-      <circle cx="17.700" cy="22.600" r="1.600" fill="#fff" />
-      <path d="M37 22c0 7-5 12-12 12" fill="none" stroke="#ffc83d" strokeWidth="2.600" strokeLinecap="round" />
-      <path d="M28.500 30l-4 4 4.600 2.800" fill="none" stroke="#ffc83d" strokeWidth="2.600" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M33 3l1.200 3.300 3.300 1.200-3.300 1.200L33 12l-1.200-3.300-3.300-1.200 3.300-1.200z" fill="#ffd98a" className="tw" />
+      <rect x="2" y="2" width="36" height="36" rx="11" fill="#111119" />
+      <path d="M21.5 6 11 22h7l-1.5 12L27 17h-7z" fill="url(#ts-bolt)" />
+      <circle cx="29" cy="10" r="2.4" fill="none" stroke="#FF6B35" strokeWidth="1.4" />
+      <circle cx="29" cy="10" r="0.9" fill="#FF6B35" className="tw" />
     </svg>
+  );
+}
+
+// 워드마크 — teen(밝음) + spark(오렌지) + ai(흐림). 소문자 고정
+export function Wordmark({ size = 20, className = "" }: { size?: number; className?: string }) {
+  return (
+    <span
+      className={`font-extrabold tracking-tight lowercase leading-none ${className}`}
+      style={{ fontSize: size }}
+    >
+      <span style={{ color: "#f2f4ff" }}>teen</span>
+      <span style={{ color: "#FF6B35" }}>spark</span>
+      <span style={{ color: "#f2f4ff", opacity: 0.3 }}>ai</span>
+    </span>
   );
 }
 

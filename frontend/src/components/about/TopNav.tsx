@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { LogoMark } from "../Art";
+import { LogoMark, Wordmark } from "../Art";
 
 // 상단 메뉴 — 지금 보는 섹션에 불이 들어오고, 아래 금색 줄이 읽은 만큼 자란다
 export default function TopNav({ items }: { items: { id: string; label: string }[] }) {
@@ -38,7 +38,7 @@ export default function TopNav({ items }: { items: { id: string; label: string }
       <div className="mx-auto flex max-w-[1200px] items-center gap-3 px-4 py-2.5 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <LogoMark size={30} />
-          <b className="hidden text-base font-extrabold sm:block">AskBack</b>
+          <Wordmark size={18} className="hidden sm:block" />
         </Link>
         <nav ref={pill} aria-label="소개 메뉴" className="pill noscroll relative mx-auto flex min-w-0 items-center gap-0.5 overflow-x-auto rounded-full p-1">
           <a href="#top" aria-current={active === "top" ? "page" : undefined}>소개</a>

@@ -88,7 +88,7 @@ export function DebtArt() {
 export function GapArt() {
   const arrow = (x: number) => <path d={`M${x} 150h34l-2-12 22 18-22 18 2-12h-34z`} fill={SUB} />;
   return (
-    <svg viewBox="0 0 1000 300" role="img" aria-label="아이디어와 바이브 코딩 도구 사이의 텅 빈 공간에 AskBack이 들어간다" className="h-auto w-full min-w-[720px]" style={FONT}>
+    <svg viewBox="0 0 1000 300" role="img" aria-label="아이디어와 바이브 코딩 도구 사이의 텅 빈 공간에 틴스파크AI가 들어간다" className="h-auto w-full min-w-[720px]" style={FONT}>
       <defs>
         <linearGradient id="gap-orb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor={VIOLET} /><stop offset="1" stopColor={BLUE} /></linearGradient>
         <radialGradient id="gap-glow"><stop offset="0" stopColor={MINT} stopOpacity="0.5" /><stop offset="1" stopColor={MINT} stopOpacity="0" /></radialGradient>
@@ -110,7 +110,7 @@ export function GapArt() {
         <path d="M465 121a11 11 0 1 1 16.500 9.500c-4 2.400-5.500 4.200-5.500 8" fill="none" stroke="#fff" strokeWidth="4.600" strokeLinecap="round" />
         <circle cx="476" cy="148" r="3" fill="#fff" />
         <rect x="414" y="34" width="124" height="30" rx="15" fill="#0a261f" stroke={MINT} />
-        <text x="476" y="54" textAnchor="middle" fill={MINT} fontSize="15" fontWeight="800">AskBack ↓</text>
+        <text x="476" y="54" textAnchor="middle" fill={MINT} fontSize="15" fontWeight="800">teensparkai ↓</text>
       </g>
       {arrow(684)}
       {/* 코딩 도구 */}
@@ -205,7 +205,7 @@ export function PositionArt() {
     { x: 374, y: 268, w: 220, t: "바이브 코딩 도구 · 일반 챗봇", d: "AI가 대신 설계한다" },
   ];
   return (
-    <svg viewBox="0 0 640 400" role="img" aria-label="답을 충실히 주면서 설계는 학생이 하는 자리에 AskBack이 있다" className="h-auto w-full min-w-[560px]" style={FONT}>
+    <svg viewBox="0 0 640 400" role="img" aria-label="답을 충실히 주면서 설계는 학생이 하는 자리에 틴스파크AI가 있다" className="h-auto w-full min-w-[560px]" style={FONT}>
       <defs><radialGradient id="pos-glow"><stop offset="0" stopColor={MINT} stopOpacity="0.4" /><stop offset="1" stopColor={MINT} stopOpacity="0" /></radialGradient></defs>
       <path d="M320 36v330M40 200h560" stroke={LINE} strokeWidth="2" />
       <path d="M320 36v330M40 200h560" stroke={VIOLET} strokeWidth="2" className="draw" pathLength={1} />
@@ -223,7 +223,7 @@ export function PositionArt() {
       <g className="stg-pop" style={at(1.5)}>
         <ellipse cx="470" cy="106" rx="150" ry="80" fill="url(#pos-glow)" className="ab-pulse" />
         <rect x="350" y="58" width="240" height="96" rx="18" fill="#0a261f" stroke={MINT} strokeWidth="2.500" />
-        <text x="470" y="96" textAnchor="middle" fill={MINT} fontSize="26" fontWeight="800">AskBack</text>
+        <text x="470" y="96" textAnchor="middle" fill={MINT} fontSize="26" fontWeight="800">teensparkai</text>
         <text x="470" y="119" textAnchor="middle" fill={INK} fontSize="12.500" fontWeight="700">명세와 답은 끝까지 주되,</text>
         <text x="470" y="138" textAnchor="middle" fill={INK} fontSize="12.500" fontWeight="700">판단과 설계는 학생의 언어로 남긴다</text>
       </g>

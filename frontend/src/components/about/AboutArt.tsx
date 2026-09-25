@@ -581,7 +581,7 @@ export function HubOrb() {
       <circle cx="100" cy="100" r="98" fill="url(#hub-g)" />
       <circle cx="100" cy="100" r="80" fill="none" stroke={LINE} strokeDasharray="3 7" />
       <circle cx="100" cy="100" r="58" fill="url(#hub-c)" stroke="#c7d2fe" strokeWidth="1.500" />
-      <text x="100" y="96" fill="#fff" fontSize="20" fontWeight="800" textAnchor="middle">AskBack</text>
+      <text x="100" y="96" fill="#fff" fontSize="20" fontWeight="800" textAnchor="middle">teensparkai</text>
       <text x="100" y="118" fill="#dfe6ff" fontSize="11" textAnchor="middle">묻고 · 답하고 · 적는다</text>
       {[[GOLD, "6s"], [PINK, "9s"], [SKY, "12s"]].map(([c, d]) => <circle key={c} r="5" fill={c}><animateMotion dur={d} repeatCount="indefinite" path="M180 100A80 80 0 1 1 20 100A80 80 0 1 1 180 100" /></circle>)}
     </svg>
