@@ -65,10 +65,6 @@ export default function About() {
         <AboutHero />
       </section>
 
-      {/* ═══ 질문을 넓히는 여섯 축 — 순서가 아니라 방향 ═══ */}
-      <AboutAxes />
-      <Trail />
-
       {/* ═══ STAGE 01 · 몰래 쓰는 AI → 인정받는 AI ═══ */}
       <Stage id="gate" no="01">
         <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
@@ -155,6 +151,10 @@ export default function About() {
 
       {/* ═══ 전체 흐름 — 한 번의 질문이 지나가는 다섯 칸 ═══ */}
       <AboutFlow />
+      <Trail />
+
+      {/* ═══ 질문을 넓히는 여섯 축 — 순서가 아니라 방향 ═══ */}
+      <AboutAxes />
       <Trail />
 
       {/* ═══ STAGE 04 · 누구에게 ═══ */}
