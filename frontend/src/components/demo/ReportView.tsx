@@ -98,6 +98,18 @@ export default function ReportView({ scenario, records, onClose }: Props) {
           </div>
         </Section>
 
+        <Section no="🔎" title="질문 하나씩 — 원문 전체와 그 질문이 한 일">
+          <div className="space-y-2.5">
+            {(report.questions ?? []).map((q) => (
+              <div key={q.n} className="rounded-lg border border-stone-200 px-2.5 py-2">
+                <div className="text-[11.5px] font-semibold text-stone-500">Q{q.n}</div>
+                <div className="mt-0.5 whitespace-pre-wrap font-medium">{q.question}</div>
+                <div className="mt-1.5 rounded bg-stone-50 px-2 py-1.5 text-[12.5px] leading-relaxed text-stone-600">💬 {q.comment}</div>
+              </div>
+            ))}
+          </div>
+        </Section>
+
         <Section no="④" title="돌아보기 결과">
           <div className="mb-2.5 rounded-lg border border-stone-200 px-2.5 py-2">
             <div className="text-[11.5px] font-semibold text-stone-500">📐 이번에 확인한 세 축</div>

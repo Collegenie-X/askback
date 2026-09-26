@@ -318,6 +318,19 @@ export interface QuestionDocInput {
   rqs: ReverseQuestion[];
   /** 그 질문의 답이 기획서에 남긴 한 줄 (있으면) */
   planNoteOf?: (turnId: string) => string | undefined;
+  /** 그 질문에 AI가 준 답 — 요약 한 줄을 만들기 위해서만 쓴다 */
+  answerOf?: (turnId: string) => { md: string; assumptions?: string[]; yourCall?: string[] } | undefined;
+}
+
+/** 답 .md에서 한 줄 요약을 뽑는다 — 제목·목록 기호를 걷어내고 첫 문장만. */
+function answerSummary(md: string, limit = 120) {
+  const line = md
+    .split("\n")
+    .map((x) => x.replace(/^[#>\-*\d.\s]+/, "").trim())
+    .find((x) => x.length > 8);
+  if (!line) return "(답이 남아 있지 않아)";
+  const one = line.replace(/\s+/g, " ");
+  return one.length > limit ? `${one.slice(0, limit)}…` : one;
 }
 
 /** 리포트 한 장이 덮는 질문들을, 한 개씩 뜯어 본 문서. 숫자는 전부 그 질문에서 직접 센 것이다. */
@@ -350,7 +363,36 @@ export function questionsToMd(r: WindowReport, reports: WindowReport[], name: st
       `| Q${t.n} | ${t.question.replace(/\s+/g, " ").trim().slice(0, 28)}… | ${info ? `${info.short} → ${role?.emoji} ${role?.name}` : "판별 불가"} | ${six.length}/6 | ${chars}자 | ${q ? `${colorOf(q.score ?? null)} ${elementById(q.element)?.name ?? q.element}` : "—"} |`,
     );
   });
-  L.push(``, `---`, ``);
+  L.push(``);
+
+  /* 📊 전체 통계 — 위 표에 있는 값만 다시 센다 */
+  const statTotal = Math.max(1, mine.length);
+  const pct = (n: number) => Math.round((n / statTotal) * 100);
+  const mixCount = (k: Openness) => mine.filter((t) => t.analysis.openness === k).length;
+  const sixCount = (k: SixKey) => mine.filter((t) => t.analysis.six[k] >= 0.5).length;
+  const stats = buildTextStats(mine, (t) => t.n);
+  const answered = mine.filter((t) => rqOf(t)?.status === "answered").length;
+  const roleCount: Record<string, number> = {};
+  mine.forEach((t) => {
+    const o = t.analysis.openness;
+    if (o === "NA") return;
+    const rk = roles.openness[o].role as RoleKey;
+    roleCount[rk] = (roleCount[rk] ?? 0) + 1;
+  });
+
+  L.push(`## 📊 전체 통계`, ``, `질문 ${mine.length}개 · 평균 ${stats.avg}자 (${stats.min}~${stats.max}자) · 되묻기 ${mine.filter((t) => rqOf(t)).length}번 중 ${answered}번 답함`, ``);
+  L.push(`| 질문의 폭 | 횟수 | 비율 | 막대 |`, `|---|---|---|---|`);
+  O_KEYS.forEach((k) => L.push(`| ${roles.openness[k as Exclude<Openness, "NA">].label} | ${mixCount(k)} | ${pct(mixCount(k))}% | ${bar(mixCount(k))} |`));
+  L.push(``, `| 실은 것 (여섯 가지) | 횟수 | 비율 |`, `|---|---|---|`);
+  SIX_KEYS.forEach((k) => L.push(`| ${roles.six[k].name} | ${sixCount(k)} | ${pct(sixCount(k))}% |`));
+  L.push(``, `| 질문 길이 | 횟수 | 실은 것(평균) | 열린 질문 |`, `|---|---|---|---|`);
+  LENGTH_KEYS.forEach((k) => L.push(`| ${LENGTH_INFO[k].emoji} ${LENGTH_INFO[k].name} (${LENGTH_INFO[k].range}) | ${stats.buckets[k].count} | ${stats.buckets[k].avgSix}가지 | ${stats.buckets[k].open} |`));
+  const roleRows = ROLE_KEYS.filter((k) => roleCount[k]);
+  if (roleRows.length) {
+    L.push(``, `| AI를 앉힌 자리 | 횟수 | 비율 |`, `|---|---|---|`);
+    roleRows.sort((a, b) => roleCount[b] - roleCount[a]).forEach((k) => L.push(`| ${roles.roles[k].emoji} ${roles.roles[k].name} | ${roleCount[k]} | ${pct(roleCount[k])}% |`));
+  }
+  L.push(``, `> 💬 ${textComment(stats)}`, ``, `---`, ``);
 
   mine.forEach((t) => {
     const o = t.analysis.openness;
@@ -361,6 +403,7 @@ export function questionsToMd(r: WindowReport, reports: WindowReport[], name: st
     const chars = t.question.replace(/\s+/g, " ").trim().length;
     const len = LENGTH_INFO[lengthKeyOf(chars)];
     const plan = src.planNoteOf?.(t.id);
+    const ans = src.answerOf?.(t.id);
     const q = rqOf(t);
 
     L.push(`## Q${t.n}`, ``, `> ${t.question.replace(/\n+/g, "\n> ")}`, ``);
@@ -371,9 +414,11 @@ export function questionsToMd(r: WindowReport, reports: WindowReport[], name: st
       `| 그래서 AI는 | ${role ? `${role.emoji} **${role.name}** 자리에 앉았다 — 얻는 것 ${info!.gain} · 잃는 것 ${info!.lose}` : "—"} |`,
       `| 글자 수 | ${chars}자 (${len.emoji} ${len.name}) |`,
       `| 실은 것 | ${SIX_KEYS.map((k) => `${roles.six[k].name} ${t.analysis.six[k] >= 0.5 ? "✅" : "⬜"}`).join(" · ")} |`,
+      `| 답 요약 | ${ans ? answerSummary(ans.md) : "답이 남아 있지 않아"} |`,
       `| 이 질문이 남긴 것 | ${plan ?? "기획서에 새로 담긴 칸은 없었어"} |`,
       ``,
     );
+    if (ans?.yourCall?.length) L.push(`**답이 나에게 남긴 판단** — ${ans.yourCall.join(" · ")}`, ``);
     L.push(got.length ? `**잘한 것** — ${got.map((k) => roles.six[k].name).join(" · ")}을(를) 실어서, 답이 네 프로젝트 쪽으로 좁혀졌어.` : `**잘한 것** — 아직 실은 칸이 없어. 한 칸만 보태도 답이 달라져.`);
     if (miss.length) {
       L.push(``, `**빠진 것** — ${miss.map((k) => roles.six[k].name).join(" · ")}`, ``, `다음에 같은 걸 물을 땐 이 한 줄만 보태 봐:`, ``, ...miss.slice(0, 2).map((k) => `- ${roles.six[k].name} — \`${SIX_FIX[k]}\``));
@@ -400,6 +445,10 @@ export function questionsToMd(r: WindowReport, reports: WindowReport[], name: st
   if (r.text) L.push(`> 📏 ${textComment(r.text)}`, ``);
   if (r.best) L.push(`**🏅 이번의 베스트 질문** — Q${r.best.turnN} “${r.best.text}”`, ``, `💬 ${r.best.reason}`, ``);
   L.push(`**🚩 다음 미션** — ${r.nextMission.text}`, `  ← ${r.nextMission.basis}`);
+
+  /* 📜 부록 — 내가 쓴 프롬프트 원문 전체. 줄바꿈까지 그대로, 자르지 않는다. */
+  L.push(``, `---`, ``, `## 📜 부록 — 내가 쓴 프롬프트 전문`, ``, `화면·표에서는 줄여 보여줬지만, 여기엔 ${mine.length}개 전부를 쓴 그대로 남긴다.`, ``);
+  mine.forEach((t) => L.push(`### Q${t.n} (${fmtDate(t.createdAt)} · ${t.question.replace(/\s+/g, " ").trim().length}자)`, ``, "```text", t.question, "```", ``));
   return L.join("\n");
 }
 

@@ -40,6 +40,10 @@ export default function ReportDocs({ r, compact }: { r: WindowReport; compact?: 
           const m = messages.find((x) => x.kind === "answer" && x.turnId === turnId);
           return m && m.kind === "answer" ? m.planNote : undefined;
         },
+        answerOf: (turnId) => {
+          const m = messages.find((x) => x.kind === "answer" && x.turnId === turnId);
+          return m && m.kind === "answer" ? { md: m.md, assumptions: m.assumptions, yourCall: m.yourCall } : undefined;
+        },
       }),
       filename: `questions-${seq}.md`,
       variant: "report",
@@ -78,7 +82,7 @@ export default function ReportDocs({ r, compact }: { r: WindowReport; compact?: 
             <span className="block text-[10.5px] font-extrabold text-gold">🔎 질문 분석 .md</span>
             <span className="mt-0.5 block truncate text-[13px] font-bold">Q{from}~Q{to} · 질문 {mine.length}개</span>
             <span className="mt-0.5 block text-[11px] leading-relaxed text-sub">
-              질문 하나하나 — 폭 · AI를 앉힌 자리 · 실은 것과 빠진 것 · 되묻기 {rqCount}번
+              프롬프트 전문 · 질문별 분석 · 📊 전체 통계 · 되묻기 {rqCount}번
             </span>
           </span>
           <span className="mt-0.5 shrink-0 rounded-full border border-[#8a6a1f] px-2 py-0.5 text-[10.5px] font-extrabold text-gold">열기 ›</span>

@@ -11,8 +11,8 @@ import { DebtArt, GapArt, MiracleArt, MirrorArt, PositionArt, PrincipleArt } fro
 import { AudienceTabs, FormatExplorer, GrowStairs, OrbitCycle, SceneTabs } from "./AboutTabs";
 import { GateTabs, SecretArt } from "./AboutGate";
 import AboutFlow from "./AboutFlow";
+import AboutAxes from "./AboutAxes";
 import AboutHero from "./AboutHero";
-import AboutLadder from "./AboutLadder";
 import Reveal from "./Reveal";
 import { rich } from "./rich";
 import TopNav from "./TopNav";
@@ -65,8 +65,8 @@ export default function About() {
         <AboutHero />
       </section>
 
-      {/* ═══ 7단계 — 불씨에서 봉화까지, 한 칸씩 ═══ */}
-      <AboutLadder />
+      {/* ═══ 질문을 넓히는 여섯 축 — 순서가 아니라 방향 ═══ */}
+      <AboutAxes />
       <Trail />
 
       {/* ═══ STAGE 01 · 몰래 쓰는 AI → 인정받는 AI ═══ */}

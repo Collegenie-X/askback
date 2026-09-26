@@ -179,6 +179,8 @@ export interface Scenario {
     headline: string;
     range: string;
     lastMission: { text: string; result: string };
+    /** 질문 하나씩 — 원문 전체와 그 질문이 한 일 */
+    questions?: { n: number; question: string; comment: string }[];
     mixComment: string;
     best: { question: string; comment: string };
     nextMission: { text: string; basis: string };
@@ -189,6 +191,8 @@ export interface Scenario {
     headline: string; // 리포트 제목 — 이 10문을 한 줄로
     range: string;
     lastMission: { text: string; result: string };
+    /** 질문 하나씩 — 원문 전체와 그 질문이 한 일 */
+    questions?: { n: number; question: string; comment: string }[];
     mix: { role: RoleKey; label: string; count: number; note?: string }[];
     mixReference: string;
     mixComment: string;
