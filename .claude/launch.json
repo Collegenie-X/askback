@@ -7,6 +7,12 @@
       "runtimeArgs": ["--prefix", "frontend", "run", "dev"],
       "port": 3100,
       "autoPort": true
+    },
+    {
+      "name": "askback-server",
+      "runtimeExecutable": "server/.venv/bin/python",
+      "runtimeArgs": ["server/manage.py", "runserver", "8000"],
+      "port": 8000
     }
   ]
 }

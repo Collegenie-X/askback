@@ -1,0 +1,14 @@
+{% extends "admin/change_list.html" %}
+{% block result_list %}
+  {% if summary %}
+  <div style="display:flex;gap:24px;flex-wrap:wrap;margin:8px 0 16px;padding:12px 16px;border:1px solid var(--hairline-color);border-radius:6px;background:var(--darkened-bg)">
+    <div><strong>호출</strong><br>{{ summary.calls }}회</div>
+    <div><strong>실패율</strong><br>{{ summary.fail_rate }}%</div>
+    <div><strong>입력 토큰</strong><br>{{ summary.input|default:0 }}</div>
+    <div><strong>출력 토큰</strong><br>{{ summary.output|default:0 }}</div>
+    <div><strong>캐시 적중률</strong><br>{{ summary.cache_rate }}%</div>
+    <div><strong>평균 지연</strong><br>{{ summary.latency }}ms</div>
+  </div>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

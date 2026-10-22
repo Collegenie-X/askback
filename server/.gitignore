@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+db.sqlite3
+db.sqlite3-*
+staticfiles/
+media/
+dummy_tokens.json
+dummy.sqlite3
+dummy.sqlite3-*
