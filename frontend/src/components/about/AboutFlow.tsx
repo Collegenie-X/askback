@@ -96,7 +96,7 @@ export default function AboutFlow() {
         <p className="mx-auto mb-6 max-w-[620px] rounded-full border border-line bg-card px-5 py-2.5 text-center text-[13px] font-bold sm:text-sm">{rich(flow.bridge)}</p>
         <p className="eyebrow text-center" style={{ color: "#a78bfa" }}>{flow.eyebrow}</p>
         <h2 className="mt-3 text-center text-[28px] font-extrabold leading-[1.2] tracking-tight sm:text-[42px]">{rich(flow.title)}</h2>
-        <p className="mx-auto mt-4 max-w-[700px] text-center text-[15px] leading-relaxed text-sub sm:text-[17px]">{flow.lead}</p>
+        <p className="mx-auto mt-4 max-w-[700px] text-center text-[15px] leading-relaxed text-sub sm:text-[17px]">{rich(flow.lead)}</p>
       </Reveal>
 
       {/* 윗줄 — 과정 */}

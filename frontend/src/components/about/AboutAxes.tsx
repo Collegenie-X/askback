@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AxisScene from "./AxisScene";
+import AxisTree, { type Tree } from "./AxisTree";
 import { AxisIcon } from "./QuestionIcons";
 import { axes } from "./question";
 import Reveal from "./Reveal";
@@ -80,29 +80,53 @@ function Panel({ i }: { i: number }) {
         </span>
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-[1.25fr_1fr]">
-        <div>
-          <p className="text-[11px] font-extrabold tracking-wide text-sub">{axes.sceneLabel}</p>
-          <div className="mt-1.5 rounded-2xl border border-line bg-void p-3">
-            <AxisScene k={a.key} color={c} label={`${a.full} — ${a.diff}`} />
+      {/* 쉽게 말해 · 붙이는 한 마디 */}
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+        <p className="text-[15px] font-bold leading-snug sm:text-[16px]">
+          <span className="mr-2 text-[11px] font-extrabold tracking-wide text-sub">{axes.plainLabel}</span>
+          {a.plain}
+        </p>
+        <span className="w-fit shrink-0 rounded-xl border border-dashed px-3 py-1 text-[13px] font-extrabold" style={{ borderColor: c, color: c }}>
+          <span className="mr-1.5 text-[10.5px] text-sub">{axes.addLabel}</span>
+          {a.add}
+        </span>
+      </div>
+
+      {/* 위→아래 트리 둘 — 일상에서 먼저, AI에게도 똑같이 */}
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        {[
+          [axes.lifeLabel, a.life],
+          [axes.aiLabel, a.ai],
+        ].map(([lab, tree]) => (
+          <div key={lab as string}>
+            <p className="text-[12px] font-extrabold tracking-wide" style={{ color: c }}>{lab as string}</p>
+            <div className="mt-1.5 rounded-2xl border border-line bg-void p-3 sm:p-4">
+              <AxisTree
+                tree={tree as Tree}
+                color={c}
+                plainLabel={axes.plainBranch}
+                addLabel={`+ ${a.name} 붙이면`}
+                label={`${lab} — 그냥 말하면 ${(tree as Tree).a}, ${a.name}을 붙이면 ${(tree as Tree).b}`}
+              />
+            </div>
           </div>
+        ))}
+      </div>
+      <p className="mt-2 text-center text-[11.5px] font-bold text-sub">{axes.treeNote}</p>
+
+      {/* 되묻기 · 근거 */}
+      <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_1.3fr]">
+        <div className="rounded-2xl border border-clay bg-clay-soft px-4 py-3">
+          <p className="text-[11px] font-extrabold tracking-wide text-clay">🙋 {axes.backLabel}</p>
+          <p className="mt-1.5 text-[14px] font-bold leading-snug text-clay">{a.back}</p>
         </div>
-
-        <div>
-          {/* 좁게 → 한 축을 붙이면 */}
-          <p className="text-[11px] font-extrabold tracking-wide text-sub">{axes.narrowLabel}</p>
-          <p className="mt-1.5 rounded-2xl rounded-bl-md border border-line bg-sand px-4 py-2.5 text-[14px] font-semibold leading-snug text-sub">{a.narrow}</p>
-
-          <p className="mt-3 flex items-center gap-1.5 text-[11px] font-extrabold tracking-wide" style={{ color: c }}>
-            <AxisIcon k={a.key} size={14} />↓ {axes.wideLabel}
+        <div className="rounded-2xl border border-line bg-sand px-4 py-3">
+          <p className="flex flex-wrap items-center gap-x-2 text-[11px] font-extrabold tracking-wide text-sub">
+            <span style={{ color: c }}>📚 {axes.proofLabel}</span>
+            <span>{a.proof.src}</span>
           </p>
-          <p className="mt-1.5 rounded-2xl rounded-bl-md border px-4 py-2.5 text-[14px] font-bold leading-snug" style={{ borderColor: c, color: c, background: `${c}0f` }}>{a.wide}</p>
-
-          <p className="mt-3 text-[11px] font-extrabold tracking-wide text-clay">🙋 {axes.backLabel}</p>
-          <p className="mt-1.5 rounded-2xl rounded-br-md border border-clay bg-clay-soft px-4 py-2.5 text-[13.5px] font-bold leading-snug text-clay">{a.back}</p>
-
-          <p className="mt-4 border-t border-line pt-3 text-[11px] font-extrabold tracking-wide text-sub">{axes.diffLabel}</p>
-          <p className="mt-1 text-[13.5px] leading-relaxed">{a.diff}</p>
+          <p className="mt-1.5 text-[14px] font-extrabold leading-snug">{a.proof.t}</p>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-sub">{a.proof.d}</p>
         </div>
       </div>
     </div>

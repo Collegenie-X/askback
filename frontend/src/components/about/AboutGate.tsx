@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import about from "@/data/about.json";
+import { rich } from "./rich";
 
 // 몰래 쓰는 AI → 설명하고 인정받는 AI.
 // 특성화고의 '화이트보드 검문'(순서도 · 핵심 · 차별점 · 실패 조건)을 AskBack의 역질문이 매일 대신한다.
@@ -19,36 +20,116 @@ const VIOLET = "#a78bfa";
 
 const { gates: GATES, teacherLabel, appLabel, provesLabel, whyLabel } = about.gate;
 
-// 지금 — 책상 밑에서 몰래 쓴다
+const { secretSays, fieldEyebrow, fieldTitle, fieldSteps, fieldResult, fieldCompare } = about.gate;
+
+// 지금 — 책상 밑에서 몰래 쓴다. 선생님이 물으면 "네…" 하고 숨긴다. 결과물의 출처 칸은 비어 있다.
 export function SecretArt() {
   return (
-    <svg viewBox="0 0 320 190" role="img" aria-label="학생이 책상 아래에서 AI를 몰래 쓰고, 결과물에는 출처를 적지 못한다" className="h-auto w-full" style={FONT}>
-      <defs><radialGradient id="sec-glow"><stop offset="0" stopColor="#60a5fa" stopOpacity="0.55" /><stop offset="1" stopColor="#60a5fa" stopOpacity="0" /></radialGradient></defs>
-      {/* 책상 */}
-      <rect x="40" y="104" width="200" height="10" rx="4" fill="#2c2c46" /><path d="M58 114v66M222 114v66" stroke="#2c2c46" strokeWidth="8" strokeLinecap="round" />
-      {/* 책상 위 — 깨끗한 결과물 */}
-      <g className="stg" style={at(0.3)}><path d="M150 62h52l12 12v30h-64z" fill={GLASS} stroke={SUB} strokeWidth="1.500" strokeLinejoin="round" />{[0, 1, 2].map((i) => <path key={i} d={`M158 ${80 + i * 8}h${[44, 36, 40][i]}`} stroke={SUB} strokeWidth="2" strokeLinecap="round" />)}<text x="182" y="56" textAnchor="middle" fill={SUB} fontSize="10" fontWeight="700">출처: ( 빈칸 )</text></g>
-      {/* 학생 — 곁눈질 */}
-      <g className="stg" style={at(0.1)}>
-        <path d="M70 104c0-24 12-36 28-36s28 12 28 36z" fill="#4f46e5" />
-        <circle cx="98" cy="50" r="22" fill="#ffd9b8" /><path d="M76 48a22 22 0 0 1 44 0c-9-2-18-7-23-14-5 7-12 12-21 14z" fill="#3b2a1e" />
-        <g className="sec-eyes"><circle cx="92" cy="54" r="2.200" fill="#2a1a4a" /><circle cx="108" cy="54" r="2.200" fill="#2a1a4a" /></g>
-        <path d="M94 64h10" stroke="#2a1a4a" strokeWidth="1.600" strokeLinecap="round" />
-        <path d="M122 40c-3 5-3 8 0 10 3-2 3-5 0-10z" fill="#67e8f9" className="fa-drop" />
+    <svg viewBox="0 0 340 214" role="img" aria-label="학생이 책상 밑 휴대폰으로 AI를 몰래 쓰고, 선생님이 직접 했냐고 묻자 네라고 숨긴다. 과제의 출처 칸은 비어 있다" className="h-auto w-full" style={FONT}>
+      <defs>
+        <radialGradient id="sec-glow"><stop offset="0" stopColor="#60a5fa" stopOpacity="0.6" /><stop offset="1" stopColor="#60a5fa" stopOpacity="0" /></radialGradient>
+        <marker id="sec-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5 0 10z" fill="#60a5fa" /></marker>
+      </defs>
+
+      {/* ① 책상 밑 — 숨긴 휴대폰 속 AI */}
+      <circle cx="122" cy="172" r="48" fill="url(#sec-glow)" className="ab-pulse" />
+      <g className="stg-pop" style={at(0.5)}>
+        <rect x="98" y="150" width="48" height="44" rx="7" fill="#0b1220" stroke="#60a5fa" strokeWidth="1.800" />
+        <text x="122" y="168" textAnchor="middle" fill="#93c5fd" fontSize="12" fontWeight="800">AI</text>
+        <path d="M106 176h32M106 184h22" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
       </g>
-      {/* 책상 밑 — 숨긴 화면 */}
-      <circle cx="120" cy="150" r="46" fill="url(#sec-glow)" className="ab-pulse" />
-      <g className="stg-pop" style={at(0.8)}><rect x="96" y="132" width="48" height="34" rx="5" fill="#0b1220" stroke="#60a5fa" strokeWidth="1.800" /><text x="120" y="154" textAnchor="middle" fill="#93c5fd" fontSize="13" fontWeight="800">AI</text></g>
-      {/* 쉿 */}
-      <g className="stg-pop" style={at(1.3)}><rect x="12" y="10" width="54" height="28" rx="14" fill={GLASS} stroke={ROSE} strokeWidth="1.500" /><text x="39" y="29" textAnchor="middle" fill={ROSE} fontSize="14" fontWeight="800">쉿…</text></g>
-      {/* 의심하는 시선 */}
-      <g className="stg-pop" style={at(1.8)}>
-        <circle cx="280" cy="52" r="20" fill="#ffd9b8" /><path d="M260 50a20 20 0 0 1 40 0c-10-1-16-5-20-12-4 7-10 11-20 12z" fill="#2a1a4a" />
-        <g fill="none" stroke="#2a1a4a" strokeWidth="1.500"><circle cx="273" cy="55" r="5.500" /><circle cx="288" cy="55" r="5.500" /><path d="M278.500 55h4" /></g>
-        <path d="M262 100c0-18 8-28 18-28s18 10 18 28z" fill="#6c5ce7" />
-        <text x="248" y="30" fill={ROSE} fontSize="20" fontWeight="800" className="ab-tw">?</text>
+      <text x="122" y="208" textAnchor="middle" fill={SUB} fontSize="10" fontWeight="700">책상 밑</text>
+      {/* 몰래 옮겨 적기 */}
+      <g className="stg" style={at(0.9)}>
+        <path d="M148 170C200 170 214 158 214 134" fill="none" stroke="#60a5fa" strokeWidth="1.800" strokeDasharray="4 4" markerEnd="url(#sec-arr)" className="ab-dash" />
+        <text x="154" y="160" fill="#93c5fd" fontSize="10.500" fontWeight="800">그대로 옮김</text>
+      </g>
+
+      {/* 책상 */}
+      <rect x="30" y="122" width="226" height="10" rx="4" fill={LINE} /><path d="M46 132v74M240 132v74" stroke={LINE} strokeWidth="8" strokeLinecap="round" />
+
+      {/* ② 책상 위 — 완성된 과제, 출처는 빈칸 */}
+      <g className="stg" style={at(0.3)}>
+        <path d="M172 58h56l12 12v52h-68z" fill={GLASS} stroke={SUB} strokeWidth="1.500" strokeLinejoin="round" />
+        <text x="180" y="74" fill="#fff" fontSize="10" fontWeight="800">과제 ✓</text>
+        {[0, 1, 2].map((i) => <path key={i} d={`M180 ${84 + i * 7}h${[50, 40, 46][i]}`} stroke={SUB} strokeWidth="2" strokeLinecap="round" />)}
+        <text x="180" y="116" fill={SUB} fontSize="9.500" fontWeight="700">출처</text>
+        <rect x="202" y="106" width="32" height="13" rx="3" fill="#2a0f16" stroke={ROSE} strokeWidth="1.400" strokeDasharray="3 2" className="ab-pulse" />
+        <text x="218" y="116" textAnchor="middle" fill={ROSE} fontSize="10" fontWeight="800">?</text>
+      </g>
+
+      {/* ③ 학생 — 시선은 책상 밑, 식은땀 */}
+      <g className="stg" style={at(0.1)}>
+        <path d="M66 122c0-26 13-40 30-40s30 14 30 40z" fill="#4f46e5" />
+        <circle cx="96" cy="58" r="22" fill="#ffd9b8" /><path d="M74 56a22 22 0 0 1 44 0c-9-2-18-7-23-14-5 7-12 12-21 14z" fill="#3b2a1e" />
+        <g className="sec-eyes"><circle cx="90" cy="64" r="2.200" fill="#2a1a4a" /><circle cx="104" cy="64" r="2.200" fill="#2a1a4a" /></g>
+        <path d="M91 72q5-2 10 0" fill="none" stroke="#2a1a4a" strokeWidth="1.600" strokeLinecap="round" />
+        <path d="M121 46c-3 5-3 8 0 10 3-2 3-5 0-10z" fill="#67e8f9" className="fa-drop" />
+      </g>
+      <g className="stg-pop" style={at(1.6)}>
+        <rect x="8" y="6" width="74" height="26" rx="13" fill={GLASS} stroke={SUB} strokeWidth="1.400" />
+        <path d="M60 31l8 9 2-9" fill={GLASS} stroke={SUB} strokeWidth="1.400" strokeLinejoin="round" />
+        <text x="45" y="24" textAnchor="middle" fill="#fff" fontSize="12" fontWeight="800">{secretSays.student}</text>
+      </g>
+
+      {/* ④ 선생님 — 의심 */}
+      <g className="stg-pop" style={at(1.1)}>
+        <circle cx="296" cy="72" r="20" fill="#ffd9b8" /><path d="M276 70a20 20 0 0 1 40 0c-10-1-16-5-20-12-4 7-10 11-20 12z" fill="#2a1a4a" />
+        <g fill="none" stroke="#2a1a4a" strokeWidth="1.500"><circle cx="289" cy="75" r="5.500" /><circle cx="304" cy="75" r="5.500" /><path d="M294.500 75h4" /></g>
+        <path d="M290 85h12" stroke="#2a1a4a" strokeWidth="1.500" strokeLinecap="round" />
+        <path d="M272 122c0-20 10-30 24-30s24 10 24 30z" fill="#6c5ce7" />
+        <rect x="236" y="6" width="98" height="28" rx="14" fill={GLASS} stroke={ROSE} strokeWidth="1.500" />
+        <path d="M290 33l4 10 8-10" fill={GLASS} stroke={ROSE} strokeWidth="1.500" strokeLinejoin="round" />
+        <text x="285" y="25" textAnchor="middle" fill={ROSE} fontSize="12.500" fontWeight="800">{secretSays.teacher}</text>
       </g>
     </svg>
+  );
+}
+
+// 세 칸 아이콘 — 순서도(상자 셋) · 핵심(과녁) · 차별점(갈라지는 길)
+function StepIcon({ k, c }: { k: string; c: string }) {
+  return (
+    <svg viewBox="0 0 40 40" className="h-9 w-9 shrink-0" aria-hidden>
+      <rect x="1" y="1" width="38" height="38" rx="11" fill={`${c}1f`} stroke={`${c}66`} />
+      <g fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {k === "flow" && <><rect x="13" y="7" width="14" height="6" rx="2" /><path d="M20 13v4M20 17l6 4-6 4-6-4z" /><path d="M20 25v3" /><rect x="13" y="28" width="14" height="5" rx="2" /></>}
+        {k === "core" && <><circle cx="20" cy="20" r="11" /><circle cx="20" cy="20" r="6" /><circle cx="20" cy="20" r="1.800" fill={c} /></>}
+        {k === "diff" && <><path d="M20 33V21" /><path d="M20 21l-8-10M20 21l8-10" /><path d="M12 11l-1 5M12 11l5 1" opacity="0.4" /><circle cx="28" cy="11" r="2.600" fill={c} /></>}
+      </g>
+    </svg>
+  );
+}
+
+// 오른쪽 — 현장의 규칙을 한눈에: 세 칸 → 인정 → 시간 비교
+export function FieldRule() {
+  return (
+    <div className="tilecard flex h-full flex-col p-5 sm:p-7" style={{ borderColor: "#34d39966" }}>
+      <p className="text-xs font-extrabold tracking-wider text-mint">{fieldEyebrow}</p>
+      <p className="mt-2 text-[20px] font-extrabold leading-snug sm:text-[23px]">{rich(fieldTitle)}</p>
+
+      <ol className="mt-4 space-y-2">
+        {fieldSteps.map((s, n) => (
+          <li key={s.key} className="stg flex items-center gap-3 rounded-2xl border bg-[#ffffff05] px-3 py-2.5" style={{ ...at(0.2 + n * 0.15), borderColor: `${s.color}55` }}>
+            <StepIcon k={s.key} c={s.color} />
+            <div className="min-w-0 flex-1">
+              <p className="text-[14.5px] font-extrabold"><span style={{ color: s.color }}>{n + 1}. {s.name}</span><span className="ml-2 font-semibold text-white/90">{s.desc}</span></p>
+              <p className="mt-0.5 truncate text-[12.5px] text-sub">예) {s.eg}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <p className="mt-3 rounded-2xl border border-mint bg-mint-soft px-4 py-2.5 text-center text-[14.5px] font-extrabold text-mint">{fieldResult}</p>
+
+      <div className="mt-4 grid grid-cols-2 gap-2 text-[12.5px]">
+        {fieldCompare.map((x) => (
+          <div key={x.who} className={`rounded-2xl border px-3 py-2.5 ${x.tone === "mint" ? "border-[#34d39966] bg-[#34d3990f]" : "border-[#fb718555] bg-[#fb71850d]"}`}>
+            <p className="font-bold text-sub">{x.who}</p>
+            <p className={`mt-0.5 text-[15px] font-extrabold ${x.tone === "mint" ? "text-mint" : "text-[#fb7185]"}`}>{x.cost}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

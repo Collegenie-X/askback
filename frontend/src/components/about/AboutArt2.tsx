@@ -62,8 +62,8 @@ export function DebtArt() {
       <g className="stg-pop" style={at(0.8)}>
         <rect x="6" y="4" width="150" height="46" rx="12" fill={CARD} stroke={INK} strokeWidth="1.500" />
         <path d="M96 49l10 16 6-16z" fill={CARD} stroke={INK} strokeWidth="1.500" strokeLinejoin="round" />
-        <text x="81" y="24" textAnchor="middle" fill={INK} fontSize="13" fontWeight="800">“센서가 빠지면</text>
-        <text x="81" y="41" textAnchor="middle" fill={INK} fontSize="13" fontWeight="800">어떻게 되나요?”</text>
+        <text x="81" y="24" textAnchor="middle" fill={INK} fontSize="13" fontWeight="800">“필기하는 것도</text>
+        <text x="81" y="41" textAnchor="middle" fill={INK} fontSize="13" fontWeight="800">딴짓이에요?”</text>
       </g>
       {/* 말문이 막힌 학생 */}
       <g className="stg" style={at(0.5)}>
@@ -84,48 +84,201 @@ export function DebtArt() {
   );
 }
 
-// 텅 빈 공간 — 아이디어와 코딩 도구 사이. AskBack이 그 칸에 내려앉는다.
+// 딸깍 만든 앱 — "찐공 앱 만들어줘" 한 문장이 블랙박스를 지나 30초 만에 앱이 된다.
+// 상자를 열어 보면 AI가 몰래 정한 결정 셋 → 발표 날 "왜?" 하나로 모이고(깔때기) → 이유 0/3.
 export function GapArt() {
-  const arrow = (x: number) => <path d={`M${x} 150h34l-2-12 22 18-22 18 2-12h-34z`} fill={SUB} />;
+  const PINK = "#f472b6";
+  const hidden: [string, string, string, string][] = [
+    ["기획", "첫 화면 = 타이머", "누구를 위해?", GOLD],
+    ["알고리즘", "25분 = 1찐공", "왜 25분?", MINT],
+    ["구조", "순위 = 메인 화면", "왜 메인에?", PINK],
+  ];
+  const cx = [180, 500, 820];
   return (
-    <svg viewBox="0 0 1000 300" role="img" aria-label="아이디어와 바이브 코딩 도구 사이의 텅 빈 공간에 틴스파크AI가 들어간다" className="h-auto w-full min-w-[720px]" style={FONT}>
+    <svg viewBox="0 0 1000 580" role="img" aria-label="찐공 앱 만들어줘 한 문장이 블랙박스를 지나 30초 만에 앱이 됐다. 상자를 열어 보면 첫 화면, 25분 기준, 순위 위치를 AI가 몰래 정했고, 발표 날 왜냐고 물으면 설명할 이유가 0개다" className="h-auto w-full min-w-[720px]" style={FONT}>
       <defs>
-        <linearGradient id="gap-orb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor={VIOLET} /><stop offset="1" stopColor={BLUE} /></linearGradient>
-        <radialGradient id="gap-glow"><stop offset="0" stopColor={MINT} stopOpacity="0.5" /><stop offset="1" stopColor={MINT} stopOpacity="0" /></radialGradient>
+        <radialGradient id="gap-bb"><stop offset="0" stopColor={VIOLET} stopOpacity="0.35" /><stop offset="1" stopColor={VIOLET} stopOpacity="0" /></radialGradient>
+        <linearGradient id="gap-funnel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={ROSE} stopOpacity="0.02" /><stop offset="1" stopColor={ROSE} stopOpacity="0.14" /></linearGradient>
       </defs>
-      {/* 아이디어 */}
-      <rect x="20" y="86" width="180" height="140" rx="18" fill={CARD} stroke={LINE} strokeWidth="2" />
-      <g fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="ab-tw"><path d="M92 146a18 18 0 1 1 36 0c0 8-6 11-7 18h-22c-1-7-7-10-7-18zM102 172h16M110 112v-8M84 122l-6-6M136 122l6-6" /></g>
-      <text x="110" y="208" textAnchor="middle" fill={INK} fontSize="18" fontWeight="800">아이디어</text>
-      {arrow(208)}
-      {/* 텅 빈 공간 */}
-      <rect x="276" y="86" width="400" height="140" rx="18" fill="#2a0f1655" stroke={ROSE} strokeWidth="2.400" strokeDasharray="9 8" className="gap-box" />
-      <text x="476" y="164" textAnchor="middle" fill={ROSE} fontSize="62" fontWeight="800" opacity="0.5" className="gap-q">?</text>
-      <text x="476" y="208" textAnchor="middle" fill={ROSE} fontSize="17" fontWeight="800">텅 빈 공간 — 기획 · 알고리즘 · 구조</text>
-      {/* 내려앉는 AskBack */}
-      <g className="gap-drop">
-        <circle cx="476" cy="130" r="74" fill="url(#gap-glow)" />
-        <circle cx="476" cy="130" r="38" fill="url(#gap-orb)" stroke="#c7d2fe" strokeWidth="1.500" />
-        <ellipse cx="476" cy="130" rx="56" ry="12" fill="none" stroke={GOLD} strokeWidth="1.800" transform="rotate(-18 476 130)" />
-        <path d="M465 121a11 11 0 1 1 16.500 9.500c-4 2.400-5.500 4.200-5.500 8" fill="none" stroke="#fff" strokeWidth="4.600" strokeLinecap="round" />
-        <circle cx="476" cy="148" r="3" fill="#fff" />
-        <rect x="414" y="34" width="124" height="30" rx="15" fill="#0a261f" stroke={MINT} />
-        <text x="476" y="54" textAnchor="middle" fill={MINT} fontSize="15" fontWeight="800">teensparkai ↓</text>
+
+      {/* ① 학생 한 문장 */}
+      <g className="stg" style={at(0.1)}>
+        <rect x="30" y="70" width="200" height="110" rx="20" fill={CARD} stroke={LINE} strokeWidth="2" />
+        <text x="130" y="98" textAnchor="middle" fill={SUB} fontSize="12.500" fontWeight="700">💬 학생 한 문장</text>
+        <text x="130" y="134" textAnchor="middle" fill={INK} fontSize="22" fontWeight="800">“찐공 앱</text>
+        <text x="130" y="163" textAnchor="middle" fill={INK} fontSize="22" fontWeight="800">만들어줘”</text>
       </g>
-      {arrow(684)}
-      {/* 코딩 도구 */}
-      <rect x="752" y="86" width="150" height="140" rx="18" fill={CARD} stroke={LINE} strokeWidth="2" />
-      <rect x="796" y="116" width="62" height="42" rx="6" fill="none" stroke={SKY} strokeWidth="2.600" /><path d="M786 168h82" stroke={SKY} strokeWidth="3" strokeLinecap="round" />
-      <text x="827" y="143" textAnchor="middle" fill={SKY} fontSize="16" fontWeight="800">&lt;/&gt;</text>
-      <text x="827" y="196" textAnchor="middle" fill={INK} fontSize="15" fontWeight="800">바이브 코딩 도구</text>
-      <text x="827" y="214" textAnchor="middle" fill={SUB} fontSize="11.500">Cursor · Claude Code · Replit</text>
-      <path d="M908 150h20l-2-10 18 16-18 16 2-10h-20z" fill={SUB} />
-      <g className="ab-float"><path d="M972 118c10 8 13 22 10 38h-20c-3-16 0-30 10-38z" fill="#eef0ff" /><circle cx="972" cy="138" r="4.500" fill={BLUE} /><path d="M962 152l-7 10 9-2M982 152l7 10-9-2" fill={ROSE} /><path d="M968 158l4 13 4-13z" fill={GOLD} className="ab-tw" /></g>
-      <text x="972" y="208" textAnchor="middle" fill={INK} fontSize="14" fontWeight="800">결과물</text>
-      <path d="M276 262h400" stroke={ROSE} strokeWidth="1.500" /><path d="M276 254v16M676 254v16" stroke={ROSE} strokeWidth="1.500" />
-      <text x="476" y="288" textAnchor="middle" fill={SUB} fontSize="13">지금은 여기를 AI가 대신 채우거나, 아무도 채우지 않습니다</text>
+      <path d="M238 125h124" stroke={SUB} strokeWidth="2" className="ab-dash" />
+      <path d="M362 125l-10-7v14z" fill={SUB} />
+
+      {/* ② 블랙박스 — 안에서 무슨 일이 있었는지 아무도 모른다 */}
+      <g className="stg-pop" style={at(0.45)}>
+        <ellipse cx="510" cy="118" rx="190" ry="110" fill="url(#gap-bb)" className="ab-pulse" />
+        <path d="M380 60l30-30h240l-30 30z" fill="#1a1a28" stroke="#3b3b58" strokeWidth="1.600" strokeLinejoin="round" />
+        <path d="M620 60l30-30v140l-30 30z" fill="#0b0b13" stroke="#3b3b58" strokeWidth="1.600" strokeLinejoin="round" />
+        <rect x="380" y="60" width="240" height="140" fill="#030305" stroke="#3b3b58" strokeWidth="1.600" />
+        <text x="500" y="82" textAnchor="middle" fill={SUB} fontSize="10.500" fontWeight="800" letterSpacing="4">BLACK BOX</text>
+        <text x="497" y="163" textAnchor="middle" fill={ROSE} fontSize="78" fontWeight="900" opacity="0.55" className="ab-tw">?</text>
+        <text x="503" y="163" textAnchor="middle" fill={SKY} fontSize="78" fontWeight="900" opacity="0.45">?</text>
+        <text x="500" y="163" textAnchor="middle" fill={INK} fontSize="78" fontWeight="900">?</text>
+        <text x="500" y="189" textAnchor="middle" fill={ROSE} fontSize="12.500" fontWeight="800">AI가 알아서 · 말없이</text>
+      </g>
+
+      {/* ③ 30초 — 딸깍 */}
+      <path d="M660 125h134" stroke={GOLD} strokeWidth="2.600" className="ab-dash" />
+      <path d="M800 125l-11-7.500v15z" fill={GOLD} />
+      <text x="727" y="110" textAnchor="middle" fill={GOLD} fontSize="16" fontWeight="800">⚡ 30초</text>
+
+      {/* ④ 딸깍 나온 찐공 앱 */}
+      <g className="stg" style={at(0.8)}>
+        <g className="ab-float">
+          <rect x="810" y="30" width="130" height="196" rx="18" fill={CARD} stroke={VIOLET} strokeWidth="2" />
+          <rect x="861" y="38" width="28" height="4" rx="2" fill={LINE} />
+          <text x="875" y="62" textAnchor="middle" fill={INK} fontSize="12" fontWeight="800">찐공 📚</text>
+          <circle cx="875" cy="100" r="26" fill="none" stroke={`${VIOLET}44`} strokeWidth="6" />
+          <path d="M875 74a26 26 0 1 1 -24 36" fill="none" stroke={VIOLET} strokeWidth="6" strokeLinecap="round" />
+          <text x="875" y="105" textAnchor="middle" fill={INK} fontSize="13" fontWeight="800">25:00</text>
+          {[["🥇 민지", "3h"], ["🥈 나", "2h"], ["🥉 준호", "1h"]].map(([n, h], i) => (
+            <g key={n}>
+              <rect x="822" y={138 + i * 24} width="106" height="19" rx="6" fill={SAND} />
+              <text x="828" y={151 + i * 24} fill={INK} fontSize="10.500" fontWeight="700">{n}</text>
+              <text x="922" y={151 + i * 24} textAnchor="end" fill={SUB} fontSize="10.500">{h}</text>
+            </g>
+          ))}
+        </g>
+        <rect x="900" y="16" width="70" height="26" rx="13" fill="#0a261f" stroke={MINT} />
+        <text x="935" y="34" textAnchor="middle" fill={MINT} fontSize="12.500" fontWeight="800">✓ 완성!</text>
+      </g>
+
+      {/* ⑤ 상자를 열면 — 위에서 아래로 갈라지는 숨은 결정 셋 */}
+      <g className="stg" style={at(1.1)}>
+        <path d="M500 200v44M180 244h640M180 244v22M500 244v22M820 244v22" stroke={ROSE} strokeWidth="2" fill="none" strokeLinecap="round" strokeDasharray="5 5" />
+        <rect x="512" y="210" width="200" height="22" rx="11" fill="#2a0f16" stroke={`${ROSE}99`} />
+        <text x="612" y="225.500" textAnchor="middle" fill="#fda4af" fontSize="11.500" fontWeight="800">상자를 열면 — AI가 정한 것</text>
+      </g>
+
+      {/* 깔때기 — 셋이 아래로 좁아져 하나의 질문으로 */}
+      <path d="M30 266h940L650 420H350z" fill="url(#gap-funnel)" stroke={`${ROSE}44`} strokeWidth="1.500" strokeDasharray="4 6" className="stg" style={at(1.2)} />
+      {hidden.map(([n, v, why, c], i) => (
+        <g key={n} className="stg" style={at(1.3 + i * 0.2)}>
+          <rect x={cx[i] - 140} y="272" width="280" height="84" rx="16" fill={CARD} stroke={c} strokeWidth="1.800" />
+          <rect x={cx[i] - 124} y="284" width={n.length * 13 + 20} height="20" rx="10" fill={`${c}26`} />
+          <text x={cx[i] - 114} y="298.500" fill={c} fontSize="11.500" fontWeight="800">{n}</text>
+          <text x={cx[i] + 124} y="298.500" textAnchor="end" fill={ROSE} fontSize="11" fontWeight="800">정한 사람: AI</text>
+          <text x={cx[i]} y="331" textAnchor="middle" fill={INK} fontSize="19" fontWeight="800">{v}</text>
+          <text x={cx[i]} y="349" textAnchor="middle" fill={SUB} fontSize="11.500" fontWeight="700">🤷 {why}</text>
+          <path d={i === 1 ? "M500 356v52" : `M${cx[i]} 356C${cx[i]} 390 ${500 + (i === 0 ? -120 : 120)} 386 ${500 + (i === 0 ? -60 : 60)} 408`} stroke={c} strokeWidth="2" fill="none" strokeLinecap="round" />
+        </g>
+      ))}
+
+      {/* ⑥ 발표 날 — 하나로 모인 질문 */}
+      <g className="stg" style={at(2)}>
+        <rect x="320" y="408" width="360" height="50" rx="25" fill={SAND} stroke={INK} strokeWidth="1.600" />
+        <text x="500" y="439" textAnchor="middle" fill={INK} fontSize="16.500" fontWeight="800">🙋 발표 날 · “왜 이렇게 만들었어?”</text>
+        <path d="M500 458v24" stroke={ROSE} strokeWidth="2.400" strokeLinecap="round" />
+        <path d="M500 490l-7-10h14z" fill={ROSE} />
+      </g>
+
+      {/* ⑦ 답 — 이유 0 / 3 */}
+      <g className="stg" style={at(2.3)}>
+        <rect x="290" y="494" width="420" height="78" rx="20" fill="#2a0f16" stroke={ROSE} strokeWidth="2.200" />
+        <text x="500" y="526" textAnchor="middle" fill={INK} fontSize="17" fontWeight="800">😶 “…AI가 그렇게 만들어서요.”</text>
+        <g className="stamp">
+          <text x="500" y="558" textAnchor="middle" fill={ROSE} fontSize="20" fontWeight="900">설명한 이유 0 / 3</text>
+        </g>
+      </g>
     </svg>
   );
+}
+
+// 빈칸 세 장 — 칸을 채우면 이렇게 된다. 기획(누구 → 첫 화면) · 알고리즘(위→아래 판단) · 구조(3화면, 순위는 뺌)
+export function GapAxisArt({ name }: { name: "plan" | "algo" | "arch" }) {
+  const PINK = "#f472b6";
+  const DARK = "#04140f";
+  const art: Record<string, ReactNode> = {
+    plan: (
+      <>
+        <text x="8" y="16" fill={GOLD} fontSize="11" fontWeight="800">누구를 위해?</text>
+        <g className="stg" style={at(0.2)}>
+          <path d="M28 120c0-24 12-36 30-36s30 12 30 36z" fill={BLUE} />
+          <circle cx="58" cy="62" r="17" fill="#ffd9b8" />
+          <path d="M41 60a17 17 0 0 1 34 0c-7-1-14-6-17-11-4 6-10 10-17 11z" fill="#3b2a1e" />
+          <circle cx="52" cy="65" r="1.800" fill="#2a1a4a" /><circle cx="64" cy="65" r="1.800" fill="#2a1a4a" />
+          <rect x="84" y="78" width="16" height="26" rx="3" fill={CARD} stroke={SKY} strokeWidth="1.500" />
+          <path d="M98 50l-6 10h7l-6 11" fill="none" stroke={ROSE} strokeWidth="2.200" strokeLinecap="round" strokeLinejoin="round" className="ab-tw" />
+          <text x="60" y="140" textAnchor="middle" fill={INK} fontSize="11.500" fontWeight="800">시험 2주 전 중학생</text>
+          <text x="60" y="156" textAnchor="middle" fill={ROSE} fontSize="10.500" fontWeight="700">폰 때문에 10분마다 끊김</text>
+        </g>
+        <path d="M122 84h44" stroke={GOLD} strokeWidth="2.400" className="ab-dash" />
+        <path d="M172 84l-9-6v12z" fill={GOLD} />
+        <g className="stg" style={at(0.6)}>
+          <rect x="190" y="20" width="88" height="128" rx="14" fill={CARD} stroke={GOLD} strokeWidth="1.800" />
+          <rect x="223" y="27" width="22" height="3.500" rx="1.800" fill={LINE} />
+          <text x="234" y="52" textAnchor="middle" fill={SUB} fontSize="10" fontWeight="700">첫 화면</text>
+          <g className="ab-pulse"><rect x="202" y="66" width="64" height="40" rx="20" fill={MINT} /></g>
+          <text x="234" y="91" textAnchor="middle" fill={DARK} fontSize="14" fontWeight="900">▶ 시작</text>
+          <text x="234" y="128" textAnchor="middle" fill={SUB} fontSize="9.500" fontWeight="700">누르면 바로 공부</text>
+        </g>
+      </>
+    ),
+    algo: (
+      <>
+        {[["📱 폰 뒤집기", 6, 0.1], ["⏱ 25분 재기", 42, 0.3]].map(([t, y, d]) => (
+          <g key={t as string} className="stg" style={at(d as number)}>
+            <rect x="96" y={y as number} width="108" height="24" rx="8" fill={CARD} stroke={MINT} strokeWidth="1.500" />
+            <text x="150" y={(y as number) + 16.500} textAnchor="middle" fill={INK} fontSize="11.500" fontWeight="800">{t}</text>
+          </g>
+        ))}
+        <path d="M150 30v12M150 66v10" stroke={MINT} strokeWidth="1.800" />
+        <g className="stg" style={at(0.5)}>
+          <path d="M150 76l64 22-64 22-64-22z" fill={`${GOLD}1f`} stroke={GOLD} strokeWidth="1.600" strokeLinejoin="round" />
+          <text x="150" y="102" textAnchor="middle" fill={INK} fontSize="11" fontWeight="800">중간에 폰 들면?</text>
+        </g>
+        <g className="stg" style={at(0.8)}>
+          <path d="M86 98H40v28" stroke={ROSE} strokeWidth="1.800" fill="none" />
+          <text x="64" y="92" textAnchor="middle" fill={ROSE} fontSize="10" fontWeight="800">예</text>
+          <rect x="4" y="126" width="72" height="26" rx="9" fill={`${ROSE}1a`} stroke={ROSE} strokeWidth="1.500" />
+          <text x="40" y="143.500" textAnchor="middle" fill="#fda4af" fontSize="11.500" fontWeight="800">■ 멈춤</text>
+        </g>
+        <g className="stg" style={at(1)}>
+          <path d="M214 98h46v28" stroke={MINT} strokeWidth="1.800" fill="none" />
+          <text x="238" y="92" textAnchor="middle" fill={MINT} fontSize="10" fontWeight="800">아니오</text>
+          <rect x="220" y="126" width="76" height="26" rx="9" fill={`${MINT}24`} stroke={MINT} strokeWidth="1.800" />
+          <text x="258" y="143.500" textAnchor="middle" fill={INK} fontSize="12" fontWeight="900">+1 찐공 🔥</text>
+        </g>
+        <g className="stg-pop" style={at(1.3)}>
+          <rect x="98" y="140" width="104" height="22" rx="11" fill="#2a2108" stroke={GOLD} />
+          <text x="150" y="155" textAnchor="middle" fill={GOLD} fontSize="10" fontWeight="800">25분 = 우리 반 설문</text>
+        </g>
+      </>
+    ),
+    arch: (
+      <>
+        {[["시작", "▶"], ["타이머", "25"], ["기록", "▮▮▮"]].map(([t, g], i) => (
+          <g key={t} className="stg" style={at(0.15 + i * 0.25)}>
+            <rect x={8 + i * 100} y="8" width="84" height="92" rx="12" fill={CARD} stroke={PINK} strokeWidth="1.700" />
+            <text x={50 + i * 100} y="26" textAnchor="middle" fill={SUB} fontSize="9.500" fontWeight="800">{i + 1}</text>
+            {i === 1 ? (
+              <><circle cx={150} cy="54" r="17" fill="none" stroke={`${PINK}44`} strokeWidth="4" /><path d="M150 37a17 17 0 1 1 -15 25" fill="none" stroke={PINK} strokeWidth="4" strokeLinecap="round" /><text x="150" y="58" textAnchor="middle" fill={INK} fontSize="11" fontWeight="800">{g}</text></>
+            ) : (
+              <text x={50 + i * 100} y="62" textAnchor="middle" fill={i === 0 ? MINT : PINK} fontSize={i === 0 ? 22 : 15} fontWeight="900">{g}</text>
+            )}
+            <text x={50 + i * 100} y="90" textAnchor="middle" fill={INK} fontSize="12" fontWeight="800">{t}</text>
+            {i < 2 && <path d={`M${94 + i * 100} 54h10`} stroke={PINK} strokeWidth="2" />}
+            {i < 2 && <path d={`M${106 + i * 100} 54l-5-4v8z`} fill={PINK} />}
+          </g>
+        ))}
+        <g className="stg" style={at(1)}>
+          <rect x="40" y="116" width="120" height="36" rx="10" fill={SAND} stroke={`${ROSE}aa`} strokeWidth="1.500" strokeDasharray="5 4" />
+          <text x="100" y="139" textAnchor="middle" fill={SUB} fontSize="13" fontWeight="800">🏆 순위 화면</text>
+          <path d="M46 134h108" stroke={ROSE} strokeWidth="2.600" strokeLinecap="round" className="draw" pathLength={1} style={at(1.4)} />
+          <text x="172" y="132" fill={ROSE} fontSize="13" fontWeight="900">✗ 일부러 뺌</text>
+          <text x="172" y="149" fill={SUB} fontSize="11" fontWeight="700">비교 스트레스라서</text>
+        </g>
+      </>
+    ),
+  };
+  return <svg viewBox="0 0 300 166" aria-hidden className="h-auto w-full" style={FONT}>{art[name]}</svg>;
 }
 
 // 세 가지 원칙

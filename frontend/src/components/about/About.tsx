@@ -7,12 +7,13 @@ import { LogoMark } from "../Art";
 import { CandyPlanet, Galaxy, GiantPlanet, OceanPlanet, Probe, RingPlanet } from "../Space";
 import { Glyph, ReportMini, StagePlanet, ThreeStepArt } from "./AboutArt";
 import { BridgeArt, CompassArt, RhythmArt } from "./AboutArt3";
-import { DebtArt, GapArt, MiracleArt, MirrorArt, PositionArt, PrincipleArt } from "./AboutArt2";
+import { DebtArt, GapArt, GapAxisArt, MiracleArt, MirrorArt, PositionArt, PrincipleArt } from "./AboutArt2";
 import { AudienceTabs, FormatExplorer, GrowStairs, OrbitCycle, SceneTabs } from "./AboutTabs";
-import { GateTabs, SecretArt } from "./AboutGate";
+import { FieldRule, GateTabs, SecretArt } from "./AboutGate";
 import AboutFlow from "./AboutFlow";
 import AboutAxes from "./AboutAxes";
 import AboutHero from "./AboutHero";
+import HiddenDecisions from "./HiddenDecisions";
 import Reveal from "./Reveal";
 import { rich } from "./rich";
 import TopNav from "./TopNav";
@@ -37,7 +38,7 @@ function Stage({ id, no, children, center = false }: { id: StageId; no: string; 
           <p className="eyebrow" style={{ color }}>STAGE {no}</p>
         </div>
         <h2 className={`mt-3 text-[28px] font-extrabold leading-[1.2] tracking-tight sm:text-[42px] ${center ? "text-center" : ""}`}>{rich(title)}</h2>
-        {lead && <p className={`mt-4 max-w-[700px] text-[15px] leading-relaxed text-sub sm:text-[17px] ${center ? "mx-auto text-center" : ""}`}>{lead}</p>}
+        {lead && <p className={`mt-4 max-w-[700px] text-[15px] leading-relaxed text-sub sm:text-[17px] ${center ? "mx-auto text-center" : ""}`}>{rich(lead)}</p>}
       </Reveal>
       <div className="mt-9">{children}</div>
     </section>
@@ -78,12 +79,7 @@ export default function About() {
             </div>
           </Reveal>
           <Reveal delay={150}>
-            <div className="tilecard flex h-full flex-col justify-center p-6 sm:p-8" style={{ borderColor: "#34d39966" }}>
-              <p className="text-xs font-extrabold tracking-wider text-mint">{gate.fieldEyebrow}</p>
-              <p className="mt-3 text-[22px] font-extrabold leading-snug sm:text-[26px]">{rich(gate.fieldQuote)}</p>
-              <p className="mt-4 rounded-2xl border border-mint bg-mint-soft px-4 py-3 text-[15px] font-extrabold text-mint">{gate.fieldRule}</p>
-              <p className="mt-4 text-[13.5px] leading-relaxed text-sub">{rich(gate.fieldNote)}</p>
-            </div>
+            <FieldRule />
           </Reveal>
         </div>
         <Reveal className="mt-12">
@@ -122,6 +118,20 @@ export default function About() {
             </div>
           </Reveal>
         </div>
+        {/* 한 문장 속 숨은 결정 — "증발"의 정체: 결정이 AI에게 몰래 넘어갔다 */}
+        <Reveal className="mt-6"><HiddenDecisions /></Reveal>
+        <Reveal className="mt-6">
+          <p className="text-sm font-extrabold text-sub">{problem.evidenceTitle}</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            {problem.evidence.map((e, i) => (
+              <div key={e.num} className="stg tilecard flex flex-col p-4" style={{ animationDelay: `${i * 0.15}s` }}>
+                <p className="text-[30px] font-extrabold leading-none text-[#fb7185]">{e.num}</p>
+                <p className="mt-2 text-[13.5px] font-bold leading-snug">{e.desc}</p>
+                <p className="mt-auto pt-3 text-[11.5px] leading-snug text-sub">{e.src}</p>
+              </div>
+            ))}
+          </div>
+        </Reveal>
         <Reveal className="mt-12">
           <h3 className="text-xl font-extrabold sm:text-2xl">{problem.scenesTitle}</h3>
           <p className="mt-1.5 text-sm text-sub">{problem.scenesLead}</p>
@@ -132,7 +142,11 @@ export default function About() {
 
       {/* ═══ STAGE 03 · 빈칸 ═══ */}
       <Stage id="gap" no="03" center>
-        <Reveal><div className="noscroll overflow-x-auto rounded-[24px] border border-line bg-card p-4 sm:p-6"><GapArt /></div></Reveal>
+        <Reveal>
+          <div className="noscroll overflow-x-auto rounded-[24px] border border-line bg-card p-4 sm:p-6"><GapArt /></div>
+          <p className="mt-7 text-center text-[24px] font-extrabold leading-tight tracking-tight sm:text-[34px]">{rich(gap.punch)}</p>
+          <p className="mt-2 text-center text-[14px] font-bold text-sub sm:text-[16px]">{rich(gap.punchSub)}</p>
+        </Reveal>
         <p className="mt-8 text-center text-sm font-bold text-sub">{gap.axesLead}</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {gap.axes.map((a, i) => (
@@ -141,7 +155,10 @@ export default function About() {
                 <span className="icon h-12 w-12" style={{ color: a.color, background: `${a.color}1f` }}><Glyph name={a.glyph} size={28} /></span>
                 <h3 className="mt-3 text-xl font-extrabold" style={{ color: a.color }}>{a.name}</h3>
                 <p className="mt-1 text-sm font-semibold">{a.mean}</p>
-                <p className="mt-2 text-[13px] leading-relaxed text-sub">{a.say}</p>
+                <p className="mt-3 rounded-xl bg-[#2a0f16] px-3 py-2 text-[13px] font-bold text-[#fda4af]">🙋 {a.ask} <span className="font-semibold text-sub">→ 딸깍 앱: 🤷</span></p>
+                <p className="mt-4 text-[11px] font-extrabold tracking-wide" style={{ color: a.color }}>칸을 채우면 ↓</p>
+                <div className="mt-1.5 rounded-2xl border border-line bg-void p-3"><GapAxisArt name={a.key as "plan" | "algo" | "arch"} /></div>
+                <p className="mt-3 text-center text-[15px] font-extrabold leading-snug">{rich(a.punch)}</p>
               </div>
             </Reveal>
           ))}
