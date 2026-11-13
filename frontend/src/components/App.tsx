@@ -23,13 +23,13 @@ import ReportView from "./ReportView";
 import { Starfield } from "./Space";
 import SpaceStudio from "./SpaceStudio";
 import Splash from "./Splash";
+import Welcome from "./Welcome";
 
 export default function App() {
   const profile = useTable("profile");
   const projects = useTable("projects");
   const state = useTable("state");
   const [splash, setSplash] = useState(true);
-  const introSeen = useTable("introSeen"); // 온보딩 소개는 한 번만
   const space = useTable("space");
   const [view, setView] = useState<View>({ name: "chat" });
   const [drawer, setDrawer] = useState(false);
@@ -88,6 +88,12 @@ export default function App() {
     write("introSeen", seen);
   }, [state.demoProjectId]);
 
+  // 소개 슬라이드는 건너뛴다 — 프로필이 없으면 기본값으로 두고 바로 메인으로 (소개는 /about)
+  useEffect(() => {
+    if (!read("profile")) write("profile", { name: "친구", grade: "중3", interests: [], createdAt: Date.now() });
+    if (!read("introSeen")) write("introSeen", true);
+  }, []);
+
   const runDemo = () => setExamples(true);
   const pickExample = async (s: Scenario) => {
     const mine = profile && state.demoProjectId === null; // 예시끼리 바꿀 때는 묻지 않는다
@@ -102,7 +108,7 @@ export default function App() {
   if (splash) body = <Splash onDone={hideSplash} />;
   else if (view.name === "idea") body = <IdeaLab />;
   else if (view.name === "onboarding") body = <Onboarding hasProfile onDone={() => setView({ name: "chat" })} onDemo={runDemo} />; // 언제든 다시 보는 소개
-  else if (!introSeen || !profile || !project) body = <Onboarding hasProfile={!!profile && !!project} onDone={() => { write("introSeen", true); setView({ name: "chat" }); }} onDemo={runDemo} />;
+  else if (!project) body = <Welcome onNewProject={() => setNewProject(true)} onDemo={runDemo} />; // 첫 화면: 사용 설명서 → 템플릿 고르기
   else if (view.name === "reports") body = <ReportsView />;
   else if (view.name === "monthly") body = <MonthlyView key={view.ym} ym={view.ym} />;
   else if (view.name === "notes") body = <NotesView />;
@@ -111,7 +117,7 @@ export default function App() {
   else if (view.name === "settings") body = <Settings onDemo={runDemo} />;
   else body = <Chat key={project.id} project={project} />;
 
-  const docked = !splash && introSeen && !!profile && !!project && view.name !== "onboarding"; // 온보딩·스플래시에는 메뉴가 없다
+  const docked = !splash && !!project && view.name !== "onboarding"; // 사용 설명서·소개·스플래시에는 메뉴가 없다
 
   return (
     <AppCtx.Provider value={ctx}>
