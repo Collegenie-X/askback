@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import lenses from "@/data/lenses.json";
 import roles from "@/data/roles.json";
 import formats from "@/data/formats.json";
 import { askMe, deepAnswer, deepAsk, patchProject, pushMessage, runTurn } from "@/lib/actions";
 import { update, useTable } from "@/lib/db";
+import { loadExample } from "@/lib/example";
 import { checkLive, roleLabel } from "@/lib/engine";
 import { reportTitle, reportToMd, seqOf, SIX_KEYS, windowCountOf } from "@/lib/report";
 import { draftProgress, exportFilename, formatOf, projectMd } from "@/lib/draft";
@@ -23,6 +24,8 @@ import ReportCard from "./ReportCard";
 import RQCard from "./RQCard";
 import { CoachAvatar, RolePlanet, Rocket } from "./Space";
 import { Sheet } from "./ui";
+import SimDialog from "./sim/SimDialog";
+import { templateFor } from "@/lib/sim";
 
 // 확장 칩(메이커 · 공유·서버 · 협력 · AI) — 켜 둔 팩의 칩이 앞에 온다
 const PACK_QUICK = (on: Project["packs"]) => {
@@ -188,7 +191,7 @@ function CoachNote({ note }: { note: Guide }) {
   );
 }
 
-function AnswerView({ m, project, isLast, streaming, embedded, spark, note, onTick, onStreamDone, onChip, onDeep, onAskMe, onRole, onTasks, onPlan, onSpark }: {
+function AnswerView({ m, project, isLast, streaming, embedded, spark, note, onTick, onStreamDone, onChip, onDeep, onAskMe, onRole, onTasks, onPlan, onSpark, simRules, onSim }: {
   m: Extract<Message, { kind: "answer" }>;
   project: Project;
   isLast: boolean;
@@ -205,6 +208,8 @@ function AnswerView({ m, project, isLast, streaming, embedded, spark, note, onTi
   onTasks: () => void;
   onPlan: () => void;
   onSpark?: () => void;
+  simRules?: { id: string; text: string }[]; // 이 답에서 정한 규칙 중 화면에 붙은 것 (예시 템플릿)
+  onSim?: (ruleId: string) => void;
 }) {
   const { openMd } = useApp();
   const [override, setOverride] = useState<boolean | null>(null); // 지난 답은 핵심 한 줄로 접힌다
@@ -280,6 +285,22 @@ function AnswerView({ m, project, isLast, streaming, embedded, spark, note, onTi
             </button>
           )}
 
+          {/* 📱 이 답에서 정한 규칙이 화면 어디에 붙었나 — 누르면 시뮬레이터가 그 규칙의 버튼부터 연다 */}
+          {simRules && simRules.length > 0 && onSim && (
+            <div className="rounded-xl border border-clay bg-clay-soft px-3 py-2.5 text-[13px] leading-relaxed">
+              <p className="text-[11px] font-extrabold text-clay">📱 이 규칙이 화면에 붙었어 — 눌러서 돌려 봐</p>
+              <div className="mt-1.5 space-y-1.5">
+                {simRules.map((r) => (
+                  <button key={r.id} type="button" onClick={() => onSim(r.id)} className="flex w-full items-start gap-2 rounded-lg border border-clay/40 bg-card px-2.5 py-2 text-left hover:border-clay">
+                    <b className="shrink-0 text-clay">{r.id}</b>
+                    <span className="min-w-0 flex-1 font-semibold">{r.text}</span>
+                    <span className="shrink-0 rounded-full border border-clay px-2 py-0.5 text-[11px] font-bold text-clay">화면 ›</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {isLast && m.chips.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {m.chips.map((c) => (
@@ -345,6 +366,59 @@ function AnswerView({ m, project, isLast, streaming, embedded, spark, note, onTi
   );
 }
 
+/** 🚫 나쁜 예시의 첫 인사 아래 — 짝이 되는 좋은 예시와 앞 10문을 살짝 견주고, 버튼 하나로 건너간다 */
+function PairCompare({ bad, good }: { bad: Scenario; good: Scenario }) {
+  const stat = (s: Scenario) => {
+    const t = s.turns.slice(0, 10);
+    const n = t.length || 1;
+    return {
+      words: (t.reduce((a, x) => a + x.question.trim().split(/\s+/).length, 0) / n).toFixed(1),
+      six: (t.reduce((a, x) => a + Object.values(x.six ?? {}).filter(Boolean).length, 0) / n).toFixed(1),
+      ask: t.filter((x) => x.answer.ask).length,
+      rq: t.filter((x) => x.reverseQuestion).length,
+      plan: t.filter((x) => x.plan).length,
+    };
+  };
+  const b = stat(bad);
+  const g = stat(good);
+  const rows: [string, string | number, string | number][] = [
+    ["질문 길이 (평균 단어)", b.words, g.words],
+    ["질문에 담은 맥락 (6칸 중)", b.six, g.six],
+    ["🙋 열린 되묻기", b.ask, g.ask],
+    ["🧭 역질문", b.rq, g.rq],
+    ["📝 기획서에 채운 칸", b.plan, g.plan],
+  ];
+  return (
+    <div className="pair-compare mt-3 overflow-hidden rounded-2xl border border-line">
+      <table className="w-full text-[13px]">
+        <thead>
+          <tr className="bg-ink/5 text-left">
+            <th className="px-3 py-2 font-bold text-sub">앞 10문</th>
+            <th className="px-3 py-2 text-center font-bold">🚫 {bad.student.name}</th>
+            <th className="px-3 py-2 text-center font-bold">{good.card.emoji} {good.student.name}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([label, x, y]) => (
+            <tr key={label} className="border-t border-line">
+              <td className="px-3 py-1.5 text-sub">{label}</td>
+              <td className="px-3 py-1.5 text-center font-bold text-clay">{x}</td>
+              <td className="px-3 py-1.5 text-center font-bold">{y}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <button
+        type="button"
+        onClick={() => loadExample(good)}
+        className="flex w-full items-center justify-center gap-1.5 border-t border-line bg-ink px-3 py-2.5 text-[13.5px] font-bold text-paper"
+      >
+        {good.card.emoji} {good.card.title} 예시로 이동 →
+      </button>
+    </div>
+  );
+}
+
 export default function Chat({ project }: { project: Project }) {
   const { go, openDrawer, openMd, openReport, confirm } = useApp();
   const all = useTable("messages");
@@ -369,12 +443,17 @@ export default function Chat({ project }: { project: Project }) {
   const progress = draftProgress(project);
   const [openTurns, setOpenTurns] = useState<Record<string, boolean>>({}); // 턴 카드 열림 — 기본은 마지막 카드만
   const [sortNew, setSortNew] = useState(false);
-  const [filter, setFilter] = useState<"all" | "q" | "rq">("all");
+  const [filter, setFilter] = useState<"all" | "q" | "rq" | "a">("all"); // 🔍 필터 — 질문 · 되묻기 · 답 중 하나만
   const [tray, setTray] = useState<null | "quick" | "lens" | GroupKey>(null); // 입력창 위로 요술 램프처럼 솟는 트레이
   const quickOpen = tray === "quick";
   const [toolsOpen, setToolsOpen] = useState(false); // 보기 도구 줄 — 필요할 때만
   const [checksOpen, setChecksOpen] = useState(false); // 헤더의 형식 체크 칸 — 기본은 접힘
   const [sparkOpen, setSparkOpen] = useState(false); // 🔥 7단계 기획 가이드 시트
+  const [simOpen, setSimOpen] = useState(false); // 📱 화면 시뮬레이터 — 기획서로 그린 화면을 다이얼로그에서 눌러 본다
+  const [simFocus, setSimFocus] = useState<string | undefined>(); // 답 카드에서 들어온 규칙
+  const closeSim = useCallback(() => setSimOpen(false), []);
+  const simTemplate = useMemo(() => templateFor(project.id), [project.id]); // 예시 템플릿의 화면 명세 — 규칙마다 정한 질문 번호(from)가 있다
+  const openSim = (rule?: string) => { setSimFocus(rule); setSimOpen(true); };
   const [live, setLive] = useState<boolean | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
@@ -394,6 +473,8 @@ export default function Chat({ project }: { project: Project }) {
 
   const isExample = state.demoProjectId === project.id; // 시나리오 JSON에서 한꺼번에 불러온 예시
   const example = isExample ? scenarios.find((x) => `prj_example_${x.id}` === project.id) : undefined;
+  const pair = example?.pair ? scenarios.find((x) => x.id === example.pair) : undefined; // 🚫 나쁜 예시의 짝
+  const badPair = example && !example.bad ? scenarios.find((x) => x.bad && x.pair === example.id) : undefined; // 좋은 예시 → 짝이 되는 나쁜 예시
   const openPlan = () => project.plan && openMd({ title: `📝 ${project.plan.filename}`, md: project.plan.md, filename: project.plan.filename });
   // 🔥 7단계 기획 가이드 — 지금까지 채운 칸으로 레벨과 다음 빈칸을 센다
   const sparkState = example ? sparkStateOf(example, turns.filter((t) => t.projectId === project.id).length) : null;
@@ -543,10 +624,13 @@ export default function Chat({ project }: { project: Project }) {
       }
       if (m.kind === "answer") {
         const st = scriptTurnOf(m.turnId);
+        const qn = turnNo.get(m.turnId);
+        const simRules = simTemplate && qn !== undefined ? simTemplate.rules.filter((r) => r.from === qn) : undefined;
         return (
           <AnswerView key={m.id} m={m} project={project} embedded={embedded} isLast={m.id === lastAnswerId && !busy} streaming={m.id === streamId} onTick={toBottom} onStreamDone={endStream}
             spark={example && st?.spark ? { scenario: example, turn: st.spark } : null} note={st?.guide?.answer} onSpark={() => setSparkOpen(true)}
             onChip={(kind, text) => fillDraft(text, kind)} onDeep={() => setTray("lens")} onRole={() => setRoleSheet(true)} onTasks={() => setCheckKey("")} onPlan={openPlan}
+            simRules={simRules} onSim={openSim}
             onAskMe={async () => {
               setBusy(true);
               await askMe(project.id);
@@ -624,12 +708,27 @@ export default function Chat({ project }: { project: Project }) {
     blocks.splice(at, 0, { key: `report${r.index}`, kind: "report", r });
   }
   const turnBlocks = blocks.filter((x) => x.kind === "turn");
+  // 시뮬레이터 규칙의 💬 Q → 다이얼로그를 닫고 그 질문 카드를 펼쳐 보여 준다
+  const jumpToQ = (q: number) => {
+    setSimOpen(false);
+    setFilter("all");
+    const key = turnBlocks.find((x) => x.n === q)?.key;
+    if (key) setOpenTurns((o) => ({ ...o, [key]: true }));
+    setTimeout(() => document.getElementById(`q-${q}`)?.scrollIntoView({ block: "start" }), 250);
+  };
   const lastTurnKey = turnBlocks[turnBlocks.length - 1]?.key;
   const pendingTurn = turnBlocks.some((x) => x.kind === "turn" && x.a === null);
   const isOpen = (key: string) => openTurns[key] ?? (isExample || key === lastTurnKey); // 예시는 전부 펼친 채로 — 누를 것 없이 읽는다
   const allOpen = turnBlocks.length > 0 && turnBlocks.every((x) => isOpen(x.key));
   const setAll = (v: boolean) => setOpenTurns(Object.fromEntries(turnBlocks.map((x) => [x.key, v])));
-  const shown = blocks.filter((x) => (filter === "all" ? true : filter === "q" ? x.kind === "turn" : x.kind === "single" && x.m.kind === "rq"));
+  const isRq = (x: Block) => x.kind === "single" && x.m.kind === "rq";
+  const shown = blocks.filter((x) => (filter === "all" ? true : filter === "q" ? x.kind === "turn" : filter === "a" ? x.kind === "turn" && x.a !== null : isRq(x)));
+  const FILTERS = [
+    { k: "q", emoji: "💬", label: "질문", count: turnBlocks.length },
+    { k: "rq", emoji: "🧭", label: "되묻기", count: blocks.filter(isRq).length },
+    { k: "a", emoji: "🤖", label: "답", count: turnBlocks.filter((x) => x.kind === "turn" && x.a).length },
+  ] as const;
+  const activeFilter = FILTERS.find((f) => f.k === filter);
   const openReportDoc = (r: WindowReport) => {
     update("reports", (prev) => prev.map((x) => (x.index === r.index ? { ...x, opened: true } : x)));
     openMd({ title: reportTitle(r, reports), md: reportToMd(r, reports, profile?.name ?? "나"), filename: `report-${seqOf(r, reports)}.md`, variant: "report" });
@@ -646,7 +745,7 @@ export default function Chat({ project }: { project: Project }) {
           </button>
           <h1 className="min-w-[72px] flex-1 truncate px-1 text-[15px] font-bold" title={project.desc || undefined}>
             {project.emoji} {project.name}
-            {state.demoProjectId === project.id && <span className="ml-1.5 rounded-full border border-dashed border-current px-1.5 py-px text-[10px] font-bold text-sub">예시</span>}
+            {state.demoProjectId === project.id && (example?.bad ? <span className="ml-1.5 rounded-full border border-[#fb7185] bg-[#2a0f16] px-1.5 py-px text-[10px] font-bold text-[#fb7185]">🚫 나쁜 예시</span> : <span className="ml-1.5 rounded-full border border-dashed border-current px-1.5 py-px text-[10px] font-bold text-sub">예시</span>)}
             {project.answerOnly && <span className="ml-1.5 text-[11px] font-semibold text-sub">⚡ 답만</span>}
             {live && <span className="ml-1.5 text-[11px] font-semibold text-mint">● Claude</span>}
           </h1>
@@ -666,9 +765,13 @@ export default function Chat({ project }: { project: Project }) {
               📝<span className="max-[400px]:hidden"> 기획서</span>
             </button>
           )}
+          <button type="button" onClick={() => openSim()} title={simTemplate ? `화면 설계도 — 예시 템플릿 (규칙 ${simTemplate.rules.length}개)` : "화면 설계도 — 답 10개마다 AI로 한 번, 고치기는 손으로"} className="shrink-0 rounded-full border border-clay bg-clay-soft px-2.5 py-1.5 text-xs font-bold text-clay">
+            📱<span className="max-[400px]:hidden"> 화면</span>
+          </button>
           {turnBlocks.length >= 2 && (
-            <button type="button" aria-label="보기 도구" title="보기 도구 — 필터 · 모두 접기 · 정렬" aria-expanded={toolsOpen} onClick={() => { if (toolsOpen) { setFilter("all"); setSortNew(false); } setToolsOpen((v) => !v); }} className={`shrink-0 rounded-full border px-2.5 py-1.5 text-xs font-bold ${toolsOpen || filter !== "all" || sortNew ? "border-clay bg-clay-soft text-clay" : "border-line bg-card"}`}>
-              ☷
+            <button type="button" aria-label={activeFilter ? `필터: ${activeFilter.label}만 보는 중` : "필터 — 질문 · 되묻기 · 답만 보기"} title="필터 — 질문 · 되묻기 · 답만 골라 보기" aria-expanded={toolsOpen} onClick={() => { if (toolsOpen) { setFilter("all"); setSortNew(false); } setToolsOpen((v) => !v); }} className={`filter-btn shrink-0 ${activeFilter ? "is-active" : toolsOpen ? "is-open" : ""}`}>
+              <svg aria-hidden viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 4.5h18l-7 8.2v5.8l-4 2v-7.8z" /></svg>
+              <span className={activeFilter ? "" : "max-[400px]:hidden"}>{activeFilter ? `${activeFilter.emoji} ${activeFilter.label}만` : "필터"}</span>
             </button>
           )}
           <button type="button" aria-label=".md로 내보내기" title=".md로 내보내기" onClick={() => openMd({ title: `${project.name} — 전체 기록`, md: projectMd(project, true), filename: exportFilename(project, true) })} className="shrink-0 rounded-full border border-line bg-card px-2.5 py-1.5 text-xs font-bold max-[400px]:hidden">
@@ -704,14 +807,23 @@ export default function Chat({ project }: { project: Project }) {
       </header>
 
       {turnBlocks.length >= 2 && (toolsOpen || filter !== "all" || sortNew) && (
-        <div className="viewbar fade">
-          <div className="seg" role="tablist" aria-label="보기">
-            {([["all", "전체"], ["q", "질문만"], ["rq", "🧭 되묻기"]] as const).map(([k, label]) => (
-              <button key={k} type="button" role="tab" aria-selected={filter === k} onClick={() => setFilter(k)} className={filter === k ? "on" : ""}>{label}</button>
+        <div className={`viewbar filterbar fade ${activeFilter ? "is-active" : ""}`}>
+          <span className="filter-title">🔍 이것만 보기</span>
+          <div className="filter-chips" role="tablist" aria-label="필터">
+            {FILTERS.map((f) => (
+              <button key={f.k} type="button" role="tab" aria-selected={filter === f.k} onClick={() => setFilter(filter === f.k ? "all" : f.k)} className={filter === f.k ? "on" : ""}>
+                {filter === f.k ? "✓" : f.emoji} {f.label}<span className="n">{f.count}</span>
+              </button>
             ))}
           </div>
-          <button type="button" onClick={() => setAll(!allOpen)} className="tool">{allOpen ? "▴ 모두 접기" : "▾ 모두 펼치기"}</button>
-          <button type="button" onClick={() => setSortNew((v) => !v)} className="tool">{sortNew ? "↑ 최신순" : "↓ 시간순"}</button>
+          {activeFilter ? (
+            <button type="button" onClick={() => setFilter("all")} className="tool clear">✕ 전체</button>
+          ) : (
+            <>
+              <button type="button" onClick={() => setAll(!allOpen)} className="tool">{allOpen ? "▴ 접기" : "▾ 펼치기"}</button>
+              <button type="button" onClick={() => setSortNew((v) => !v)} className="tool">{sortNew ? "↑ 최신" : "↓ 시간"}</button>
+            </>
+          )}
         </div>
       )}
 
@@ -745,7 +857,17 @@ export default function Chat({ project }: { project: Project }) {
                         <SparkPanel spark={example.spark} state={sparkState} onAsk={(q) => fillDraft(q, null)} onGo={(n) => jumpTo(`q-${n}`)} />
                       </div>
                     )}
-                    <Markdown>{x.m.md.split("\n").filter((l) => !l.includes("작게 시작해서 한 단씩 키워")).join("\n")}</Markdown>{/* 예전에 불러 둔 예시에는 글 사다리가 남아 있다 */}
+                    <Markdown>{x.m.md.split("\n").filter((l) => !l.includes("작게 시작해서 한 단씩 키워") && !l.includes("나란히 보면 차이가 보여")).join("\n")}</Markdown>{/* 예전에 불러 둔 예시에는 글 사다리 · 옛 비교 문장이 남아 있다 */}
+                    {example.bad && pair && <PairCompare bad={example} good={pair} />}
+                    {badPair && (
+                      <button
+                        type="button"
+                        onClick={() => loadExample(badPair)}
+                        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-line px-3 py-2.5 text-[13.5px] font-bold"
+                      >
+                        🚫 같은 아이템을 딸깍으로만 만들면? — {badPair.card.title} 보기 →
+                      </button>
+                    )}
                   </CoachBubble>
                 </div>
               );
@@ -755,6 +877,15 @@ export default function Chat({ project }: { project: Project }) {
           if (x.kind === "report") {
             const r = x.r;
             return <ReportCard key={x.key} r={r} onDoc={() => openReportDoc(r)} onDetail={() => { update("reports", (prev) => prev.map((y) => (y.index === r.index ? { ...y, opened: true } : y))); openReport(r.index); }} />;
+          }
+          // 🤖 답만 — 질문 카드 없이 답만, 몇 번째 질문의 답인지만 위에 붙인다
+          if (filter === "a" && x.a) {
+            return (
+              <div key={x.key} className="rise">
+                <p className="mb-1.5 truncate text-[11.5px] font-bold text-sub"><b className="text-clay">Q{x.n}</b> {x.q.text}</p>
+                {renderMessage(x.a, true)}
+              </div>
+            );
           }
           const open = filter === "q" ? (openTurns[x.key] ?? false) : isOpen(x.key) || x.a?.id === streamId;
           const role = x.a?.role;
@@ -783,7 +914,7 @@ export default function Chat({ project }: { project: Project }) {
             </div>
           );
         })}
-        {filter !== "all" && ordered.length === 0 && <p className="py-10 text-center text-sm text-sub">{filter === "rq" ? "아직 되묻기가 없어." : "아직 질문이 없어."}</p>}
+        {filter !== "all" && ordered.length === 0 && <p className="py-10 text-center text-sm text-sub">{filter === "rq" ? "아직 되묻기가 없어." : filter === "a" ? "아직 답이 없어." : "아직 질문이 없어."}</p>}
 
         {messages.length <= 1 && !busy && project.format === "product" && (
           <div className="rise space-y-2 pt-2">
@@ -981,6 +1112,11 @@ export default function Chat({ project }: { project: Project }) {
                   📄 리포트 보러 가기
                 </button>
               )}
+              {project && (
+                <button type="button" className="w-full rounded-2xl border border-clay bg-clay-soft py-3 text-sm font-bold text-clay" onClick={() => { setSeenLv(level); openSim(); }}>
+                  📐 이 기획으로 화면 설계도 만들기
+                </button>
+              )}
               <button type="button" className="w-full py-2 text-sm font-semibold text-sub" onClick={() => setSeenLv(level)}>
                 계속 물어볼래
               </button>
@@ -1003,6 +1139,8 @@ export default function Chat({ project }: { project: Project }) {
           </p>
         </Sheet>
       )}
+
+      {simOpen && <SimDialog projectId={project.id} emoji={project.emoji} name={project.name} desc={project.desc} plan={project.plan?.md || projectMd(project, false)} answers={turns.filter((t) => t.projectId === project.id).length} hasPlan={Boolean(project.plan)} onClose={closeSim} focusRule={simFocus} onJump={jumpToQ} />}
 
       {roleSheet && (
         <Sheet title="네 질문이 나를 앉힌 자리" onClose={() => setRoleSheet(false)}>

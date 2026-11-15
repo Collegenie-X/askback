@@ -304,7 +304,7 @@ export function reportToMd(r: WindowReport, reports: WindowReport[], name: strin
 /* ---------- 🔎 질문 분석 .md — 내가 매번 뭘 물었고, 그 질문이 답을 어떻게 바꿨나 ---------- */
 
 /** 빠진 칸을 채우는 한 줄 초안 — 다음에 같은 걸 물을 때 이 줄만 보태면 된다 */
-const SIX_FIX: Record<SixKey, string> = {
+export const SIX_FIX: Record<SixKey, string> = {
   why: "이건 ___를 위한 거야 — ___가 되면 성공이야.",
   context: "지금 상황은 ___이고, 쓰는 사람은 ___야.",
   constraint: "___까지 해야 하고, ___는 못 써.",
@@ -323,7 +323,7 @@ export interface QuestionDocInput {
 }
 
 /** 답 .md에서 한 줄 요약을 뽑는다 — 제목·목록 기호를 걷어내고 첫 문장만. */
-function answerSummary(md: string, limit = 120) {
+export function answerSummary(md: string, limit = 120) {
   const line = md
     .split("\n")
     .map((x) => x.replace(/^[#>\-*\d.\s]+/, "").trim())

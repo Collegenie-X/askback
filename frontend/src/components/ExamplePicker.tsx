@@ -17,6 +17,7 @@ export default function ExamplePicker({ onPick, onClose }: { onPick: (s: Scenari
             <p className="flex items-center gap-2 text-[15px] font-bold">
               <span className="text-xl">{s.card.emoji}</span>
               {s.card.title}
+              {s.bad && <span className="rounded-full border border-[#fb7185] px-1.5 py-px text-[10px] font-bold text-[#fb7185]">나쁜 예시</span>}
               <span className="ml-auto shrink-0 text-[11px] font-semibold text-sub">
                 질문 {s.turns.length} · 🧭 {s.turns.filter((t) => t.reverseQuestion).length}
               </span>

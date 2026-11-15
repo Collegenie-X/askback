@@ -3,10 +3,11 @@
 // 리포트가 남기는 두 장의 .md — 📝 기획서(무엇을 만들기로 했나)와 🔎 질문 분석(내가 어떻게 물었나).
 // 리포트의 그래프는 요약이고, 진짜 남는 건 이 두 장이다.
 import { useTable } from "@/lib/db";
-import { questionsToMd, reportTitle, seqOf } from "@/lib/report";
+import { type QuestionDocInput, questionsToMd, reportTitle, seqOf } from "@/lib/report";
 import type { WindowReport } from "@/lib/types";
 import { useApp } from "./AppContext";
 import { PlanArt, ReportArt } from "./Art";
+import QuestionAnalysis from "./QuestionAnalysis";
 
 export default function ReportDocs({ r, compact }: { r: WindowReport; compact?: boolean }) {
   const { openMd } = useApp();
@@ -29,22 +30,24 @@ export default function ReportDocs({ r, compact }: { r: WindowReport; compact?: 
     project?.plan &&
     openMd({ title: `📝 ${project.plan.filename}`, md: project.plan.md, filename: project.plan.filename });
 
+  const src: QuestionDocInput = {
+    turns,
+    rqs,
+    planNoteOf: (turnId) => {
+      const m = messages.find((x) => x.kind === "answer" && x.turnId === turnId);
+      return m && m.kind === "answer" ? m.planNote : undefined;
+    },
+    answerOf: (turnId) => {
+      const m = messages.find((x) => x.kind === "answer" && x.turnId === turnId);
+      return m && m.kind === "answer" ? { md: m.md, assumptions: m.assumptions, yourCall: m.yourCall } : undefined;
+    },
+  };
   const openQuestions = () =>
     openMd({
       title: `🔎 질문 분석 · ${seq}번째 리포트`,
       subtitle: `${name} · Q${from}~Q${to}`,
-      md: questionsToMd(r, reports, name, {
-        turns,
-        rqs,
-        planNoteOf: (turnId) => {
-          const m = messages.find((x) => x.kind === "answer" && x.turnId === turnId);
-          return m && m.kind === "answer" ? m.planNote : undefined;
-        },
-        answerOf: (turnId) => {
-          const m = messages.find((x) => x.kind === "answer" && x.turnId === turnId);
-          return m && m.kind === "answer" ? { md: m.md, assumptions: m.assumptions, yourCall: m.yourCall } : undefined;
-        },
-      }),
+      md: questionsToMd(r, reports, name, src),
+      visual: <QuestionAnalysis r={r} name={name} src={src} />,
       filename: `questions-${seq}.md`,
       variant: "report",
     });

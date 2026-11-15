@@ -1,0 +1,483 @@
+{
+  "id": "bad-click",
+  "bad": true,
+  "pair": "zzingong",
+  "format": "service",
+  "packs": [
+    "ai"
+  ],
+  "card": {
+    "emoji": "🚫",
+    "title": "나쁜 예시 · 딸깍 타이머",
+    "oneLine": "몇 단어 질문 → AI가 한 번에 완성품 → 질문은 더 짧아진다. 질문 10개, 코드 702줄, 내가 내린 결정 0개. 발표 날 '왜 2초야?'에 답이 없다.",
+    "origin": "찐공 AI와 같은 아이템을 '딸깍'으로만 만들면 — 비교용 나쁜 예시 (가상)",
+    "tags": [
+      "딸깍",
+      "나쁜 예시",
+      "결정 0개"
+    ]
+  },
+  "meta": {
+    "title": "준호의 딸깍 타이머 — 무엇이 남았나",
+    "subtitle": "질문 10개 · 평균 2단어 · 되묻기 0번 · 역질문 0번 · 기획서 0칸",
+    "note": "일부러 나쁘게 만든 예시예요. 같은 아이템인 '찐공 AI' 예시와 나란히 보세요."
+  },
+  "student": {
+    "name": "준호",
+    "grade": "중2"
+  },
+  "project": {
+    "emoji": "🚫",
+    "name": "나쁜 예시 · 딸깍 타이머",
+    "desc": "몇 단어로 시키고, 완성품을 받고, 다시 시킨 10번",
+    "rhythm": 2
+  },
+  "window": {
+    "index": 1,
+    "startCount": 0,
+    "size": 10
+  },
+  "stages": [
+    {
+      "emoji": "🖱",
+      "label": "1단 · 딸깍",
+      "desc": "몇 단어로 시키면 완성품이 나온다"
+    },
+    {
+      "emoji": "🔁",
+      "label": "2단 · 오류나 → 통째로",
+      "desc": "고칠 때마다 전체 코드를 다시 받는다 — 무엇이 바뀌었는지 모른다"
+    },
+    {
+      "emoji": "🤷",
+      "label": "3단 · 발표 날",
+      "desc": "'왜?'를 받으면 AI에게 다시 묻는다 — 일반론만 돌아온다"
+    }
+  ],
+  "planDoc": {
+    "filename": "딸깍타이머_기획서.md",
+    "base": "# 🚫 딸깍 타이머 기획서\n\n> 준호 · 중2 — *나쁜 예시*\n\n## (비어 있음)\n\n질문 10개를 하는 동안 정한 칸이 하나도 없어. 목표 · 기준 · 제약 · 확인하는 법 · 안 할 것 — 전부 AI가 몰래 정했고, 어디에도 적히지 않았어.\n\n| 몰래 정해진 것 | 누가 | 근거 |\n|---|---|---|\n| 시작~정지 = 공부 | AI | 없음 |\n| 고개 숙이면 딴짓 (필기 포함) | AI | 없음 |\n| 웹캠 화면 서버 저장 | AI | 없음 |\n| 꼴찌까지 실명 공개 | AI | 없음 |\n| 딴짓 기준 6초 → 2초 | AI | 없음 |\n| 카메라 꺼지면 공부로 셈 | AI | 없음 |\n| 하품도 알림 | AI | 없음 |\n| 공부 시간 30% 증가 | AI | 잰 적 없음 |"
+  },
+  "guides": {
+    "intro": {
+      "title": "나쁜 예시예요",
+      "body": "질문은 몇 단어, 답은 완성품. 코치는 되묻지 않고, 학생은 정하지 않아요. 무엇이 남는지 보세요.",
+      "ref": "나쁜 예시"
+    },
+    "all": {
+      "title": "질문 10개를 한꺼번에",
+      "body": "답마다 붙은 🤫 해설이 'AI가 몰래 정한 것'이에요. 기획서는 비어 있어요.",
+      "ref": "나쁜 예시"
+    },
+    "afterTurns": {
+      "title": "리포트는 나오지만",
+      "body": "질문 10개 — 전부 지시형, 실은 것 0개.",
+      "ref": "나쁜 예시"
+    },
+    "lens": {
+      "title": "심화 없음",
+      "body": "되묻기가 없으니 생각을 넓힐 문도 열리지 않았어요.",
+      "ref": "나쁜 예시"
+    }
+  },
+  "turns": [
+    {
+      "id": "q1",
+      "number": 1,
+      "time": "21:03",
+      "stage": 0,
+      "scene": "딸깍 1 — 웹페이지 · 버튼 둘 · 총 시간",
+      "openness": "O1",
+      "opennessLabel": "지시형 (딸깍)",
+      "question": "공부 타이머 만들어줘",
+      "answer": {
+        "md": "완성! 🎉 **index.html** 하나로 끝나요.\n\n```html\n<button id=\"start\">시작</button>\n<button id=\"stop\">정지</button>\n<p id=\"total\">00:00:00</p>\n<script> /* … 148줄 … */ </script>\n```\n\n▶ 복사해서 실행해 보세요!\n\n> 🤫 **나쁜 예시 해설** — 이 답이 몰래 정한 것: 시작~정지 사이는 전부 공부 시간",
+        "assumptions": [],
+        "role": "typist",
+        "roleReason": "'공부 타이머 만들어줘' — 3단어라 목표 · 기준 · 제약이 하나도 없어서, 그냥 시킨 대로 만들었어"
+      },
+      "six": {
+        "why": false,
+        "context": false,
+        "constraint": false,
+        "criteria": false,
+        "verify": false
+      },
+      "chips": [],
+      "planSkip": "기획서에 남길 게 없어 — 정한 사람이 없으니까",
+      "guide": {}
+    },
+    {
+      "id": "q2",
+      "number": 2,
+      "time": "21:06",
+      "stage": 0,
+      "scene": "딸깍 2 — 얼굴 인식 · 고개 각도 25°",
+      "openness": "O1",
+      "opennessLabel": "지시형 (딸깍)",
+      "question": "카메라로 딴짓 잡아줘",
+      "answer": {
+        "md": "완성! 📷 얼굴 인식 라이브러리를 붙였어요. 고개를 숙이면 딴짓으로 기록됩니다.\n\n```js\nif (face.pitch > 25) markDistracted();\nuploadFrame(video); // 서버에 저장\n/* … 412줄 … */\n```\n\n▶ 전체 코드를 덮어쓰세요!\n\n> 🤫 **나쁜 예시 해설** — 이 답이 몰래 정한 것: 고개 숙이면 바로 딴짓 (필기도 딴짓) · 웹캠 화면을 서버에 저장",
+        "assumptions": [],
+        "role": "typist",
+        "roleReason": "'카메라로 딴짓 잡아줘' — 3단어라 목표 · 기준 · 제약이 하나도 없어서, 그냥 시킨 대로 만들었어"
+      },
+      "six": {
+        "why": false,
+        "context": false,
+        "constraint": false,
+        "criteria": false,
+        "verify": false
+      },
+      "chips": [],
+      "planSkip": "기획서에 남길 게 없어 — 정한 사람이 없으니까",
+      "guide": {}
+    },
+    {
+      "id": "q3",
+      "number": 3,
+      "time": "21:09",
+      "stage": 0,
+      "scene": "딸깍 3 — 다크 모드 · 애니메이션",
+      "openness": "O1",
+      "opennessLabel": "지시형 (딸깍)",
+      "question": "더 예쁘게",
+      "answer": {
+        "md": "완성! ✨ 다크 모드, 네온 그라디언트, 숫자가 올라가는 애니메이션을 넣었어요.\n\n```css\n:root { --neon: #a855f7; }\n/* … 220줄 … */\n```\n\n▶ 훨씬 멋져졌죠?\n\n> 🤫 **나쁜 예시 해설** — 정한 건 없어. 겉모습만 바뀌었어.",
+        "assumptions": [],
+        "role": "typist",
+        "roleReason": "'더 예쁘게' — 2단어라 목표 · 기준 · 제약이 하나도 없어서, 그냥 시킨 대로 만들었어"
+      },
+      "six": {
+        "why": false,
+        "context": false,
+        "constraint": false,
+        "criteria": false,
+        "verify": false
+      },
+      "chips": [],
+      "planSkip": "기획서에 남길 게 없어 — 정한 사람이 없으니까",
+      "guide": {}
+    },
+    {
+      "id": "q4",
+      "number": 4,
+      "time": "21:12",
+      "stage": 0,
+      "scene": "딸깍 4 — 랭킹 · 실명 · 서버",
+      "openness": "O1",
+      "opennessLabel": "지시형 (딸깍)",
+      "question": "반 순위도",
+      "answer": {
+        "md": "완성! 🏆 랭킹 페이지와 서버를 만들었어요. 반 친구들의 공부 시간이 1등부터 꼴찌까지 이름과 함께 보입니다.\n\n```js\nranking.sort((a, b) => b.total - a.total);\n/* … 서버 180줄 … */\n```\n\n> 🤫 **나쁜 예시 해설** — 이 답이 몰래 정한 것: 꼴찌까지 실명 공개 · 하루 총 시간 그대로 비교 (딴짓 포함)",
+        "assumptions": [],
+        "role": "typist",
+        "roleReason": "'반 순위도' — 2단어라 목표 · 기준 · 제약이 하나도 없어서, 그냥 시킨 대로 만들었어"
+      },
+      "six": {
+        "why": false,
+        "context": false,
+        "constraint": false,
+        "criteria": false,
+        "verify": false
+      },
+      "chips": [],
+      "planSkip": "기획서에 남길 게 없어 — 정한 사람이 없으니까",
+      "guide": {}
+    },
+    {
+      "id": "q5",
+      "number": 5,
+      "time": "21:15",
+      "stage": 1,
+      "scene": "딸깍 5 — 전체 코드 다시",
+      "openness": "O1",
+      "opennessLabel": "지시형 (딸깍)",
+      "question": "오류나",
+      "answer": {
+        "md": "고쳤어요! 🔧 전체 코드를 다시 드릴게요. 이걸로 통째로 바꾸세요. (640줄)\n\n```js\n/* … 640줄 … */\n```\n\n> 🤫 **나쁜 예시 해설** — 이 답이 몰래 정한 것: 딴짓 기준 2초로 바뀜 (예전 6초) · 예전 기록 형식이 사라짐",
+        "assumptions": [],
+        "role": "typist",
+        "roleReason": "'오류나' — 1단어라 목표 · 기준 · 제약이 하나도 없어서, 그냥 시킨 대로 만들었어"
+      },
+      "six": {
+        "why": false,
+        "context": false,
+        "constraint": false,
+        "criteria": false,
+        "verify": false
+      },
+      "chips": [],
+      "planSkip": "기획서에 남길 게 없어 — 정한 사람이 없으니까",
+      "guide": {}
+    },
+    {
+      "id": "q6",
+      "number": 6,
+      "time": "21:18",
+      "stage": 1,
+      "scene": "딸깍 6 — 라이브러리 교체",
+      "openness": "O1",
+      "opennessLabel": "지시형 (딸깍)",
+      "question": "또 오류",
+      "answer": {
+        "md": "다시 고쳤어요! 🔧 이번엔 라이브러리 버전을 바꿨어요. 전체 코드를 다시 덮어쓰세요.\n\n```js\n/* … 655줄 … */\n```\n\n> 🤫 **나쁜 예시 해설** — 이 답이 몰래 정한 것: 카메라가 안 켜지면 그 시간도 공부로 셈",
+        "assumptions": [],
+        "role": "typist",
+        "roleReason": "'또 오류' — 2단어라 목표 · 기준 · 제약이 하나도 없어서, 그냥 시킨 대로 만들었어"
+      },
+      "six": {
+        "why": false,
+        "context": false,
+        "constraint": false,
+        "criteria": false,
+        "verify": false
+      },
+      "chips": [],
+      "planSkip": "기획서에 남길 게 없어 — 정한 사람이 없으니까",
+      "guide": {}
+    },
+    {
+      "id": "q7",
+      "number": 7,
+      "time": "21:21",
+      "stage": 1,
+      "scene": "딸깍 7 — 알림 · 소리",
+      "openness": "O1",
+      "opennessLabel": "지시형 (딸깍)",
+      "question": "알림도",
+      "answer": {
+        "md": "완성! 🔔 딴짓이 감지되면 '집중하세요!' 알림이 뜨고 소리가 나요.\n\n```js\nnew Notification('집중하세요!');\n```\n\n> 🤫 **나쁜 예시 해설** — 이 답이 몰래 정한 것: 딴짓 한 번마다 알림 (하품도)",
+        "assumptions": [],
+        "role": "typist",
+        "roleReason": "'알림도' — 1단어라 목표 · 기준 · 제약이 하나도 없어서, 그냥 시킨 대로 만들었어"
+      },
+      "six": {
+        "why": false,
+        "context": false,
+        "constraint": false,
+        "criteria": false,
+        "verify": false
+      },
+      "chips": [],
+      "planSkip": "기획서에 남길 게 없어 — 정한 사람이 없으니까",
+      "guide": {}
+    },
+    {
+      "id": "q8",
+      "number": 8,
+      "time": "21:24",
+      "stage": 2,
+      "scene": "딸깍 8 — 슬라이드 6장",
+      "openness": "O1",
+      "opennessLabel": "지시형 (딸깍)",
+      "question": "발표 자료 만들어줘",
+      "answer": {
+        "md": "완성! 📊 발표 슬라이드 6장이에요.\n\n1. 찐공 타이머 — AI로 집중력을 높인다\n2. 핵심 기술: 얼굴 인식 AI\n3. 랭킹으로 동기 부여\n4. 기대 효과: 공부 시간 30% 증가\n5. 시연\n6. 감사합니다\n\n▶ 그대로 쓰면 돼요!\n\n> 🤫 **나쁜 예시 해설** — 이 답이 몰래 정한 것: '공부 시간 30% 증가' — 잰 적 없는 숫자",
+        "assumptions": [],
+        "role": "typist",
+        "roleReason": "'발표 자료 만들어줘' — 3단어라 목표 · 기준 · 제약이 하나도 없어서, 그냥 시킨 대로 만들었어"
+      },
+      "six": {
+        "why": false,
+        "context": false,
+        "constraint": false,
+        "criteria": false,
+        "verify": false
+      },
+      "chips": [],
+      "planSkip": "기획서에 남길 게 없어 — 정한 사람이 없으니까",
+      "guide": {}
+    },
+    {
+      "id": "q9",
+      "number": 9,
+      "time": "21:27",
+      "stage": 2,
+      "scene": "딸깍 9 — 일반론 답",
+      "openness": "O1",
+      "opennessLabel": "지시형 (딸깍)",
+      "question": "선생님이 왜 2초냐는데",
+      "answer": {
+        "md": "일반적으로 사람의 주의 집중이 흐트러지는 시간은 짧기 때문에, 2초는 민감하게 딴짓을 잡기 위한 적절한 값입니다. 필요하면 3초나 5초로 바꿔도 됩니다.\n\n```js\nconst THRESHOLD = 2000; // ms\n```\n\n> 🤫 **나쁜 예시 해설** — 이 답이 몰래 정한 것: '적절한 값' — 근거 없음. 학생도 AI도 모름",
+        "assumptions": [],
+        "role": "typist",
+        "roleReason": "'선생님이 왜 2초냐는데' — 3단어라 목표 · 기준 · 제약이 하나도 없어서, 그냥 시킨 대로 만들었어"
+      },
+      "six": {
+        "why": false,
+        "context": false,
+        "constraint": false,
+        "criteria": false,
+        "verify": false
+      },
+      "chips": [],
+      "planSkip": "기획서에 남길 게 없어 — 정한 사람이 없으니까",
+      "guide": {}
+    },
+    {
+      "id": "q10",
+      "number": 10,
+      "time": "21:30",
+      "stage": 2,
+      "scene": "딸깍 10 — 처음부터 다시",
+      "openness": "O1",
+      "opennessLabel": "지시형 (딸깍)",
+      "question": "그냥 다시 만들어줘",
+      "answer": {
+        "md": "알겠어요! 처음부터 새로 만들어 드릴게요. 🎉 완성! (702줄)\n\n```html\n<!-- 찐공 타이머 v2 · 702줄 -->\n```\n\n▶ 이번 건 더 깔끔해요!\n\n> 🤫 **나쁜 예시 해설** — 이 답이 몰래 정한 것: 지금까지 정한 것도 전부 새로 — 기준 · 저장 · 순위 규칙이 또 바뀜",
+        "assumptions": [],
+        "role": "typist",
+        "roleReason": "'그냥 다시 만들어줘' — 3단어라 목표 · 기준 · 제약이 하나도 없어서, 그냥 시킨 대로 만들었어"
+      },
+      "six": {
+        "why": false,
+        "context": false,
+        "constraint": false,
+        "criteria": false,
+        "verify": false
+      },
+      "chips": [],
+      "planSkip": "기획서에 남길 게 없어 — 정한 사람이 없으니까",
+      "guide": {}
+    }
+  ],
+  "deep": {
+    "lenses": [],
+    "demoLens": "psychology",
+    "origin": "",
+    "messages": [],
+    "note": "(없음 — 되묻기가 없어서 심화도 열리지 않았어)"
+  },
+  "report": {
+    "title": "나쁜 예시 · 딸깍 타이머 · 1번째 리포트",
+    "headline": "질문 10개, 남은 건 코드 702줄 — 내가 내린 결정 0개",
+    "range": "질문 Q1~Q10 · 하루 저녁 · 🚫 딸깍 타이머",
+    "lastMission": {
+      "text": "(첫 리포트)",
+      "result": "—"
+    },
+    "questions": [
+      {
+        "n": 1,
+        "question": "공부 타이머 만들어줘",
+        "comment": "지시만 — 목표 · 기준 · 이유 없음"
+      },
+      {
+        "n": 2,
+        "question": "카메라로 딴짓 잡아줘",
+        "comment": "지시만 — 목표 · 기준 · 이유 없음"
+      },
+      {
+        "n": 3,
+        "question": "더 예쁘게",
+        "comment": "지시만 — 목표 · 기준 · 이유 없음"
+      },
+      {
+        "n": 4,
+        "question": "반 순위도",
+        "comment": "지시만 — 목표 · 기준 · 이유 없음"
+      },
+      {
+        "n": 5,
+        "question": "오류나",
+        "comment": "지시만 — 목표 · 기준 · 이유 없음"
+      },
+      {
+        "n": 6,
+        "question": "또 오류",
+        "comment": "지시만 — 목표 · 기준 · 이유 없음"
+      },
+      {
+        "n": 7,
+        "question": "알림도",
+        "comment": "지시만 — 목표 · 기준 · 이유 없음"
+      },
+      {
+        "n": 8,
+        "question": "발표 자료 만들어줘",
+        "comment": "지시만 — 목표 · 기준 · 이유 없음"
+      },
+      {
+        "n": 9,
+        "question": "선생님이 왜 2초냐는데",
+        "comment": "지시만 — 목표 · 기준 · 이유 없음"
+      },
+      {
+        "n": 10,
+        "question": "그냥 다시 만들어줘",
+        "comment": "지시만 — 목표 · 기준 · 이유 없음"
+      }
+    ],
+    "mix": [
+      {
+        "role": "typist",
+        "label": "지시",
+        "count": 10
+      },
+      {
+        "role": "coder",
+        "label": "좁은",
+        "count": 0
+      },
+      {
+        "role": "engineer",
+        "label": "열린",
+        "count": 0
+      },
+      {
+        "role": "architect",
+        "label": "대안",
+        "count": 0
+      },
+      {
+        "role": "encyclopedia",
+        "label": "맨 열린",
+        "count": 0
+      }
+    ],
+    "mixReference": "참고 · 지시형만 10번이면 AI가 모든 결정을 대신 한 거야",
+    "mixComment": "10번 모두 지시형이었어. 질문은 2단어에서 시작해 '오류나' · '또 오류'처럼 1~2단어로 줄었어. 결과가 바로 나오니까 맥락을 붙일 이유가 없었던 거야. 그사이 AI가 몰래 정한 게 8개 넘게 쌓였어.",
+    "six": [
+      {
+        "label": "왜",
+        "value": 0
+      },
+      {
+        "label": "맥",
+        "value": 0
+      },
+      {
+        "label": "제",
+        "value": 0
+      },
+      {
+        "label": "기",
+        "value": 0
+      },
+      {
+        "label": "검",
+        "value": 0
+      },
+      {
+        "label": "버",
+        "value": 0
+      }
+    ],
+    "elementsBefore": [],
+    "stuck": "'왜 2초야?'에 답하지 못했어. 기준을 정한 사람이 없었고, 6초가 2초로 바뀐 것도 '오류나' 다음 전체 코드 속에 묻혀 있었어.",
+    "stuckItem": {
+      "concept": "판정 기준(몇 초)",
+      "count": 1,
+      "total": 1
+    },
+    "best": {
+      "question": "선생님이 왜 2초냐는데",
+      "comment": "유일하게 '왜'가 들어간 질문. 다만 남이 물은 걸 AI에게 넘겼을 뿐이라 일반론만 돌아왔어 — 직접 재 본 숫자가 있었다면 달랐을 거야."
+    },
+    "nextMission": {
+      "text": "다음 질문에 '왜' 한 줄과 직접 센 숫자 하나를 붙이기 — 예: \"어제 3시간 앉았는데 폰 52분… 그럼 딴짓을 어떻게 빼?\"",
+      "basis": "10번 모두 0칸. 한 칸만 실어도 AI가 몰래 정하던 결정 하나가 네 것이 돼."
+    }
+  }
+}

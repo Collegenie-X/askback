@@ -151,6 +151,10 @@ export interface DeepMessage {
 
 export interface Scenario {
   id: string;
+  /** 🚫 나쁜 예시 — 딸깍으로만 만든 대화. 규칙(되묻기 · 역질문 · 기획서)을 일부러 지키지 않는다 */
+  bad?: boolean;
+  /** 나쁜 예시와 짝이 되는 좋은 예시의 id — 첫 인사에서 나란히 비교하고 바로 건너간다 */
+  pair?: string;
   format?: "paper" | "research" | "campaign" | "service" | "product"; // 메인 앱에 불러올 때의 초안 형식
   packs?: ("maker" | "share" | "collab" | "ai")[];
   turnGuides?: Partial<Record<"ask" | "answer" | "rq" | "hint" | "feedback", Guide>>; // 턴에 guide가 없을 때 쓰는 공통 안내 (common.json)

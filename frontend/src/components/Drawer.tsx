@@ -107,7 +107,7 @@ export default function Drawer({ docked = false, onClose, onNewProject, onExampl
                     <span className="flex items-center gap-2">
                       <span className="tile h-8 w-8 text-base">{s.card.emoji}</span>
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-bold">{s.card.title}</span>
+                        <span className={`block truncate text-sm font-bold ${s.bad ? "text-[#fb7185]" : ""}`}>{s.card.title}</span>
                         <span className="block text-[11px] text-sub">{s.student.name} {s.student.grade} · 💬 질문 {s.turns.length}개</span>
                       </span>
                     </span>

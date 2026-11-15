@@ -1,0 +1,1337 @@
+{
+  "_doc": "예시 템플릿의 화면 명세 — 키는 시나리오 id (scenarios/<id>.json). 예시 프로젝트(prj_example_<id>)에서 📱 화면을 열면 이 명세가 바로 뜬다. rules[].from = 그 규칙을 정한 대화 질문 번호(Q). 대화의 답 카드 ↔ 시뮬레이터 규칙이 이 번호로 서로 이어진다. 하드웨어(웹캠 · 센서 · 스피커 · 펌프)는 진짜로 돌리지 않는다 — hardware.inputs는 손으로 움직이는 가짜 입력 값, hardware.outputs는 조건(onIf)이 맞으면 켜지는 램프다 (🔌 하드웨어 패널). 모두 예시.",
+  "zzingong": {
+    "id": "tpl_zzingong",
+    "rev": 3,
+    "emoji": "⏱",
+    "name": "찐공 AI",
+    "oneLine": "앉아 있던 시간이 아니라 딴짓을 뺀 진짜 공부 시간을 재는 레이스 타이머 — 실제 찐공 AI의 메뉴 · 화면을 가장 잘된 날의 더미 데이터로 옮긴 예시 템플릿",
+    "rules": [
+      {
+        "id": "R1",
+        "from": 2,
+        "text": "📗 찐공일 때만 순공을 센다 — 📵 딴짓은 따로 세고, ☕ 쉼은 안 센다"
+      },
+      {
+        "id": "R2",
+        "from": 7,
+        "text": "☕ 쉬는 동안은 러너도 유령도 멈춘다 — 순공 · 딴짓 둘 다 안 센다"
+      },
+      {
+        "id": "R3",
+        "from": 4,
+        "text": "신호 하나로는 판정하지 않는다 — 신호 2개 이상이 6초 넘게 이어지면 📵 딴짓"
+      },
+      {
+        "id": "R4",
+        "from": 6,
+        "text": "영상은 남기지 않는다 — 딴짓 사진은 메모리에 최근 12장만, 측정이 끝나면 전부 지운다"
+      },
+      {
+        "id": "R5",
+        "from": 7,
+        "text": "🔥 콤보 — 딴짓하면 0, 10분이면 불꽃, 30분이면 무적"
+      },
+      {
+        "id": "R6",
+        "from": 9,
+        "text": "AI 리포트 등급 — 반 상위 15% A+ · 30% A · 50% B · 70% C · 그 아래 D"
+      }
+    ],
+    "state": {
+      "focus": {
+        "label": "📗 순공",
+        "value": 252,
+        "min": 0,
+        "max": 480,
+        "unit": "분"
+      },
+      "distract": {
+        "label": "📵 딴짓",
+        "value": 8,
+        "min": 0,
+        "max": 120,
+        "unit": "분"
+      },
+      "signals": {
+        "label": "👀 AI 눈 신호",
+        "value": 0,
+        "min": 0,
+        "max": 3,
+        "unit": "개"
+      },
+      "held": {
+        "label": "⏳ 신호 2개↑ 이어진 시간",
+        "value": 0,
+        "min": 0,
+        "max": 20,
+        "unit": "초"
+      },
+      "combo": {
+        "label": "🔥 끊기지 않은 찐공",
+        "value": 38,
+        "min": 0,
+        "max": 60,
+        "unit": "분"
+      },
+      "photos": {
+        "label": "📸 메모리의 딴짓 사진",
+        "value": 0,
+        "min": 0,
+        "max": 12,
+        "unit": "장"
+      },
+      "rank": {
+        "label": "🏫 반에서 상위",
+        "value": 1,
+        "min": 1,
+        "max": 100,
+        "unit": "%"
+      },
+      "plan": {
+        "label": "🗓 계획한 과목",
+        "value": 8,
+        "min": 0,
+        "max": 8,
+        "unit": "과목"
+      },
+      "students": {
+        "label": "👥 반 학생",
+        "value": 20,
+        "min": 1,
+        "max": 40,
+        "unit": "명"
+      }
+    },
+    "start": "home",
+    "screens": [
+      {
+        "id": "home",
+        "title": "⏱ 오늘의 찐공",
+        "group": "timer",
+        "blocks": [
+          {
+            "id": "h1",
+            "type": "chips",
+            "items": [
+              "*나",
+              "김서연",
+              "박준호",
+              "+ 학생"
+            ]
+          },
+          {
+            "id": "h2",
+            "type": "big",
+            "text": "2026년 11월 15일 (일) · 오늘 순공",
+            "val": "4:12:30",
+            "sub": "Lv.9 · 집중력 ❤❤❤❤❤ · 목표 6시간 55분의 61%"
+          },
+          {
+            "id": "h3",
+            "type": "progress",
+            "text": "🏃 모험 진행 — 성까지 48분",
+            "unit": "분",
+            "data": [
+              {
+                "label": "🏃 나",
+                "value": 252,
+                "value2": 300,
+                "note": "252분"
+              },
+              {
+                "label": "👻 유령",
+                "value": 8,
+                "value2": 300,
+                "note": "8분"
+              }
+            ]
+          },
+          {
+            "id": "h4",
+            "type": "chart",
+            "text": "💎 과목별 퀘스트 — 보석 8/8",
+            "chart": "bar",
+            "unit": "분",
+            "data": [
+              {
+                "label": "국어",
+                "value": 40,
+                "value2": 40
+              },
+              {
+                "label": "영어",
+                "value": 50,
+                "value2": 50
+              },
+              {
+                "label": "수학",
+                "value": 90,
+                "value2": 90
+              },
+              {
+                "label": "사회",
+                "value": 30,
+                "value2": 30
+              },
+              {
+                "label": "역사",
+                "value": 30,
+                "value2": 30
+              },
+              {
+                "label": "과학",
+                "value": 45,
+                "value2": 45
+              },
+              {
+                "label": "물리",
+                "value": 40,
+                "value2": 40
+              },
+              {
+                "label": "독서",
+                "value": 30,
+                "value2": 30
+              }
+            ],
+            "sub": "흰 목표선을 넘으면 퀘스트 클리어"
+          },
+          {
+            "id": "h5",
+            "type": "button",
+            "text": "▶️ 레이스 시작",
+            "go": "race",
+            "do": [
+              {
+                "key": "signals",
+                "op": "set",
+                "value": 0
+              },
+              {
+                "key": "held",
+                "op": "set",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "id": "h6",
+            "type": "button",
+            "text": "🗓 오늘의 공부 계획",
+            "go": "plan"
+          },
+          {
+            "id": "h7",
+            "type": "button",
+            "text": "👤 학생 관리",
+            "go": "student"
+          }
+        ]
+      },
+      {
+        "id": "plan",
+        "title": "🗓 공부 계획",
+        "group": "timer",
+        "blocks": [
+          {
+            "id": "p8",
+            "type": "big",
+            "text": "계획한 과목 8개 · 예상 종료",
+            "val": "01:55",
+            "sub": "🔥 5시간 55분 · 학원 시간(4시간)을 빼고 자동 계산"
+          },
+          {
+            "id": "p9",
+            "type": "table",
+            "text": "📋 오늘의 공부 계획",
+            "cols": [
+              "#",
+              "과목",
+              "목표",
+              "시간"
+            ],
+            "rows": [
+              [
+                "1",
+                "국어",
+                "40분",
+                "20:00~20:40"
+              ],
+              [
+                "2",
+                "영어",
+                "50분",
+                "20:40~21:30"
+              ],
+              [
+                "3",
+                "수학",
+                "90분",
+                "21:30~23:00"
+              ],
+              [
+                "4",
+                "사회",
+                "30분",
+                "23:00~23:30"
+              ],
+              [
+                "5",
+                "역사",
+                "30분",
+                "23:30~00:00"
+              ],
+              [
+                "6",
+                "과학",
+                "45분",
+                "00:00~00:45"
+              ]
+            ],
+            "sub": "+ 물리 40분 · 독서 30분"
+          },
+          {
+            "id": "p10",
+            "type": "progress",
+            "text": "⏳ 오늘 쓸 수 있는 시간",
+            "unit": "분",
+            "data": [
+              {
+                "label": "공부",
+                "value": 355,
+                "value2": 595,
+                "note": "5시간 55분"
+              },
+              {
+                "label": "학원",
+                "value": 240,
+                "value2": 595,
+                "note": "4시간"
+              }
+            ]
+          },
+          {
+            "id": "p11",
+            "type": "button",
+            "text": "▶️ 이 계획으로 시작",
+            "go": "race"
+          },
+          {
+            "id": "p12",
+            "type": "button",
+            "text": "🏠 처음으로",
+            "go": "home"
+          }
+        ]
+      },
+      {
+        "id": "race",
+        "title": "🏃 레이스 중",
+        "group": "timer",
+        "blocks": [
+          {
+            "id": "r13",
+            "type": "chips",
+            "items": [
+              "*수학",
+              "90분 목표",
+              "🎥 AI 감지 켜짐"
+            ]
+          },
+          {
+            "id": "r14",
+            "type": "big",
+            "text": "💪 찐공",
+            "val": "00:42:10",
+            "sub": "👻 가짜 공부 0:20 · 💎 순도 99% · 🔥 콤보 38:00"
+          },
+          {
+            "id": "r15",
+            "type": "progress",
+            "text": "🏁 결승선까지 — 수학 90분",
+            "unit": "분",
+            "data": [
+              {
+                "label": "🏃 러너",
+                "value": 42,
+                "value2": 90,
+                "note": "47%"
+              },
+              {
+                "label": "👻 유령",
+                "value": 1,
+                "value2": 90,
+                "note": "한참 뒤"
+              }
+            ]
+          },
+          {
+            "id": "r16",
+            "type": "chart",
+            "text": "📈 집중 리듬 — 최고 몰입 15~42분",
+            "chart": "line",
+            "unit": "%",
+            "data": [
+              {
+                "label": "0분",
+                "value": 40
+              },
+              {
+                "label": "5분",
+                "value": 62
+              },
+              {
+                "label": "10분",
+                "value": 78
+              },
+              {
+                "label": "15분",
+                "value": 90
+              },
+              {
+                "label": "20분",
+                "value": 94
+              },
+              {
+                "label": "25분",
+                "value": 96
+              },
+              {
+                "label": "30분",
+                "value": 97
+              },
+              {
+                "label": "35분",
+                "value": 98
+              },
+              {
+                "label": "40분",
+                "value": 98
+              }
+            ]
+          },
+          {
+            "id": "r17",
+            "type": "notice",
+            "text": "🛡 무적 콤보 — 30분 넘게 한 번도 안 끊겼어",
+            "tone": "good"
+          },
+          {
+            "id": "r18",
+            "type": "button",
+            "text": "⏩ 10분 집중했어",
+            "rule": "R5",
+            "do": [
+              {
+                "key": "focus",
+                "op": "add",
+                "value": 10
+              },
+              {
+                "key": "combo",
+                "op": "add",
+                "value": 10
+              }
+            ]
+          },
+          {
+            "id": "r19",
+            "type": "button",
+            "text": "⏸ 일시정지",
+            "go": "rest",
+            "rule": "R2"
+          },
+          {
+            "id": "r20",
+            "type": "button",
+            "text": "⏹ 종료 & 저장",
+            "go": "done",
+            "rule": "R4",
+            "do": [
+              {
+                "key": "photos",
+                "op": "set",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rest",
+        "title": "☕ 쉬는 중",
+        "group": "timer",
+        "blocks": [
+          {
+            "id": "s21",
+            "type": "big",
+            "text": "쉬는 시간",
+            "val": "05:00",
+            "sub": "러너도 유령도 멈췄어 — 순공 · 딴짓 둘 다 안 센다"
+          },
+          {
+            "id": "s22",
+            "type": "progress",
+            "text": "오늘 쉰 시간",
+            "unit": "분",
+            "data": [
+              {
+                "label": "☕ 쉼",
+                "value": 25,
+                "value2": 60,
+                "note": "25분 / 60분"
+              }
+            ]
+          },
+          {
+            "id": "s23",
+            "type": "button",
+            "text": "▶️ 다시 시작",
+            "go": "race",
+            "rule": "R2"
+          }
+        ]
+      },
+      {
+        "id": "done",
+        "title": "✅ 저장 완료",
+        "group": "timer",
+        "blocks": [
+          {
+            "id": "d24",
+            "type": "big",
+            "text": "오늘 순공",
+            "val": "4:12:30",
+            "sub": "🏆 오늘 목표 달성 · 반 1등 유지"
+          },
+          {
+            "id": "d25",
+            "type": "chart",
+            "text": "💎 오늘의 순도",
+            "chart": "donut",
+            "val": "97%",
+            "data": [
+              {
+                "label": "찐공",
+                "value": 252,
+                "note": "4시간 12분"
+              },
+              {
+                "label": "딴짓",
+                "value": 8,
+                "note": "8분"
+              },
+              {
+                "label": "쉼",
+                "value": 25,
+                "note": "25분"
+              }
+            ]
+          },
+          {
+            "id": "d26",
+            "type": "progress",
+            "text": "📶 오늘의 기록 — 8과목 모두 목표 달성",
+            "unit": "분",
+            "data": [
+              {
+                "label": "국어",
+                "value": 40,
+                "value2": 40,
+                "note": "40분 100%"
+              },
+              {
+                "label": "영어",
+                "value": 50,
+                "value2": 50,
+                "note": "50분 100%"
+              },
+              {
+                "label": "수학",
+                "value": 90,
+                "value2": 90,
+                "note": "90분 100%"
+              },
+              {
+                "label": "사회",
+                "value": 30,
+                "value2": 30,
+                "note": "30분 100%"
+              },
+              {
+                "label": "역사",
+                "value": 30,
+                "value2": 30,
+                "note": "30분 100%"
+              },
+              {
+                "label": "과학",
+                "value": 45,
+                "value2": 45,
+                "note": "45분 100%"
+              },
+              {
+                "label": "물리",
+                "value": 40,
+                "value2": 40,
+                "note": "40분 100%"
+              },
+              {
+                "label": "독서",
+                "value": 30,
+                "value2": 30,
+                "note": "30분 100%"
+              }
+            ]
+          },
+          {
+            "id": "d27",
+            "type": "notice",
+            "text": "🗑 딴짓 사진 0장 — 메모리에서 전부 지웠어",
+            "tone": "good"
+          },
+          {
+            "id": "d28",
+            "type": "button",
+            "text": "📊 AI 리포트 보기",
+            "go": "report",
+            "rule": "R6"
+          },
+          {
+            "id": "d29",
+            "type": "button",
+            "text": "🏠 처음으로",
+            "go": "home"
+          }
+        ]
+      },
+      {
+        "id": "student",
+        "title": "👤 학생 관리",
+        "group": "timer",
+        "blocks": [
+          {
+            "id": "u30",
+            "type": "big",
+            "text": "우리 반",
+            "val": "20",
+            "unit": "명",
+            "sub": "이름 대신 별명도 돼 — 서버엔 숫자만 간다"
+          },
+          {
+            "id": "u31",
+            "type": "table",
+            "text": "👥 이번 주 순공 TOP 5",
+            "cols": [
+              "순위",
+              "학생",
+              "순공",
+              "집중률"
+            ],
+            "rows": [
+              [
+                "1",
+                "나",
+                "31시간",
+                "97%"
+              ],
+              [
+                "2",
+                "김서연",
+                "29시간",
+                "93%"
+              ],
+              [
+                "3",
+                "박준호",
+                "27시간",
+                "91%"
+              ],
+              [
+                "4",
+                "이하은",
+                "25시간",
+                "90%"
+              ],
+              [
+                "5",
+                "최민재",
+                "24시간",
+                "88%"
+              ]
+            ]
+          },
+          {
+            "id": "u32",
+            "type": "button",
+            "text": "➕ 학생 추가",
+            "do": [
+              {
+                "key": "students",
+                "op": "add",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "id": "u33",
+            "type": "button",
+            "text": "🏠 처음으로",
+            "go": "home"
+          }
+        ]
+      },
+      {
+        "id": "dash",
+        "title": "🏫 반 순위",
+        "group": "dash",
+        "blocks": [
+          {
+            "id": "a34",
+            "type": "chips",
+            "items": [
+              "오늘",
+              "*1주",
+              "1달",
+              "3달"
+            ]
+          },
+          {
+            "id": "a35",
+            "type": "big",
+            "text": "1주 순공 · 반 20명 중",
+            "val": "1등",
+            "sub": "상위 5% · 최상위권 · 나 31시간 12분 (평균 +15시간)"
+          },
+          {
+            "id": "a36",
+            "type": "notice",
+            "text": "💬 코치 한마디 — 8과목 모두 반 평균 이상, 1등 4일째 유지 중",
+            "tone": "good"
+          },
+          {
+            "id": "a37",
+            "type": "progress",
+            "text": "🏅 공부 습관 순위",
+            "data": [
+              {
+                "label": "순공 시간",
+                "value": 20,
+                "value2": 20,
+                "note": "1/20"
+              },
+              {
+                "label": "집중률",
+                "value": 20,
+                "value2": 20,
+                "note": "1/20"
+              },
+              {
+                "label": "공부한 날",
+                "value": 20,
+                "value2": 20,
+                "note": "1/20"
+              }
+            ]
+          },
+          {
+            "id": "a38",
+            "type": "chart",
+            "text": "📅 최근 7일 하루 순공",
+            "chart": "bar",
+            "unit": "분",
+            "data": [
+              {
+                "label": "월",
+                "value": 250,
+                "note": "250"
+              },
+              {
+                "label": "화",
+                "value": 268,
+                "note": "268"
+              },
+              {
+                "label": "수",
+                "value": 242,
+                "note": "242"
+              },
+              {
+                "label": "목",
+                "value": 281,
+                "note": "281"
+              },
+              {
+                "label": "금",
+                "value": 259,
+                "note": "259"
+              },
+              {
+                "label": "토",
+                "value": 310,
+                "note": "310"
+              },
+              {
+                "label": "일",
+                "value": 252,
+                "note": "252"
+              }
+            ],
+            "sub": "7일 모두 반 1등"
+          },
+          {
+            "id": "a39",
+            "type": "table",
+            "text": "📚 과목별 순위",
+            "cols": [
+              "과목",
+              "순위",
+              "평균 대비"
+            ],
+            "rows": [
+              [
+                "영어",
+                "1/20",
+                "+4시간 35분"
+              ],
+              [
+                "과학",
+                "1/20",
+                "+4시간 9분"
+              ],
+              [
+                "수학",
+                "1/20",
+                "+3시간 2분"
+              ],
+              [
+                "국어",
+                "1/20",
+                "+1시간 55분"
+              ]
+            ]
+          },
+          {
+            "id": "a40",
+            "type": "button",
+            "text": "📊 AI 학습 리포트",
+            "go": "report",
+            "rule": "R6"
+          }
+        ]
+      },
+      {
+        "id": "report",
+        "title": "🤖 AI 리포트",
+        "group": "dash",
+        "blocks": [
+          {
+            "id": "q41",
+            "type": "big",
+            "text": "최근 1주 · 반 20명 기준",
+            "val": "A+",
+            "sub": "최고예요! 20명 중 1등 · 상위 5%"
+          },
+          {
+            "id": "q42",
+            "type": "table",
+            "text": "📋 한 주 요약",
+            "cols": [
+              "순공",
+              "집중률",
+              "공부한 날",
+              "쉬는 시간"
+            ],
+            "rows": [
+              [
+                "31시간 12분",
+                "97%",
+                "7/7일",
+                "2시간 50분"
+              ]
+            ]
+          },
+          {
+            "id": "q43",
+            "type": "chart",
+            "text": "📈 공부량 흐름 — 나 vs 반 평균",
+            "chart": "line",
+            "unit": "분",
+            "data": [
+              {
+                "label": "11/9",
+                "value": 250,
+                "value2": 120
+              },
+              {
+                "label": "11/10",
+                "value": 268,
+                "value2": 130
+              },
+              {
+                "label": "11/11",
+                "value": 242,
+                "value2": 118
+              },
+              {
+                "label": "11/12",
+                "value": 281,
+                "value2": 125
+              },
+              {
+                "label": "11/13",
+                "value": 259,
+                "value2": 122
+              },
+              {
+                "label": "11/14",
+                "value": 310,
+                "value2": 135
+              },
+              {
+                "label": "11/15",
+                "value": 252,
+                "value2": 128
+              }
+            ]
+          },
+          {
+            "id": "q44",
+            "type": "progress",
+            "text": "⚖️ 과목 밸런스 — 내 시간 ÷ 반 평균",
+            "data": [
+              {
+                "label": "국어",
+                "value": 205,
+                "value2": 250,
+                "note": "강점"
+              },
+              {
+                "label": "영어",
+                "value": 240,
+                "value2": 250,
+                "note": "강점"
+              },
+              {
+                "label": "수학",
+                "value": 230,
+                "value2": 250,
+                "note": "강점"
+              },
+              {
+                "label": "사회",
+                "value": 195,
+                "value2": 250,
+                "note": "강점"
+              },
+              {
+                "label": "역사",
+                "value": 200,
+                "value2": 250,
+                "note": "강점"
+              },
+              {
+                "label": "과학",
+                "value": 235,
+                "value2": 250,
+                "note": "강점"
+              },
+              {
+                "label": "물리",
+                "value": 190,
+                "value2": 250,
+                "note": "강점"
+              },
+              {
+                "label": "독서",
+                "value": 185,
+                "value2": 250,
+                "note": "강점"
+              }
+            ]
+          },
+          {
+            "id": "q45",
+            "type": "list",
+            "items": [
+              "🏅 반 1등, 상위 5%에 들었어",
+              "🎯 집중률 97% — 딴짓 없이 몰입했어",
+              "📅 7일 모두 공부했어. 꾸준함이 최고의 무기!"
+            ]
+          },
+          {
+            "id": "q46",
+            "type": "notice",
+            "text": "🎯 다음 미션 — 지금처럼 매일 같은 시간에 타이머 켜기",
+            "tone": "good"
+          },
+          {
+            "id": "q47",
+            "type": "button",
+            "text": "🏠 타이머로",
+            "go": "home"
+          }
+        ]
+      },
+      {
+        "id": "data",
+        "title": "🗂 데이터 관리",
+        "group": "data",
+        "blocks": [
+          {
+            "id": "t48",
+            "type": "chips",
+            "items": [
+              "총 세션 6,550건",
+              "학생 20명",
+              "4,291시간",
+              "91일"
+            ]
+          },
+          {
+            "id": "t49",
+            "type": "chart",
+            "text": "📚 과목별 누적 시간",
+            "chart": "bar",
+            "unit": "시간",
+            "data": [
+              {
+                "label": "수학",
+                "value": 1098
+              },
+              {
+                "label": "영어",
+                "value": 660
+              },
+              {
+                "label": "과학",
+                "value": 568
+              },
+              {
+                "label": "국어",
+                "value": 477
+              },
+              {
+                "label": "물리",
+                "value": 456
+              },
+              {
+                "label": "독서",
+                "value": 367
+              },
+              {
+                "label": "역사",
+                "value": 343
+              },
+              {
+                "label": "사회",
+                "value": 324
+              }
+            ]
+          },
+          {
+            "id": "t50",
+            "type": "table",
+            "text": "🧾 최근 세션",
+            "cols": [
+              "학생",
+              "과목",
+              "날짜",
+              "공부 시간"
+            ],
+            "rows": [
+              [
+                "나",
+                "수학",
+                "11/15",
+                "1시간 7분"
+              ],
+              [
+                "나",
+                "영어",
+                "11/15",
+                "48분"
+              ],
+              [
+                "김서연",
+                "과학",
+                "11/14",
+                "1시간 4분"
+              ],
+              [
+                "박준호",
+                "수학",
+                "11/14",
+                "55분"
+              ],
+              [
+                "이하은",
+                "국어",
+                "11/14",
+                "42분"
+              ]
+            ],
+            "sub": "6,550건 중 1–5 · 행을 누르면 상세"
+          },
+          {
+            "id": "t51",
+            "type": "button",
+            "text": "🔍 세션 상세",
+            "go": "session"
+          },
+          {
+            "id": "t52",
+            "type": "button",
+            "text": "⬇ 내보내기"
+          }
+        ]
+      },
+      {
+        "id": "session",
+        "title": "🔍 세션 상세",
+        "group": "data",
+        "blocks": [
+          {
+            "id": "e53",
+            "type": "big",
+            "text": "수학 · 11/15 19:41 ~ 20:52",
+            "val": "1:07:20",
+            "sub": "일시정지 1회 · 4분"
+          },
+          {
+            "id": "e54",
+            "type": "chart",
+            "text": "🧩 딴짓 유형 — 거의 없음",
+            "chart": "donut",
+            "val": "98%",
+            "data": [
+              {
+                "label": "찐공",
+                "value": 67,
+                "note": "67분"
+              },
+              {
+                "label": "멍때림",
+                "value": 1,
+                "note": "1분"
+              },
+              {
+                "label": "핸드폰",
+                "value": 0,
+                "note": "0분"
+              },
+              {
+                "label": "졸음",
+                "value": 0,
+                "note": "0분"
+              }
+            ]
+          },
+          {
+            "id": "e55",
+            "type": "chart",
+            "text": "📈 최근 14일 집중도",
+            "chart": "line",
+            "unit": "%",
+            "data": [
+              {
+                "label": "2일",
+                "value": 88
+              },
+              {
+                "label": "3일",
+                "value": 90
+              },
+              {
+                "label": "4일",
+                "value": 89
+              },
+              {
+                "label": "5일",
+                "value": 92
+              },
+              {
+                "label": "6일",
+                "value": 91
+              },
+              {
+                "label": "7일",
+                "value": 93
+              },
+              {
+                "label": "8일",
+                "value": 94
+              },
+              {
+                "label": "9일",
+                "value": 92
+              },
+              {
+                "label": "10일",
+                "value": 95
+              },
+              {
+                "label": "11일",
+                "value": 96
+              },
+              {
+                "label": "12일",
+                "value": 95
+              },
+              {
+                "label": "13일",
+                "value": 97
+              },
+              {
+                "label": "14일",
+                "value": 98
+              },
+              {
+                "label": "15일",
+                "value": 98
+              }
+            ]
+          },
+          {
+            "id": "e56",
+            "type": "notice",
+            "text": "🎥 영상 · 사진은 없어 — 숫자만 남는다",
+            "tone": "good"
+          },
+          {
+            "id": "e57",
+            "type": "button",
+            "text": "↩️ 목록으로",
+            "go": "data"
+          }
+        ]
+      },
+      {
+        "id": "about",
+        "title": "📖 소개",
+        "group": "about",
+        "blocks": [
+          {
+            "id": "o58",
+            "type": "big",
+            "text": "딴짓 빼고 재는",
+            "val": "진짜 순공",
+            "sub": "카메라 속 AI가 지켜보고, 앉아 있던 시간에서 가짜 공부를 덜어낸다"
+          },
+          {
+            "id": "o59",
+            "type": "chart",
+            "text": "🪑 책상 앞 3시간 중 진짜 순공",
+            "chart": "donut",
+            "val": "1:32",
+            "data": [
+              {
+                "label": "찐공",
+                "value": 92,
+                "note": "1시간 32분"
+              },
+              {
+                "label": "핸드폰",
+                "value": 40,
+                "note": "40분"
+              },
+              {
+                "label": "멍때림",
+                "value": 30,
+                "note": "30분"
+              },
+              {
+                "label": "책상 정리",
+                "value": 18,
+                "note": "18분"
+              }
+            ]
+          },
+          {
+            "id": "o60",
+            "type": "chips",
+            "items": [
+              "🗓 계획",
+              "🧠 AI 감지",
+              "🏃 레이스",
+              "🔢 기록",
+              "🏫 반 비교",
+              "🤖 리포트"
+            ]
+          },
+          {
+            "id": "o61",
+            "type": "button",
+            "text": "▶️ 타이머 시작하기",
+            "go": "home"
+          },
+          {
+            "id": "o62",
+            "type": "button",
+            "text": "📊 AI 리포트 보기",
+            "go": "report"
+          }
+        ]
+      }
+    ],
+    "hardware": {
+      "inputs": [
+        {
+          "key": "signals",
+          "device": "📷 웹캠 → AI 눈"
+        },
+        {
+          "key": "held",
+          "device": "📷 웹캠 → 초 세기"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "alarm",
+          "label": "🔊 딴짓 경보",
+          "device": "💻 노트북 스피커",
+          "onIf": {
+            "key": "held",
+            "op": ">=",
+            "value": 6
+          },
+          "rule": "R3"
+        },
+        {
+          "id": "mem",
+          "label": "📸 딴짓 사진 (메모리)",
+          "device": "💻 노트북 메모리 · 파일로 안 남김",
+          "onIf": {
+            "key": "photos",
+            "op": ">",
+            "value": 0
+          },
+          "rule": "R4"
+        }
+      ]
+    },
+    "menu": [
+      {
+        "id": "timer",
+        "title": "⏱ 타이머",
+        "path": "/"
+      },
+      {
+        "id": "dash",
+        "title": "📊 대시보드",
+        "path": "/dashboard"
+      },
+      {
+        "id": "data",
+        "title": "🗂 데이터",
+        "path": "/data"
+      },
+      {
+        "id": "about",
+        "title": "📖 소개",
+        "path": "/about"
+      }
+    ]
+  }
+}

@@ -317,6 +317,20 @@ body:has(.phone)::after {
 .phone .seg button { flex: 1; white-space: nowrap; border-radius: 9px; padding: 5px 6px; color: var(--color-sub); }
 .phone .seg button.on { background: #ffc83d; color: #1d1600; }
 .phone .viewbar .tool { flex-shrink: 0; white-space: nowrap; border-radius: 10px; background: var(--color-sand); padding: 7px 9px; color: var(--color-ink); }
+/* 🔍 필터 — 헤더 버튼과 아래 줄. 지금 무엇만 보고 있는지 한눈에 보여야 한다 */
+.phone .filter-btn { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; border: 1.5px solid #6c5ce7; background: #1a1640; padding: 5px 10px; font-size: 12px; font-weight: 800; color: #c4b5fd; }
+.phone .filter-btn.is-open { background: #2a2366; color: #fff; box-shadow: 0 0 0 3px #6c5ce755; }
+.phone .filter-btn.is-active { border-color: #ffc83d; background: #ffc83d; color: #1d1600; box-shadow: 0 0 0 3px #ffc83d44, 0 0 16px #ffc83d66; }
+.phone .filterbar { flex-wrap: wrap; gap: 8px; padding: 10px 14px; background: #120f2e; border-bottom: 2px solid #6c5ce7; }
+.phone .filterbar.is-active { background: #221a05; border-bottom-color: #ffc83d; }
+.phone .filter-title { flex-shrink: 0; font-size: 12px; font-weight: 800; color: #c4b5fd; }
+.phone .filterbar.is-active .filter-title { color: #ffc83d; }
+.phone .filter-chips { display: flex; flex: 1; min-width: 0; gap: 6px; }
+.phone .filter-chips button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; border-radius: 12px; border: 1.5px solid var(--color-line); background: var(--color-card); padding: 8px 6px; font-size: 13px; font-weight: 800; color: var(--color-ink); }
+.phone .filter-chips button .n { border-radius: 999px; background: var(--color-sand); padding: 0 6px; font-size: 11px; color: var(--color-sub); }
+.phone .filter-chips button.on { border-color: #ffc83d; background: #ffc83d; color: #1d1600; box-shadow: 0 2px 12px #ffc83d55; }
+.phone .filter-chips button.on .n { background: #1d160022; color: #1d1600; }
+.phone .viewbar .tool.clear { border: 1.5px solid #ffc83d; background: transparent; color: #ffc83d; }
 .phone .demobar { border-top: 1px solid var(--color-line); background: #10152e; padding: 8px 12px; }
 
 /* 요술 램프 — 입력창 위 트레이가 아래 버튼에서 빨려 나오듯 솟는다 */

@@ -234,7 +234,9 @@ const STEPS: Step[] = [
 
 export default function Welcome({ onNewProject, onDemo }: { onNewProject: () => void; onDemo: () => void }) {
   const { go } = useApp();
-  const [step, setStep] = useState(0);
+  // 처음엔 설명서를 건너뛰고 시작 칸(마지막 칸)부터 — "사용 설명서 보기"를 누를 때만 1칸부터 펼친다
+  const [guide, setGuide] = useState(false);
+  const [step, setStep] = useState(STEPS.length - 1);
   const s = STEPS[step];
   const last = step === STEPS.length - 1;
   const next = () => !last && setStep(step + 1);
@@ -247,7 +249,7 @@ export default function Welcome({ onNewProject, onDemo }: { onNewProject: () => 
     <>
       <div className="pointer-events-none absolute inset-0 -z-[1] bg-[#05041a]/90" />
       <div className="scroll flex min-h-0 flex-1 flex-col px-7 pb-[max(16px,env(safe-area-inset-bottom))] pt-5">
-        <div className="mb-3 grid grid-cols-[1fr_auto_1fr] items-center">
+        {guide && <div className="mb-3 grid grid-cols-[1fr_auto_1fr] items-center">
           {step === 0 ? (
             <span className="justify-self-start text-xs font-semibold text-clay">📘 사용 설명서</span>
           ) : (
@@ -259,7 +261,7 @@ export default function Welcome({ onNewProject, onDemo }: { onNewProject: () => 
             ))}
           </div>
           <button type="button" className={`justify-self-end text-xs font-semibold text-sub ${last ? "invisible" : ""}`} onClick={() => setStep(STEPS.length - 1)}>건너뛰기</button>
-        </div>
+        </div>}
 
         <div
           key={step}
@@ -268,7 +270,7 @@ export default function Welcome({ onNewProject, onDemo }: { onNewProject: () => 
         >
           <div className="rise flex w-full flex-1 items-center justify-center py-1">{s.art}</div>
 
-          <p className="rise mt-2 text-[10px] font-extrabold tracking-[0.08em] text-sub">STEP {step + 1} / {STEPS.length}</p>
+          {guide && <p className="rise mt-2 text-[10px] font-extrabold tracking-[0.08em] text-sub">STEP {step + 1} / {STEPS.length}</p>}
           <p className="ob-pop text-[28px] font-black leading-tight tracking-tight" style={{ color: s.c, animationDelay: "0.1s" }}>{s.word}</p>
           <h1 className="rise mt-1 max-w-[340px] text-[18px] font-extrabold leading-snug [word-break:keep-all]" style={{ animationDelay: "0.2s" }}>{s.title}</h1>
           <p className="rise mt-2 max-w-[340px] text-[13.5px] leading-[1.7] text-sub [word-break:keep-all]" style={{ animationDelay: "0.3s" }}>{s.desc}</p>
@@ -290,7 +292,10 @@ export default function Welcome({ onNewProject, onDemo }: { onNewProject: () => 
                   <button type="button" onClick={onDemo} className="rounded-2xl border border-clay py-2.5 text-[13px] font-bold text-clay">📂 예시 먼저 보기</button>
                   <button type="button" onClick={free} className="rounded-2xl border border-line bg-card py-2.5 text-[13px] font-bold">💬 그냥 물어볼래</button>
                 </div>
-                <Link href="/about" className="block pt-2 text-xs font-semibold text-sub">✨ 더 자세한 소개 보기</Link>
+                <div className="flex justify-center gap-4 pt-2 text-xs font-semibold text-sub">
+                  <button type="button" onClick={() => { setGuide(true); setStep(0); }}>📘 사용 설명서 보기</button>
+                  <Link href="/about">✨ 소개 다시 보기</Link>
+                </div>
               </>
             ) : (
               <span className="mx-auto flex w-fit items-center gap-2 rounded-full border border-line bg-card px-4 py-1.5 text-[13px] font-semibold">

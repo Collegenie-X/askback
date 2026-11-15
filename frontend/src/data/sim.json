@@ -1,0 +1,97 @@
+{
+  "_doc": "화면 시뮬레이터 MVP 더미 데이터 (/sim). 코드는 없다 — 화면(screens) · 칸(blocks) · 값(state) · 규칙(rules)만 있고, 정해진 렌더러(components/sim/Simulator.tsx)가 그린다. 칸 종류: text 글 · stat 숫자(bind) · notice 알림(showIf) · button 버튼(go 이동 · do 값 바꾸기 · rule 따르는 규칙 · disabledIf 막는 조건) · list 목록 · image 그림 자리. 글 안의 {키}는 지금 값으로 바뀐다.",
+  "projects": [
+    {
+      "id": "plant",
+      "emoji": "🌱",
+      "name": "스마트 화분",
+      "oneLine": "흙이 마르면 알려 주고, 너무 많이 주는 것도 막아 주는 화분 앱",
+      "rules": [
+        { "id": "R1", "text": "습도가 30% 아래면 '목말라요' 알림을 띄운다" },
+        { "id": "R2", "text": "물 한 번에 습도 +30, 100%를 넘지 않는다" },
+        { "id": "R3", "text": "습도가 80% 이상이면 물 주기를 막는다 (과습 방지)" },
+        { "id": "R4", "text": "물 준 횟수를 기록에 남긴다" }
+      ],
+      "state": {
+        "moisture": { "label": "💧 흙 습도", "value": 45, "min": 0, "max": 100, "unit": "%" },
+        "watered": { "label": "🚿 물 준 횟수", "value": 0, "min": 0, "max": 20, "unit": "번" }
+      },
+      "start": "home",
+      "screens": [
+        {
+          "id": "home",
+          "title": "오늘의 화분",
+          "blocks": [
+            { "id": "p1", "type": "image", "text": "🪴 화분 사진" },
+            { "id": "p2", "type": "stat", "text": "흙 습도", "bind": "moisture" },
+            { "id": "p3", "type": "notice", "text": "😵 목말라요! 물을 주세요", "tone": "warn", "showIf": { "key": "moisture", "op": "<", "value": 30 } },
+            { "id": "p4", "type": "notice", "text": "😌 지금은 충분해요", "tone": "good", "showIf": { "key": "moisture", "op": ">=", "value": 80 } },
+            { "id": "p5", "type": "button", "text": "🚿 물 주기", "go": "watering", "rule": "R3", "disabledIf": { "key": "moisture", "op": ">=", "value": 80 } },
+            { "id": "p6", "type": "button", "text": "📒 기록 보기", "go": "log" }
+          ]
+        },
+        {
+          "id": "watering",
+          "title": "급수 중",
+          "blocks": [
+            { "id": "p7", "type": "text", "text": "물을 주고 있어요… 지금 습도 {moisture}%" },
+            { "id": "p8", "type": "button", "text": "✅ 다 줬어", "go": "home", "rule": "R2", "do": [{ "key": "moisture", "op": "add", "value": 30 }, { "key": "watered", "op": "add", "value": 1 }] },
+            { "id": "p9", "type": "button", "text": "↩️ 취소", "go": "home" }
+          ]
+        },
+        {
+          "id": "log",
+          "title": "물 준 기록",
+          "blocks": [
+            { "id": "p10", "type": "stat", "text": "이번 주 물 준 횟수", "bind": "watered" },
+            { "id": "p11", "type": "list", "items": ["월 — 아침 8시", "수 — 저녁 6시", "오늘 — {watered}번"] },
+            { "id": "p12", "type": "button", "text": "🧹 기록 지우기", "rule": "R4", "do": [{ "key": "watered", "op": "set", "value": 0 }] },
+            { "id": "p13", "type": "button", "text": "🏠 처음으로", "go": "home" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lunch",
+      "emoji": "🍱",
+      "name": "급식 투표",
+      "oneLine": "내일 급식 메뉴를 반 친구들이 한 표씩 던져 정하는 앱",
+      "rules": [
+        { "id": "R1", "text": "한 사람은 한 표만 — 투표하면 버튼이 막힌다" },
+        { "id": "R2", "text": "결과는 투표한 사람만 볼 수 있다" },
+        { "id": "R3", "text": "표가 같으면 '재투표' 알림을 띄운다" },
+        { "id": "R4", "text": "다시 하기는 표를 모두 0으로 되돌린다" }
+      ],
+      "state": {
+        "a": { "label": "🍗 치킨마요 표", "value": 7, "min": 0, "max": 30, "unit": "표" },
+        "b": { "label": "🍜 짜장면 표", "value": 8, "min": 0, "max": 30, "unit": "표" },
+        "voted": { "label": "🗳 내가 투표했나 (0/1)", "value": 0, "min": 0, "max": 1, "unit": "" }
+      },
+      "start": "vote",
+      "screens": [
+        {
+          "id": "vote",
+          "title": "내일 급식 뭐 먹지?",
+          "blocks": [
+            { "id": "l1", "type": "text", "text": "하나만 골라 줘. 한 번 누르면 못 바꿔!" },
+            { "id": "l2", "type": "button", "text": "🍗 치킨마요", "rule": "R1", "do": [{ "key": "a", "op": "add", "value": 1 }, { "key": "voted", "op": "set", "value": 1 }], "disabledIf": { "key": "voted", "op": "==", "value": 1 } },
+            { "id": "l3", "type": "button", "text": "🍜 짜장면", "rule": "R1", "do": [{ "key": "b", "op": "add", "value": 1 }, { "key": "voted", "op": "set", "value": 1 }], "disabledIf": { "key": "voted", "op": "==", "value": 1 } },
+            { "id": "l4", "type": "notice", "text": "✅ 투표 완료! 이제 결과를 볼 수 있어", "tone": "good", "showIf": { "key": "voted", "op": "==", "value": 1 } },
+            { "id": "l5", "type": "button", "text": "📊 결과 보기", "go": "result", "rule": "R2", "disabledIf": { "key": "voted", "op": "==", "value": 0 } }
+          ]
+        },
+        {
+          "id": "result",
+          "title": "투표 결과",
+          "blocks": [
+            { "id": "l6", "type": "stat", "text": "🍗 치킨마요", "bind": "a" },
+            { "id": "l7", "type": "stat", "text": "🍜 짜장면", "bind": "b" },
+            { "id": "l8", "type": "notice", "text": "🤝 동점! 재투표가 필요해", "tone": "warn", "showIf": { "key": "a", "op": "==", "value": 8 } },
+            { "id": "l9", "type": "button", "text": "🔄 다시 하기", "go": "vote", "rule": "R4", "do": [{ "key": "a", "op": "set", "value": 0 }, { "key": "b", "op": "set", "value": 0 }, { "key": "voted", "op": "set", "value": 0 }] },
+            { "id": "l10", "type": "button", "text": "↩️ 돌아가기", "go": "vote" }
+          ]
+        }
+      ]
+    }
+  ]
+}

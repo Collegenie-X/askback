@@ -6,7 +6,8 @@ import safeRoute from "./safe-route.json";
 import turtleNeck from "./turtle-neck.json";
 import petDiary from "./pet-diary.json";
 import zzingong from "./zzingong.json";
+import badClick from "./bad-click.json"; // 🚫 나쁜 예시 — 딸깍으로만 만들면
 
 const build = (s: unknown) => ({ ...common, ...(s as object) }) as unknown as Scenario;
 
-export const scenarios: Scenario[] = [smartpot, turtleNeck, petDiary, safeRoute, zzingong].map(build);
+export const scenarios: Scenario[] = [smartpot, turtleNeck, petDiary, safeRoute, zzingong, badClick].map(build);

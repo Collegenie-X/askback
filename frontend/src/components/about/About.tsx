@@ -17,6 +17,8 @@ import HiddenDecisions from "./HiddenDecisions";
 import Reveal from "./Reveal";
 import { rich } from "./rich";
 import TopNav from "./TopNav";
+import WhiteboardTry from "./WhiteboardTry";
+import BadClick from "./BadClick";
 
 // 소개 페이지 — 설계서 v4 · 사업계획서 v4 · 이전 기획서(코드보다 설계 먼저)를 우주 항해의 정거장(STAGE)으로 푼다.
 // 글은 광고 문구처럼 짧게, 설명은 커스텀 SVG와 탭으로.
@@ -244,6 +246,16 @@ export default function About() {
           <ul className="flex flex-wrap justify-center gap-2 text-[13px] font-bold">
             {askback.chips.map((t, i) => <li key={t} className="stg rounded-full border border-line bg-card px-4 py-2" style={{ animationDelay: `${i * 0.15}s` }}>{t}</li>)}
           </ul>
+        </Reveal>
+        {/* 딸깍 화이트보드 — '아는지' 대신 보드 위에서 돌려 보게, 답에 따라 한 번 더 */}
+        <Reveal className="mt-14">
+          <div id="whiteboard" className="scroll-mt-24">
+            <p className="eyebrow" style={{ color: "#f472b6" }}>{askback.whiteboard.eyebrow}</p>
+            <h3 className="mt-2 text-xl font-extrabold leading-snug sm:text-[28px]">{rich(askback.whiteboard.title)}</h3>
+            <p className="mt-2 max-w-[760px] text-sm leading-relaxed text-sub sm:text-[15px]">{rich(askback.whiteboard.lead)}</p>
+            <div className="mt-6"><BadClick /></div>
+            <div className="mt-6"><WhiteboardTry /></div>
+          </div>
         </Reveal>
       </Stage>
       <Trail />

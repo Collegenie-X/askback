@@ -88,10 +88,14 @@ export default function App() {
     write("introSeen", seen);
   }, [state.demoProjectId]);
 
-  // 소개 슬라이드는 건너뛴다 — 프로필이 없으면 기본값으로 두고 바로 메인으로 (소개는 /about)
+  // 처음 온 사람은 소개 페이지(/about)부터 본다 — 소개의 "시작" 버튼이 다시 / 로 데려온다.
+  // 공유된 예시 링크로 들어온 경우는 위에서 introSeen 이 먼저 켜지므로 바로 그 화면을 연다.
   useEffect(() => {
     if (!read("profile")) write("profile", { name: "친구", grade: "중3", interests: [], createdAt: Date.now() });
-    if (!read("introSeen")) write("introSeen", true);
+    if (!read("introSeen")) {
+      write("introSeen", true);
+      if (window.location.pathname === "/") window.location.replace("/about");
+    }
   }, []);
 
   const runDemo = () => setExamples(true);
@@ -108,7 +112,7 @@ export default function App() {
   if (splash) body = <Splash onDone={hideSplash} />;
   else if (view.name === "idea") body = <IdeaLab />;
   else if (view.name === "onboarding") body = <Onboarding hasProfile onDone={() => setView({ name: "chat" })} onDemo={runDemo} />; // 언제든 다시 보는 소개
-  else if (!project) body = <Welcome onNewProject={() => setNewProject(true)} onDemo={runDemo} />; // 첫 화면: 사용 설명서 → 템플릿 고르기
+  else if (!project) body = <Welcome onNewProject={() => setNewProject(true)} onDemo={runDemo} />; // 프로젝트가 없을 때: 바로 템플릿 고르기 (사용 설명서는 원할 때만 연다)
   else if (view.name === "reports") body = <ReportsView />;
   else if (view.name === "monthly") body = <MonthlyView key={view.ym} ym={view.ym} />;
   else if (view.name === "notes") body = <NotesView />;

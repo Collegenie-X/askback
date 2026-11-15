@@ -11,11 +11,14 @@ export interface MdDoc {
   filename?: string;
   variant?: "question" | "report";
   subtitle?: string;
+  /** 있으면 '그림' 탭으로 먼저 보여준다 — .md는 '문서' · '원문' 탭에 그대로 남는다 */
+  visual?: React.ReactNode;
 }
 
 export default function MdViewer({ doc, onClose }: { doc: MdDoc; onClose: () => void }) {
   const [fetched, setFetched] = useState<string | null>(null);
-  const [raw, setRaw] = useState(false);
+  const [mode, setMode] = useState<"visual" | "doc" | "raw">(doc.visual ? "visual" : "doc");
+  const raw = mode === "raw";
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -72,16 +75,17 @@ export default function MdViewer({ doc, onClose }: { doc: MdDoc; onClose: () => 
           </p>
         </div>
         <div className="flex rounded-full bg-sand p-0.5 text-xs font-semibold">
-          <button type="button" onClick={() => setRaw(false)} className={`rounded-full px-3 py-1 ${!raw ? "bg-card shadow-sm" : "text-sub"}`}>
-            보기
-          </button>
-          <button type="button" onClick={() => setRaw(true)} className={`rounded-full px-3 py-1 ${raw ? "bg-card shadow-sm" : "text-sub"}`}>
-            원문
-          </button>
+          {(doc.visual ? (["visual", "doc", "raw"] as const) : (["doc", "raw"] as const)).map((m) => (
+            <button key={m} type="button" onClick={() => setMode(m)} className={`rounded-full px-3 py-1 ${mode === m ? "bg-card shadow-sm" : "text-sub"}`}>
+              {m === "visual" ? "📊 그림" : m === "doc" ? (doc.visual ? "📄 문서" : "보기") : "원문"}
+            </button>
+          ))}
         </div>
       </header>
       <div className="scroll flex-1 px-5 py-5">
-        {md === null || md === undefined ? (
+        {mode === "visual" && doc.visual ? (
+          doc.visual
+        ) : md === null || md === undefined ? (
           <p className="text-sm text-sub">불러오는 중…</p>
         ) : raw ? (
           <pre className="whitespace-pre-wrap break-words font-mono text-[12.5px] leading-relaxed text-ink">{md}</pre>
