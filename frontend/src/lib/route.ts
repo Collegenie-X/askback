@@ -4,7 +4,7 @@
 //   /p/<프로젝트id>        그 프로젝트의 대화
 //   /x/<예시id>            예시 프로젝트 (친구에게 보내는 링크)
 //   /reports              리포트 목록        /reports/<2026-09>  달마다 보기
-//   /notes /library /space /settings /idea /intro
+//   /notes /library /space /settings /idea /intro /account
 //   ?r=<번호>              리포트 팝업 — 보던 화면 위에 겹쳐 열린다
 import type { View } from "@/components/AppContext";
 
@@ -23,6 +23,7 @@ const SIMPLE: Record<string, View["name"]> = {
   settings: "settings",
   idea: "idea",
   intro: "onboarding",
+  account: "account", // 회원가입 · 로그인 (Google)
 };
 
 export function parseRoute(pathname: string, search = ""): Route {

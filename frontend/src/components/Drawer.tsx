@@ -6,6 +6,8 @@ import roles from "@/data/roles.json";
 import { scenarios } from "@/data/scenarios";
 import { update, useTable } from "@/lib/db";
 import { windowCountOf } from "@/lib/report";
+import { useAccount } from "@/lib/account";
+import { Avatar } from "./Account";
 import { useApp, type View } from "./AppContext";
 import { LogoMark, Wordmark } from "./Art";
 import Buddy, { buddyName, levelOf } from "./Buddy";
@@ -26,6 +28,7 @@ export default function Drawer({ docked = false, onClose, onNewProject, onExampl
   const turns = useTable("turns");
   const state = useTable("state");
   const reports = useTable("reports");
+  const account = useAccount();
   const level = levelOf(reports.length);
   const current = projects.find((p) => p.id === state.currentProjectId);
   const windowCount = windowCountOf(current?.id, current?.name ?? "", turns, reports);
@@ -120,6 +123,14 @@ export default function Drawer({ docked = false, onClose, onNewProject, onExampl
 
         {/* 메뉴는 늘 바닥에 붙어 있다 — 목록이 길어도 가려지지 않게 */}
         <nav className="sticky -bottom-6 z-10 -mx-3 mt-auto shrink-0 space-y-0.5 border-t border-line bg-[#0c1124] px-3 pb-3 pt-2">
+          {/* 계정 — 로그인 전에는 "Google로 시작하기", 가입 뒤에는 내 닉네임 */}
+          <button type="button" onClick={() => { go({ name: "account" }); onClose(); }} aria-current={view.name === "account" ? "page" : undefined} className={`nav-pick flex w-full items-center gap-3 rounded-xl px-3 py-1.5 text-left text-sm font-semibold active:bg-sand ${view.name === "account" ? "on text-clay" : ""}`}>
+            {account.status === "signedIn" ? <Avatar src={account.picture} name={account.user.nickname} size={32} /> : <span className={`tile h-8 w-8 text-base ${view.name === "account" ? "on" : ""}`}>🔐</span>}
+            <span className="min-w-0 flex-1 truncate">
+              {account.status === "signedIn" ? account.user.nickname : account.status === "needsSignup" ? "가입 마치기" : "Google로 시작하기"}
+              {account.status === "signedIn" && <span className="block truncate text-[10.5px] font-normal text-sub">{account.user.email}</span>}
+            </span>
+          </button>
           {NAV.map((n) => (
             <button key={n.label} type="button" onClick={() => { go(n.view); onClose(); }} aria-current={navOn(n.view) ? "page" : undefined} className={`nav-pick flex w-full items-center gap-3 rounded-xl px-3 py-1.5 text-left text-sm font-semibold active:bg-sand ${navOn(n.view) ? "on text-clay" : ""}`}>
               <span className={`tile h-8 w-8 text-base ${navOn(n.view) ? "on" : ""}`}>{n.emoji}</span>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
+import { useAccount } from "@/lib/account";
 import { createProject } from "@/lib/actions";
 import { useApp } from "./AppContext";
 import Buddy from "./Buddy";
@@ -234,6 +235,7 @@ const STEPS: Step[] = [
 
 export default function Welcome({ onNewProject, onDemo }: { onNewProject: () => void; onDemo: () => void }) {
   const { go } = useApp();
+  const account = useAccount();
   // 처음엔 설명서를 건너뛰고 시작 칸(마지막 칸)부터 — "사용 설명서 보기"를 누를 때만 1칸부터 펼친다
   const [guide, setGuide] = useState(false);
   const [step, setStep] = useState(STEPS.length - 1);
@@ -295,6 +297,7 @@ export default function Welcome({ onNewProject, onDemo }: { onNewProject: () => 
                 <div className="flex justify-center gap-4 pt-2 text-xs font-semibold text-sub">
                   <button type="button" onClick={() => { setGuide(true); setStep(0); }}>📘 사용 설명서 보기</button>
                   <Link href="/about">✨ 소개 다시 보기</Link>
+                  <button type="button" onClick={() => go({ name: "account" })}>🔐 {account.status === "signedIn" ? account.user.nickname : "로그인"}</button>
                 </div>
               </>
             ) : (

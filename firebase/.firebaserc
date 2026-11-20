@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "teensparkai",
+    "emulator": "demo-teenspark"
+  }
+}

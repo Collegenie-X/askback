@@ -1,0 +1,14 @@
+{
+  "name": "teenspark-firebase",
+  "private": true,
+  "description": "틴스파크AI 백엔드 — Firebase (Auth · Firestore · Cloud Functions REST API)",
+  "scripts": {
+    "build": "npm --prefix functions run build",
+    "emulators": "npm run build && firebase emulators:start --project demo-teenspark",
+    "smoke": "node scripts/smoke.mjs",
+    "deploy": "firebase deploy --only functions,firestore"
+  },
+  "devDependencies": {
+    "firebase-tools": "^15.37.0"
+  }
+}

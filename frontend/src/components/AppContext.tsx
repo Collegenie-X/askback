@@ -13,6 +13,7 @@ export type View =
   | { name: "notes" }
   | { name: "library" }
   | { name: "settings" }
+  | { name: "account" }
   | { name: "space" };
 
 interface Ctx {

@@ -9,6 +9,12 @@
       "autoPort": true
     },
     {
+      "name": "askback-frontend-emulator",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["TEENSPARK_API=http://127.0.0.1:5001/demo-teenspark/asia-northeast3/api", "NEXT_PUBLIC_FIREBASE_EMULATOR=1", "npm", "--prefix", "frontend", "run", "dev", "--", "-p", "3100"],
+      "port": 3100
+    },
+    {
       "name": "askback-server",
       "runtimeExecutable": "server/.venv/bin/python",
       "runtimeArgs": ["server/manage.py", "runserver", "8000"],

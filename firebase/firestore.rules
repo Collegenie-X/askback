@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// 틴스파크AI 데이터는 REST API(Cloud Functions · Admin SDK)만 읽고 쓴다.
+// 브라우저가 Firestore 를 직접 만지지 못하게 전부 막아 둔다 — 권한 검사는 서버 한 곳에서.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

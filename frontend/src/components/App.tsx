@@ -6,6 +6,7 @@ import { loadExample } from "@/lib/example";
 import { scenarios } from "@/data/scenarios";
 import { read, update, useTable, write } from "@/lib/db";
 import { parseRoute, routeToPath } from "@/lib/route";
+import Account from "./Account";
 import { AppCtx, type View } from "./AppContext";
 import Chat from "./Chat";
 import ConfirmDialog, { type ConfirmOptions } from "./ConfirmDialog";
@@ -111,6 +112,7 @@ export default function App() {
   let body;
   if (splash) body = <Splash onDone={hideSplash} />;
   else if (view.name === "idea") body = <IdeaLab />;
+  else if (view.name === "account") body = <Account />; // 회원가입 · 로그인 — 프로젝트가 없어도 연다
   else if (view.name === "onboarding") body = <Onboarding hasProfile onDone={() => setView({ name: "chat" })} onDemo={runDemo} />; // 언제든 다시 보는 소개
   else if (!project) body = <Welcome onNewProject={() => setNewProject(true)} onDemo={runDemo} />; // 프로젝트가 없을 때: 바로 템플릿 고르기 (사용 설명서는 원할 때만 연다)
   else if (view.name === "reports") body = <ReportsView />;

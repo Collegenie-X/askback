@@ -148,6 +148,8 @@ downloads/
 eggs/
 .eggs/
 lib/
+# 위 lib/ 는 파이썬 빌드 폴더용 — 프런트 코드(frontend/src/lib)는 올린다
+!frontend/src/lib/
 lib64/
 parts/
 sdist/
