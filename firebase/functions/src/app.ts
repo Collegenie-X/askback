@@ -8,6 +8,7 @@ import { requireRole, requireUser } from "./lib/users";
 import { getLlmSettings } from "./llm/settings";
 import { adminRouter } from "./routes/admin";
 import { authRouter } from "./routes/auth";
+import { guardianRouter, useMailKey } from "./routes/guardian";
 import { meRouter } from "./routes/me";
 
 function corsOrigins(): cors.CorsOptions["origin"] {
@@ -18,7 +19,8 @@ function corsOrigins(): cors.CorsOptions["origin"] {
   return list.includes("*") ? true : list;
 }
 
-export function createApp(getKey: () => string | undefined) {
+export function createApp(getKey: () => string | undefined, getMailKey: () => string | undefined = () => undefined) {
+  useMailKey(getMailKey);
   const app = express();
   app.disable("x-powered-by");
   app.use(cors({ origin: corsOrigins(), allowedHeaders: ["Authorization", "Content-Type"], maxAge: 600 }));
@@ -37,6 +39,7 @@ export function createApp(getKey: () => string | undefined) {
   });
 
   v1.use("/auth", authRouter);
+  v1.use("/guardian", guardianRouter); // 보호자가 메일 링크로 여는 공개 주소 — 토큰이 곧 권한
   v1.use("/me", requireUser, meRouter);
   v1.use("/projects", requireUser, projectsRouter(getKey));
   v1.post("/ask", requireUser, askHandler(getKey));

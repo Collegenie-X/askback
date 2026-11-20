@@ -75,23 +75,41 @@ cd firebase && npm run smoke
 | `under14` | 만 14세 미만이면 `true`로 보내고, 이때는 `guardianConsent: true`가 있어야 합니다 (개인정보 보호법 · 법정대리인 동의) |
 | `agreeTerms` · `agreePrivacy` | 둘 다 `true`여야 가입됩니다 |
 
-### Google 로그인 (프런트 `/account` 화면이 쓰는 길)
+### Google 로그인 (프런트 로그인 팝업이 쓰는 길)
 
 브라우저가 Firebase JS SDK로 Google 로그인(`signInWithPopup`)을 하고, 받은 ID 토큰을 `Authorization: Bearer`로 보냅니다. 비밀번호는 만들지 않습니다.
 
 | 메서드 | 경로 | 하는 일 |
 |---|---|---|
 | POST 🔑 | `/auth/google` | 가입했으면 `{ registered: true, user }`, 처음이면 `{ registered: false, profile }` (→ 가입 화면) |
-| POST 🔑 | `/auth/google/signup` | `nickname` · `grade` · `interests[]` · `under14` · `guardianConsent` · `agreeTerms` · `agreePrivacy`를 받아 회원 문서를 만든다 |
+| POST 🔑 | `/auth/google/signup` | `nickname` · `grade` · `interests[]` · `under14` · `agreeTerms` · `agreePrivacy`를 받아 회원 문서를 만든다 (201). **만 14세 미만이면 `guardianEmail`이 꼭 필요하고, 회원 문서 대신 보호자 동의 요청을 만든다 (202 `{ registered: false, pending }`)** |
+| POST 🔑 | `/auth/google/guardian/resend` | 보호자 메일 다시 보내기 · `guardianEmail`을 주면 그 주소로 바꿔 보낸다 (1분에 한 번, 요청당 5번까지) |
+| DELETE 🔑 | `/auth/google/guardian` | 보호자 동의 요청 취소 |
+| GET | `/guardian/:token` | 보호자 화면 — 학생 닉네임 · 학년 · 가린 이메일 · 상태(`pending` · `approved` · `declined` · `expired`) |
+| POST | `/guardian/:token` | 보호자의 결정 `{ decision: "approve" \| "decline", isGuardian: true, agreed: true }` → approve 면 회원 문서를 만든다 |
 
 🔑 = Google로 로그인한 Firebase ID 토큰. 가입을 마치지 않은 Google 계정으로 다른 🔒 경로를 부르면 `403 signup_required`가 옵니다(동의 없이 회원 문서가 생기지 않게). Google 회원의 탈퇴(`DELETE /me`)는 비밀번호 대신 **5분 안에 다시 로그인했는지**로 확인합니다.
 
 ```mermaid
 flowchart LR
   A["Google로 시작하기"] --> B{"POST /auth/google\n가입했나?"}
-  B -- 예 --> D["내 계정"]
-  B -- 아니오 --> C["가입 마치기\n닉네임 · 학년 · 동의"] -->|"POST /auth/google/signup"| D
+  B -- 예 --> D["회원"]
+  B -- 아니오 --> C["학년 · 동의"] -->|"POST /auth/google/signup"| E{"만 14세 미만?"}
+  E -- 아니오 --> D
+  E -- 예 --> F["guardianRequests/{uid}\n+ 보호자에게 메일"] --> G["보호자: /guardian?t=…\n동의합니다"] -->|"POST /guardian/:token"| D
+  F -. "5일 안에 동의 없음 · 거부" .-> H["매일 정리(cleanup)\n요청 · 로그인 기록 삭제"]
 ```
+
+#### 만 14세 미만 — 보호자 이메일 동의 (개인정보 보호법 제22조의2)
+
+| 무엇 | 어떻게 |
+|---|---|
+| 확인 방법 | 학생이 적은 보호자 이메일로 동의 내용 + 1회용 링크를 보낸다 → 보호자가 링크에서 "법정대리인입니다" · "동의합니다"에 체크하고 동의 → 같은 주소로 **동의 완료 알림 메일** |
+| 그 전까지 | 회원 문서를 만들지 않는다. 학생 정보(닉네임 · 학년 · 이메일)와 보호자 이메일은 `guardianRequests/{uid}`에만, 링크 토큰은 sha256 해시로만 저장 |
+| 기한 | 처음 요청부터 5일. 다시 보내도 늘어나지 않는다. 지나면 매일 04:00(KST) `cleanup` 함수가 요청과 가입 안 된 Google 로그인 기록을 지운다 |
+| 남는 증거 | 동의하면 `users/{uid}.consent`에 `guardianAt` · `guardianEmail` · `guardianMethod: "email"` (탈퇴 때 함께 삭제) |
+| 메일 | Resend — `RESEND_API_KEY`(비밀값) · `MAIL_FROM` · `APP_URL`. 키가 없으면 에뮬레이터에서는 메일 대신 응답의 `pending.devLink`로 시험하고, 운영에서는 `503 mail_not_configured` |
+| 시험 | `npm run smoke:guardian` — 요청 · 1분 쿨다운 · 보호자 동의 · 거부 · 취소 · 14세 이상 바로 가입을 한 바퀴 |
 
 ### 내 정보 🔒
 
@@ -244,6 +262,8 @@ flowchart TD
 | ⑤ | **프로젝트 설정 → 일반 → 웹 API 키**를 복사해서 `functions/.env`에 적습니다 (`cp functions/.env.example functions/.env`). `ADMIN_EMAILS`에는 본인 이메일을 적습니다 |
 | ⑥ | `cd firebase && npx firebase login` 후 `npx firebase use --add` 로 ①의 프로젝트를 고르고 별칭은 `default` |
 | ⑦ | `npx firebase functions:secrets:set ANTHROPIC_API_KEY` → Claude API 키 붙여 넣기 |
+| ⑦-2 | [resend.com](https://resend.com)에서 `teensparkai.com` 도메인 인증 → API 키 → `npx firebase functions:secrets:set RESEND_API_KEY`. `functions/.env`에 `MAIL_FROM` · `APP_URL` · `PRIVACY_CONTACT` |
+| ⑦-3 | 매일 정리 함수(`cleanup`)는 Cloud Scheduler를 쓴다 — 첫 배포 때 API 사용 설정을 물으면 "예" |
 | ⑧ | `npm run deploy` (함수 · Firestore 규칙 · 인덱스를 함께 올립니다) |
 
 배포가 끝나면 API 주소는 다음과 같습니다.
@@ -258,6 +278,7 @@ Claude 키 자리에는 아직 `NOT_SET`이 들어 있습니다. 이 값이면 �
 
 ```bash
 npx firebase functions:secrets:set ANTHROPIC_API_KEY
+npx firebase functions:secrets:set RESEND_API_KEY      # 보호자 동의 메일 (resend.com → API Keys). 아직 없으면 NOT_SET
 npm run deploy
 ```
 
@@ -321,7 +342,8 @@ curl -s -X POST $API/ask -H "Authorization: Bearer $TOKEN" -H "Content-Type: app
 | `…/projects/{pid}/turns/{tid}` | 질문 + 분석(열림 · 6요소 · 국면 · 개념) · 역할 · 모델 |
 | `…/projects/{pid}/messages/{mid}` | 대화 (프런트 `Message`와 같은 모양: user · answer · coach) |
 | `config/llm` | Claude 모델 설정 |
-| `llmCalls/{id}` | Claude 호출 기록 |
+| `llmCalls/{id}` | Claude 호출 기록 (내용 없음 · 1년 지나면 `cleanup`이 지운다) |
+| `guardianRequests/{uid}` | 만 14세 미만 보호자 동의 요청 — 보호자 이메일 · 학생 가입 정보 · 링크 토큰 해시 · 만료일(5일) |
 
 ## 7. 폴더
 

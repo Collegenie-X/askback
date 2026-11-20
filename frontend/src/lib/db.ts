@@ -67,7 +67,7 @@ export function update<K extends keyof Tables>(key: K, fn: (prev: Tables[K]) => 
   write(key, fn(read(key)));
 }
 
-function subscribe(listener: () => void) {
+export function subscribe(listener: () => void) {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
@@ -94,6 +94,24 @@ export function clearAll() {
     cache.delete(k);
   });
   listeners.forEach((l) => l());
+}
+
+// ── 기록 묶음 — 계정이 바뀔 때 통째로 꺼내 두고 · 되돌리고 · 비운다 (lib/sync.ts) ──
+/** 한 사람의 기록 — 기기 취향(space) · 소개 본 것(introSeen) · 이름표(profile)는 빼고 */
+export const RECORD_KEYS = ["projects", "messages", "turns", "rqs", "notes", "reports", "goals", "state"] as const;
+export type RecordKey = (typeof RECORD_KEYS)[number];
+
+export function takeRecords(): Pick<Tables, RecordKey> {
+  return Object.fromEntries(RECORD_KEYS.map((k) => [k, read(k)])) as Pick<Tables, RecordKey>;
+}
+
+export function putRecords(values: Partial<Pick<Tables, RecordKey>>) {
+  (Object.keys(values) as RecordKey[]).forEach((k) => write(k, values[k] as Tables[typeof k]));
+}
+
+/** 화면을 빈 기록으로 — 다음 사람이 앞 사람의 질문을 보지 않게 */
+export function resetRecords() {
+  putRecords(Object.fromEntries(RECORD_KEYS.map((k) => [k, DEFAULTS[k]])) as Pick<Tables, RecordKey>);
 }
 
 let seq = 0;

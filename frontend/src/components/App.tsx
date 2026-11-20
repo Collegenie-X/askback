@@ -6,7 +6,8 @@ import { loadExample } from "@/lib/example";
 import { scenarios } from "@/data/scenarios";
 import { read, update, useTable, write } from "@/lib/db";
 import { parseRoute, routeToPath } from "@/lib/route";
-import Account from "./Account";
+import { useAccount } from "@/lib/account";
+import { startSync, syncAccount } from "@/lib/sync";
 import { AppCtx, type View } from "./AppContext";
 import Chat from "./Chat";
 import ConfirmDialog, { type ConfirmOptions } from "./ConfirmDialog";
@@ -14,6 +15,7 @@ import type { Scenario } from "./demo/types";
 import Drawer from "./Drawer";
 import ExamplePicker from "./ExamplePicker";
 import IdeaLab from "./IdeaLab";
+import LoginDialog from "./LoginDialog";
 import MdViewer, { type MdDoc } from "./MdViewer";
 import MonthlyView from "./MonthlyView";
 import Onboarding from "./Onboarding";
@@ -37,6 +39,7 @@ export default function App() {
   const [newProject, setNewProject] = useState(false);
   const [doc, setDoc] = useState<MdDoc | null>(null);
   const [examples, setExamples] = useState(false);
+  const [login, setLogin] = useState(false); // 로그인 팝업
   const [reportIndex, setReportIndex] = useState<number | null>(null); // 리포트 팝업 — 닫으면 보던 자리로 돌아온다
 
   const [routed, setRouted] = useState(false); // 주소를 한 번 읽고 나서야 주소를 고쳐 쓴다
@@ -55,6 +58,7 @@ export default function App() {
         else if (s) { loadExample(s); write("introSeen", true); }
         setView({ name: "chat" });
       } else setView(r.view);
+      if (window.location.pathname === "/account") setLogin(true); // 예전 /account 링크 — 팝업으로 연다
       setReportIndex(r.reportIndex);
       setRouted(true);
     };
@@ -63,10 +67,18 @@ export default function App() {
     return () => window.removeEventListener("popstate", apply);
   }, []);
 
+  // 로그인하면 질문 · 답 · 되묻기를 회원별 DB(Firestore)에도 올린다 — 바뀐 것만, 2초 모아서
+  useEffect(() => startSync(), []);
+  // 기록 주인 = 가입까지 마친 계정. 바뀌면 앞 사람 기록을 치우고, 내 기록을 서버에서 내려받아 합친다
+  const account = useAccount();
+  const memberId = account.status === "signedIn" ? account.user.uid : null;
+  useEffect(() => void syncAccount(memberId, account.status !== "loading"), [memberId, account.status]);
+
   const hideSplash = useCallback(() => setSplash(false), []);
+  const closeLogin = useCallback(() => setLogin(false), []);
   const confirm = useCallback((o: ConfirmOptions) => new Promise<boolean>((resolve) => setAsk({ ...o, resolve })), []);
   const answer = useCallback((yes: boolean) => setAsk((a) => { a?.resolve(yes); return null; }), []);
-  const ctx = useMemo(() => ({ view, go: setView, openMd: setDoc, openReport: setReportIndex, openDrawer: () => setDrawer(true), confirm }), [view, confirm]);
+  const ctx = useMemo(() => ({ view, go: setView, openMd: setDoc, openReport: setReportIndex, openDrawer: () => setDrawer(true), openLogin: () => setLogin(true), confirm }), [view, confirm]);
   const project = projects.find((p) => p.id === state.currentProjectId) ?? projects[0];
 
   // 화면 → 주소. 지금 보는 화면이 곧 링크가 된다 (새로고침·공유해도 같은 자리).
@@ -112,7 +124,6 @@ export default function App() {
   let body;
   if (splash) body = <Splash onDone={hideSplash} />;
   else if (view.name === "idea") body = <IdeaLab />;
-  else if (view.name === "account") body = <Account />; // 회원가입 · 로그인 — 프로젝트가 없어도 연다
   else if (view.name === "onboarding") body = <Onboarding hasProfile onDone={() => setView({ name: "chat" })} onDemo={runDemo} />; // 언제든 다시 보는 소개
   else if (!project) body = <Welcome onNewProject={() => setNewProject(true)} onDemo={runDemo} />; // 프로젝트가 없을 때: 바로 템플릿 고르기 (사용 설명서는 원할 때만 연다)
   else if (view.name === "reports") body = <ReportsView />;
@@ -138,6 +149,7 @@ export default function App() {
           {examples && <ExamplePicker onPick={pickExample} onClose={() => setExamples(false)} />}
           {reportIndex !== null && <ReportView key={reportIndex} index={reportIndex} onClose={() => setReportIndex(null)} />}
           {doc && <MdViewer key={doc.title} doc={doc} onClose={() => setDoc(null)} />}
+          {login && !splash && <LoginDialog onClose={closeLogin} />}
           {ask && <ConfirmDialog {...ask} onDone={answer} />}
         </section>
       </main>

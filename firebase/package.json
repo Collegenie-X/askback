@@ -6,6 +6,7 @@
     "build": "npm --prefix functions run build",
     "emulators": "npm run build && firebase emulators:start --project demo-teenspark",
     "smoke": "node scripts/smoke.mjs",
+    "smoke:guardian": "node scripts/guardian-smoke.mjs",
     "deploy": "firebase deploy --only functions,firestore"
   },
   "devDependencies": {

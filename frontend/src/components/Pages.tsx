@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import lenses from "@/data/lenses.json";
+import { signOut, useAccount } from "@/lib/account";
 import { clearAll, exportAll, update, useTable, write } from "@/lib/db";
 import { fmtDate, windowCountOf } from "@/lib/report";
 import { seedNotes, seedReports } from "@/lib/seed";
@@ -90,6 +91,7 @@ function Tile({ emoji, label, sub, onClick }: { emoji: string; label: string; su
 
 export function Settings({ onDemo }: { onDemo: () => void }) {
   const { go, confirm } = useApp();
+  const signedIn = useAccount().status === "signedIn";
   const profile = useTable("profile");
   const projects = useTable("projects");
   const state = useTable("state");
@@ -202,7 +204,7 @@ export function Settings({ onDemo }: { onDemo: () => void }) {
           </p>
         </Group>
 
-        <Group tag="SAVE" title="💾 세이브 데이터" sub="모든 기록은 이 기기의 localStorage에만 있어. 가끔 내보내 둬.">
+        <Group tag="SAVE" title="💾 세이브 데이터" sub={signedIn ? "기록은 이 기기와 내 계정에 같이 저장돼. 다른 기기에서 로그인해도 이어서 볼 수 있어." : "지금 기록은 이 기기에만 있어. 로그인하면 내 계정에도 저장돼."}>
           <div className="space-y-2">
             {project && <ExportButtons project={project} />}
             <button type="button" onClick={download} className="slot flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left text-sm font-semibold">⬇️ 전체 내보내기 (.json)<span className="text-sub">›</span></button>
@@ -212,7 +214,12 @@ export function Settings({ onDemo }: { onDemo: () => void }) {
             <button
               type="button"
               onClick={async () => {
-                if (await confirm({ emoji: "🗑", title: "모든 기록을 지울까?", body: "프로젝트 · 대화 · 리포트가 전부 사라져. 되돌릴 수 없어.", ok: "전부 지우기", danger: true })) {
+                // 로그인 중이면 이 기기에서만 지우고 로그아웃한다 — 계정 기록은 서버에 남아 다시 로그인하면 돌아온다
+                const ok = signedIn
+                  ? await confirm({ emoji: "🗑", title: "이 기기에서 지우고 로그아웃할까?", body: "이 기기의 프로젝트 · 대화 · 리포트를 지워. 내 계정에 저장된 기록은 남아 있어서 다시 로그인하면 돌아와.", ok: "지우고 로그아웃", danger: true })
+                  : await confirm({ emoji: "🗑", title: "모든 기록을 지울까?", body: "프로젝트 · 대화 · 리포트가 전부 사라져. 되돌릴 수 없어.", ok: "전부 지우기", danger: true });
+                if (ok) {
+                  if (signedIn) await signOut();
                   clearAll();
                   window.location.reload();
                 }

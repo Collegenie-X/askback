@@ -1,8 +1,9 @@
 // Claude 로 질문에 답하기 — 시스템 프롬프트(틴스파크 코치 규칙)와 출력 스키마는 프런트의 파일을 그대로 쓴다.
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
+import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import prompts from "@front/data/prompts.json";
-import { AnswerSchema, type AnswerOut } from "@front/lib/schemas";
+import { AnswerSchema, FeedbackSchema, ReportSchema, RQSchema, type AnswerOut, type FeedbackOut, type ReportOut, type RQOut } from "@front/lib/schemas";
 import { FALLBACK_MODELS, type LlmSettings } from "./settings";
 import { JsonStringFieldStream } from "./stream-json";
 
@@ -111,6 +112,57 @@ export async function askClaude(input: AskInput): Promise<ClaudeResult> {
     if (error instanceof Anthropic.BadRequestError || error instanceof Anthropic.NotFoundError) return fail("bad_request", `요청이 거절됐어요 (모델 설정을 확인하세요): ${error.message}`);
     if (error instanceof Anthropic.APIError) return fail("api", error.message);
     console.error("claude unknown error", error);
+    return fail("unknown", "Claude 호출 중 알 수 없는 오류가 났어요.");
+  }
+}
+
+// ── 코치 작업 (되묻기 다듬기 · 채점 · 10문 리포트 문장) — 짧은 JSON 하나, 스트리밍 없이 ─────────────
+const COACH = {
+  rq: { schema: RQSchema, system: prompts.rq.system.join("\n") },
+  feedback: { schema: FeedbackSchema, system: prompts.feedback.system.join("\n") },
+  report: { schema: ReportSchema, system: prompts.report.system.join("\n") },
+} as const;
+type CoachTask = keyof typeof COACH;
+type CoachOut = { rq: RQOut; feedback: FeedbackOut; report: ReportOut };
+
+export type CoachResult<T> =
+  | { ok: true; out: T; model: string; usage: ClaudeUsage; ms: number }
+  | { ok: false; reason: Extract<ClaudeResult, { ok: false }>["reason"]; message: string; ms: number };
+
+export async function askCoach<K extends CoachTask>(task: K, input: { apiKey: string | undefined; settings: LlmSettings; input: string; context: string }): Promise<CoachResult<CoachOut[K]>> {
+  const started = Date.now();
+  const fail = (reason: Extract<ClaudeResult, { ok: false }>["reason"], message: string) => ({ ok: false as const, reason, message, ms: Date.now() - started });
+  if (!input.settings.enabled) return fail("disabled", "관리자가 Claude 사용을 꺼 두었어요.");
+  if (!input.apiKey) return fail("no_key", "서버에 ANTHROPIC_API_KEY 가 없어요.");
+  const t = input.settings.tasks.coach;
+  const spec = COACH[task];
+  try {
+    const client = new Anthropic({ apiKey: input.apiKey, timeout: t.timeoutMs, maxRetries: 1 });
+    const response = await client.messages.parse({
+      model: t.model,
+      max_tokens: t.maxTokens,
+      system: [{ type: "text", text: spec.system, cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content: input.context ? `<context>\n${input.context}\n</context>\n\n${input.input}` : input.input }],
+      output_config: { effort: t.effort, format: zodOutputFormat(spec.schema) },
+    });
+    if (response.stop_reason === "refusal") return fail("refusal", "Claude 가 답하지 않았어요.");
+    if (!response.parsed_output) return fail("no_output", "Claude 의 답 형식이 맞지 않아요.");
+    const u = response.usage;
+    return {
+      ok: true,
+      out: response.parsed_output as CoachOut[K],
+      model: response.model,
+      usage: { inputTokens: u.input_tokens, outputTokens: u.output_tokens, cacheReadTokens: u.cache_read_input_tokens ?? 0, cacheWriteTokens: u.cache_creation_input_tokens ?? 0 },
+      ms: Date.now() - started,
+    };
+  } catch (error) {
+    if (error instanceof Anthropic.AuthenticationError) return fail("auth", "ANTHROPIC_API_KEY 가 올바르지 않아요.");
+    if (error instanceof Anthropic.RateLimitError) return fail("rate_limit", "Claude 사용량 한도에 걸렸어요.");
+    if (error instanceof Anthropic.APIConnectionTimeoutError) return fail("timeout", `Claude 가 ${t.timeoutMs / 1000}초 안에 답하지 않았어요.`);
+    if (error instanceof Anthropic.BadRequestError && /credit balance/i.test(error.message)) return fail("billing", "Anthropic 크레딧이 부족해요.");
+    if (error instanceof Anthropic.BadRequestError || error instanceof Anthropic.NotFoundError) return fail("bad_request", `요청이 거절됐어요: ${error.message}`);
+    if (error instanceof Anthropic.APIError) return fail("api", error.message);
+    console.error("claude coach unknown error", error);
     return fail("unknown", "Claude 호출 중 알 수 없는 오류가 났어요.");
   }
 }

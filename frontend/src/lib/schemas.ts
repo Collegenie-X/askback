@@ -38,7 +38,15 @@ export const DeepSchema = z.object({
   next_question: z.string(),
 });
 
+/** 10문 리포트의 문장 세 개 — 숫자는 규칙(report.ts)이 만들고 Claude 는 문장만 쓴다 */
+export const ReportSchema = z.object({
+  headline: z.string(),
+  best_reason: z.string(),
+  mission_text: z.string(),
+});
+
 export type AnswerOut = z.infer<typeof AnswerSchema>;
 export type RQOut = z.infer<typeof RQSchema>;
 export type FeedbackOut = z.infer<typeof FeedbackSchema>;
 export type DeepOut = z.infer<typeof DeepSchema>;
+export type ReportOut = z.infer<typeof ReportSchema>;

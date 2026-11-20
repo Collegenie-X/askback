@@ -2,14 +2,18 @@
 // 브라우저 쪽 원본: frontend/src/lib/actions.ts 의 runTurn
 import roles from "@front/data/roles.json";
 import { analyze } from "@front/lib/analyzer";
-import type { Analysis, Openness, RoleKey, Turn } from "@front/lib/types";
+import { applyRQ, rqInput } from "@front/lib/grade";
+import { buildWindowReport } from "@front/lib/report";
+import { applyReport, reportInput } from "@front/lib/reportAi";
+import { buildRQ, elementById, pickElement } from "@front/lib/rq";
+import type { Analysis, Openness, Project, ReverseQuestion, RoleKey, Turn, WindowReport } from "@front/lib/types";
 import formats from "@front/data/formats.json";
 import { db, FieldValue, kstDay, paths } from "../lib/firebase";
 import { ApiError, notFound } from "../lib/http";
 import type { AuthedUser } from "../lib/users";
-import { askClaude, type ClaudeResult } from "../llm/claude";
+import { askClaude, askCoach, type ClaudeResult, type CoachResult } from "../llm/claude";
 import { localAnswer } from "../llm/local";
-import { getLlmSettings } from "../llm/settings";
+import { getLlmSettings, type LlmSettings } from "../llm/settings";
 import type { ProjectDoc } from "./projects";
 
 // actions.ts 의 INVALID_REPLY 와 같은 말
@@ -42,7 +46,7 @@ function historyOf(messages: StoredMessage[], max: number) {
   return tail;
 }
 
-function contextOf(user: AuthedUser, project: ProjectDoc) {
+export function contextOf(user: AuthedUser, project: ProjectDoc) {
   const d = user.doc;
   const f = project.format ? (formats.formats as Record<string, { emoji: string; name: string }>)[project.format] : null;
   return [
@@ -66,12 +70,18 @@ async function reserveTurn(uid: string, limit: number) {
   });
 }
 
-async function logCall(uid: string, projectId: string, model: string, r: ClaudeResult) {
+/** 코치 작업(되묻기 · 채점) 토큰도 그날 사용량에 더한다 */
+export async function addTokens(uid: string, r: CoachResult<unknown>) {
+  if (!r.ok) return;
+  await paths.usage(uid, kstDay()).set({ inputTokens: FieldValue.increment(r.usage.inputTokens), outputTokens: FieldValue.increment(r.usage.outputTokens) }, { merge: true });
+}
+
+export async function logCall(uid: string, projectId: string, model: string, r: ClaudeResult | CoachResult<unknown>, task: "answer" | "rq" | "feedback" | "report" = "answer") {
   if (!r.ok && (r.reason === "disabled" || r.reason === "no_key")) return; // 실제로 부르지 않은 것은 남기지 않는다
   await paths.llmCalls().add({
     uid,
     projectId,
-    task: "answer",
+    task,
     model: r.ok ? r.model : model,
     ok: r.ok,
     reason: r.ok ? null : r.reason,
@@ -126,6 +136,7 @@ export async function runTurn({ user, projectId, text, images, apiKey, onEvent }
 
   // 2) 하루 한도
   await reserveTurn(uid, user.doc.dailyLimit ?? settings.dailyTurnLimit);
+  const hadOpen = await skipOpenAskbacks(uid, projectId);
   onEvent?.("analysis", { analysis, model: settings.enabled && apiKey ? settings.tasks.answer.model : null });
 
   // 3) Claude → 실패하면 로컬 답 카드
@@ -203,7 +214,7 @@ export async function runTurn({ user, projectId, text, images, apiKey, onEvent }
       source,
       createdAt: now + 1,
     });
-    tx.update(projectRef, { turnCount: n, counter: FieldValue.increment(1), updatedAt: now });
+    tx.update(projectRef, { turnCount: n, counter: (p.counter ?? 0) + 1, updatedAt: now });
     tx.update(paths.user(uid), { "stats.turns": FieldValue.increment(1) });
     if (claude.ok) {
       tx.set(
@@ -215,14 +226,146 @@ export async function runTurn({ user, projectId, text, images, apiKey, onEvent }
     return { id: turnRef.id, ...t };
   });
 
+  // 5) 리듬 — 유효 질문이 rhythm 개(기본 2) 쌓이면 되묻기 1개 (브라우저 actions.ts 의 runTurn 과 같은 규칙)
+  const askback = await rhythmStep({ user, projectId, turn, analysis: merged, hadOpen, now, apiKey, settings });
+
+  // 6) 10문 리포트 — 이 프로젝트의 질문이 10개 쌓일 때마다 한 장 (숫자는 규칙, 문장 세 개만 Claude)
+  const report = turn.n % 10 === 0 ? await reportStep({ user, projectId, windowIndex: turn.windowIndex, now, apiKey, settings }) : null;
+
   return {
     outcome: "answered",
     turn,
     answer: { id: answerRef.id, ...answer, role, roleLabel: role ? roles.roles[role].name : null },
+    askback,
+    report,
     source,
     model: claude.ok ? claude.model : null,
     usage: claude.ok ? claude.usage : null,
     timing: { totalMs: Date.now() - now, firstTextMs: claude.ok ? claude.firstTextMs : null },
     fallbackReason: claude.ok ? null : { reason: claude.reason, message: claude.message },
   };
+}
+
+/** 새 질문이 오면 아직 답하지 않은 되묻기는 [나중에]로 넘긴다 (설계서 §3.3) */
+async function skipOpenAskbacks(uid: string, projectId: string) {
+  const open = await paths.askbacks(uid, projectId).where("status", "==", "open").get();
+  if (open.empty) return false;
+  const batch = db.batch();
+  open.docs.forEach((d) => batch.update(d.ref, { status: "later" }));
+  await batch.commit();
+  return true;
+}
+
+/**
+ * 2문 1역 — counter 가 rhythm 에 닿으면 되묻기를 고른다.
+ *   [⚡ 답만] · 급하다는 신호 → 묻지 않고 적립(status: later)
+ *   물을 게 마땅치 않으면 → 카운터만 리셋 (억지 질문 금지)
+ * 되묻기 문장은 요소 템플릿(elements.json · formats.json)으로 만든다.
+ */
+interface RhythmInput {
+  user: AuthedUser;
+  projectId: string;
+  turn: { id: string; n: number; windowIndex: number; question: string; createdAt: number };
+  analysis: Analysis;
+  hadOpen: boolean;
+  now: number;
+  apiKey: string | undefined;
+  settings: LlmSettings;
+}
+
+async function rhythmStep({ user, projectId, turn, analysis, hadOpen, now, apiKey, settings }: RhythmInput) {
+  const { uid } = user;
+  const projectRef = paths.project(uid, projectId);
+  const p = (await projectRef.get()).data() as ProjectDoc;
+  const rhythm = p.rhythm ?? 2;
+  const laterStreak = hadOpen ? (p.laterStreak ?? 0) + 1 : p.laterStreak ?? 0;
+  if ((p.counter ?? 0) < rhythm) {
+    if (laterStreak !== p.laterStreak) await projectRef.update({ laterStreak });
+    return null;
+  }
+
+  const [tSnap, rSnap] = await Promise.all([paths.turns(uid, projectId).orderBy("createdAt", "asc").get(), paths.askbacks(uid, projectId).orderBy("createdAt", "asc").get()]);
+  const allTurns = tSnap.docs.map((d) => ({ id: d.id, projectId, ...d.data() }) as Turn);
+  const rqs = rSnap.docs.map((d) => ({ id: d.id, projectId, ...d.data() }) as ReverseQuestion);
+  const project = { id: projectId, ...p } as unknown as Project;
+  const picked = pickElement(allTurns.slice(-rhythm), project, allTurns, rqs, turn.windowIndex);
+
+  const batch = db.batch();
+  batch.update(projectRef, { counter: 0, barIndex: (p.barIndex ?? 0) + 1, laterStreak });
+  let out: (ReverseQuestion & { delivered: boolean }) | null = null;
+  if (picked) {
+    const ref = paths.askbacks(uid, projectId).doc();
+    const last = { ...(allTurns.find((t) => t.id === turn.id) ?? allTurns[allTurns.length - 1]), projectId };
+    let rq = buildRQ(picked, last, { id: ref.id, now: now + 2 }, turn.windowIndex, p.barIndex ?? 0);
+    const deposit = Boolean(p.answerOnly || analysis.urgent);
+    let source: "claude" | "local" = "local";
+    let model: string | null = null;
+    // 띄울 되묻기만 Claude 로 다듬는다 (적립은 나중에 꺼낼 때 템플릿으로 충분) — 실패하면 템플릿 그대로
+    if (!deposit) {
+      const bar = allTurns.slice(-rhythm);
+      const answers = await paths.messages(uid, projectId).where("turnId", "in", bar.map((t) => t.id)).get();
+      const pairs = bar.map((t) => ({ q: t.question, a: String(answers.docs.find((d) => d.get("turnId") === t.id)?.get("md") ?? "").slice(0, 1200) }));
+      const r = await askCoach("rq", { apiKey, settings, input: rqInput(rq, pairs, elementById(rq.element)?.name ?? ""), context: contextOf(user, p) });
+      await Promise.all([logCall(uid, projectId, settings.tasks.coach.model, r, "rq"), addTokens(uid, r)]);
+      if (r.ok) {
+        rq = applyRQ(rq, r.out);
+        source = "claude";
+        model = r.model;
+      }
+    }
+    const saved = { ...rq, status: deposit ? ("later" as const) : ("open" as const), source, model };
+    const { id: _id, projectId: _pid, ...doc } = saved;
+    batch.set(ref, doc);
+    batch.update(paths.user(uid), { "stats.askbacks": FieldValue.increment(1) });
+    if (!deposit) batch.set(paths.messages(uid, projectId).doc(), { kind: "rq", rqId: ref.id, createdAt: now + 2 });
+    out = { ...saved, delivered: !deposit };
+  }
+  await batch.commit();
+  return out;
+}
+
+/**
+ * 10문 리포트 한 장 — report.ts 의 buildWindowReport(규칙) 로 숫자를 만들고,
+ * 제목 · 베스트 질문 이유 · 다음 미션 문장만 Claude(report 태스크) 가 다시 쓴다. 실패하면 규칙 문장 그대로.
+ * 문서 id 는 seq(그 프로젝트의 몇 번째 리포트) — 같은 리포트를 두 번 만들지 않는다.
+ */
+async function reportStep({ user, projectId, windowIndex, now, apiKey, settings }: { user: AuthedUser; projectId: string; windowIndex: number; now: number; apiKey: string | undefined; settings: LlmSettings }) {
+  const { uid } = user;
+  const ref = paths.reports(uid, projectId).doc(String(windowIndex));
+  if ((await ref.get()).exists) return null;
+  const [pSnap, tSnap, rSnap, prevSnap] = await Promise.all([
+    paths.project(uid, projectId).get(),
+    paths.turns(uid, projectId).orderBy("createdAt", "asc").get(),
+    paths.askbacks(uid, projectId).where("windowIndex", "==", windowIndex).get(),
+    windowIndex > 1 ? paths.reports(uid, projectId).doc(String(windowIndex - 1)).get() : null,
+  ]);
+  const project = { id: projectId, ...pSnap.data() } as unknown as Project;
+  const all = tSnap.docs.map((d) => ({ id: d.id, projectId, ...d.data() }) as Turn);
+  const inWindow = all.filter((t) => t.windowIndex === windowIndex);
+  const rqs = rSnap.docs.map((d) => ({ id: d.id, projectId, ...d.data() }) as ReverseQuestion).sort((a, b) => a.createdAt - b.createdAt);
+  const prev = prevSnap?.exists ? (prevSnap.data() as WindowReport) : null;
+
+  // index — 회원 전체에서 유일한 리포트 번호 (브라우저의 "여는 열쇠"와 같은 뜻)
+  const index = await db.runTransaction(async (tx) => {
+    const u = await tx.get(paths.user(uid));
+    const n = ((u.get("stats.reports") as number) ?? 0) + 1;
+    tx.update(paths.user(uid), { "stats.reports": n });
+    return n;
+  });
+  let report: WindowReport = { ...buildWindowReport(index, windowIndex, projectId, inWindow, rqs, all, [project], prev, now + 3), writtenBy: "local" };
+  let model: string | null = null;
+
+  const r = await askCoach("report", { apiKey, settings, input: reportInput(report, inWindow, project), context: contextOf(user, pSnap.data() as ProjectDoc) });
+  await Promise.all([logCall(uid, projectId, settings.tasks.coach.model, r, "report"), addTokens(uid, r)]);
+  if (r.ok) {
+    report = applyReport(report, r.out);
+    model = r.model;
+  }
+
+  const saved = { ...report, model };
+  const batch = db.batch();
+  batch.set(ref, saved);
+  batch.set(paths.messages(uid, projectId).doc(), { kind: "coach", md: `📄 **${project.name} · ${windowIndex}번째 리포트**가 나왔어 — “${report.headline}”`, reportSeq: windowIndex, createdAt: now + 3 });
+  await batch.commit();
+  return { seq: windowIndex, ...saved };
 }

@@ -5,12 +5,12 @@ import answers from "@/data/answers.json";
 import roles from "@/data/roles.json";
 import lenses from "@/data/lenses.json";
 import { draftContext, formatOf } from "./draft";
-import type { AnswerOut, DeepOut, FeedbackOut, RQOut } from "./schemas";
-import type { Analysis, Chip, TurnScript, LensKey, Message, Openness, Profile, Project, ReverseQuestion, RoleKey, Turn } from "./types";
-import { similarity } from "./analyzer";
-import { AXIS } from "./rq";
+import type { AnswerOut, DeepOut, FeedbackOut, ReportOut, RQOut } from "./schemas";
+import { applyReport, reportInput } from "./reportAi";
+import type { Analysis, Chip, TurnScript, LensKey, Message, Openness, Profile, Project, ReverseQuestion, RoleKey, Turn, WindowReport } from "./types";
+import { applyRQ, feedbackInput, fromFeedback, localGrade, rqInput, type FeedbackResult } from "./grade";
 
-type Task = "answer" | "rq" | "feedback" | "deep";
+type Task = "answer" | "rq" | "feedback" | "deep" | "report";
 let live: boolean | null = null;
 
 export async function checkLive(): Promise<boolean> {
@@ -196,35 +196,11 @@ export function chipsFor(analysis: Analysis, recentTurns: Turn[], project: Proje
 /* ---------- 역질문 생성 · 피드백 ---------- */
 
 export async function refineRQ(base: ReverseQuestion, bar: { q: string; a: string }[], project: Project, profile: Profile | null, elementName: string): Promise<ReverseQuestion> {
-  const axis = base.axis ? AXIS[base.axis] : null;
-  const input = JSON.stringify({
-    마디: bar,
-    평가요소: `${base.element} ${elementName}`,
-    형태: base.form,
-    확인할_축: axis ? `${axis.emoji} ${axis.name} — ${axis.desc}` : "설계 전반",
-  });
-  const out = await callClaude<RQOut>("rq", input, contextOf(project, profile));
-  if (!out) return base;
-  return {
-    ...base,
-    question: out.question,
-    benefit: out.benefit || base.benefit,
-    options: base.form === "F1" && out.options.length >= 2 ? out.options.slice(0, 3) : base.options,
-    hint: out.hint,
-    example: out.example,
-    coachView: out.coach_view,
-    expectedPoints: out.expected_points,
-  };
+  const out = await callClaude<RQOut>("rq", rqInput(base, bar, elementName), contextOf(project, profile));
+  return out ? applyRQ(base, out) : base;
 }
 
-const JOKE = /^(몰라|모름|ㅁㄹ|글쎄|아무거나|ㅋ+|ㅎ+|\.+|\?+)[\sㅋㅎ~!.]*$/;
-const REASON = /(때문|니까|라서|해서|으면|면 |왜냐|그래서|대신)/;
-
-export interface FeedbackResult {
-  score: number;
-  reason: string;
-  feedback: string;
-}
+export type { FeedbackResult };
 
 export async function gradeAnswer(
   rq: ReverseQuestion,
@@ -236,30 +212,18 @@ export async function gradeAnswer(
   profile: Profile | null,
 ): Promise<FeedbackResult> {
   if (optionScore === null) {
-    const input = JSON.stringify({ 역질문: rq.question, expected_points: rq.expectedPoints, 학생의_답: answer, hint_stage: rq.hintStage, 직전_AI_답: lastAnswerMd.slice(0, 1500) });
-    const out = await callClaude<FeedbackOut>("feedback", input, contextOf(project, profile));
-    if (out) return { score: Math.max(0, Math.min(3, Math.round(out.score))), reason: out.reason_one_line, feedback: out.feedback_md };
+    const out = await callClaude<FeedbackOut>("feedback", feedbackInput(rq, answer, lastAnswerMd), contextOf(project, profile));
+    if (out) return fromFeedback(out);
   }
+  return localGrade(rq, answer, optionScore, lastAnswerMd, add);
+}
 
-  const text = answer.trim();
-  const quote = text.length > 28 ? text.slice(0, 28) + "…" : text;
-  if (optionScore === null && JOKE.test(text)) {
-    return { score: 0, reason: "가볍게 넘긴 답", feedback: "ㅋㅋ 알겠어. 하던 거 하자." };
-  }
-  let score = optionScore ?? (text.length >= 18 && REASON.test(text) ? 3 : text.length >= 8 ? 2 : 1);
-  let reason = optionScore !== null ? "보기에서 고름" : score === 3 ? "자기 말로 이유까지 말함" : score === 2 ? "자기 말로 대체로 답함" : "짧게 방향만 말함";
-  const copied = optionScore === null && similarity(text, lastAnswerMd.slice(0, 400)) > 0.55;
-  if (copied) {
-    score = Math.min(score, 1);
-    reason = "직전 답과 표현이 거의 같음";
-  }
-  if (rq.hintStage > 0) {
-    score = Math.min(score, 1);
-    reason += " · 힌트 후";
-  }
-  const receive = `"${quote}" — 그렇게 봤구나.`;
-  const plus = copied ? "이번엔 네 말로 한 줄만 다시 말해 볼래?" : score >= 2 ? add.good : add.weak;
-  return { score, reason, feedback: `${receive} ${plus} 계속 갈래, 이걸 먼저 볼래?` };
+/* ---------- 10문 리포트 문장 (숫자는 report.ts 규칙) ---------- */
+
+/** 제목 · 베스트 질문 이유 · 다음 미션 문장만 Claude 가 다시 쓴다. 키가 없거나 실패하면 null — 규칙 문장 그대로 둔다 */
+export async function writeReport(report: WindowReport, turns: Turn[], project: Project, profile: Profile | null): Promise<WindowReport | null> {
+  const out = await callClaude<ReportOut>("report", reportInput(report, turns, project), contextOf(project, profile));
+  return out ? applyReport(report, out) : null;
 }
 
 /* ---------- 심화 (§5) ---------- */

@@ -3,7 +3,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import prompts from "@/data/prompts.json";
-import { AnswerSchema, DeepSchema, FeedbackSchema, RQSchema } from "@/lib/schemas";
+import { AnswerSchema, DeepSchema, FeedbackSchema, ReportSchema, RQSchema } from "@/lib/schemas";
 
 const MODEL = process.env.ASKBACK_MODEL ?? "claude-opus-5";
 type Effort = "low" | "medium" | "high" | "xhigh" | "max";
@@ -14,6 +14,7 @@ const TASKS = {
   rq: { schema: RQSchema, system: prompts.rq.system, maxTokens: 4000 },
   feedback: { schema: FeedbackSchema, system: prompts.feedback.system, maxTokens: 4000 },
   deep: { schema: DeepSchema, system: prompts.deep.system, maxTokens: 4000 },
+  report: { schema: ReportSchema, system: prompts.report.system, maxTokens: 4000 },
 } as const;
 
 function hasCredentials() {

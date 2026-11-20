@@ -184,6 +184,7 @@ export interface WindowReport {
   opened: boolean;
   seed?: boolean;
   example?: boolean; // 불러오지 않은 예시의 리포트 — 목록에만 보이고 저장되지 않는다
+  writtenBy?: "claude" | "local"; // 제목 · 베스트 이유 · 미션 문장을 누가 썼나 (숫자는 언제나 규칙)
 }
 
 export interface AppState {

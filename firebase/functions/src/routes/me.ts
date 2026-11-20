@@ -5,6 +5,7 @@ import { auth, FieldValue, kstDay, paths } from "../lib/firebase";
 import { ApiError, ok, parse } from "../lib/http";
 import { signInWithPassword } from "../lib/identity";
 import { deleteUserCompletely, Grade, Interests, Nickname, Password, publicUser, type UserDoc } from "../lib/users";
+import { exportHandler, recordsHandler, syncHandler } from "../coach/records";
 import { getLlmSettings } from "../llm/settings";
 
 export const meRouter = Router();
@@ -24,6 +25,15 @@ meRouter.patch("/", async (req, res) => {
   const fresh = (await paths.user(uid).get()).data() as UserDoc;
   ok(res, publicUser(uid, fresh));
 });
+
+/** 브라우저에 쌓인 질문 · 답 · 되묻기를 올린다 (바뀐 것만, 같은 id 는 덮어쓰기) */
+meRouter.post("/sync", syncHandler);
+
+/** 내 기록 전부를 브라우저 저장 모양 그대로 — 로그인한 기기가 내려받아 화면에 합친다 */
+meRouter.get("/records", recordsHandler);
+
+/** 내 기록 전부를 구조화된 JSON 하나로 (?projectId= 하나만 · ?download=1 파일로) */
+meRouter.get("/export", exportHandler);
 
 meRouter.post("/password", async (req, res) => {
   const body = parse(z.object({ currentPassword: z.string().min(1), newPassword: Password }), req.body);

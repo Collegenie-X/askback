@@ -4,6 +4,7 @@ import { z } from "zod";
 import { auth, FieldValue, paths, Timestamp } from "../lib/firebase";
 import { ApiError, ok, parse } from "../lib/http";
 import { refreshIdToken, sendPasswordReset, signInWithPassword } from "../lib/identity";
+import { cancelGuardianRequest, pendingOf, requestGuardianConsent, resendGuardianRequest } from "./guardian";
 import { adminEmails, ensureUserDoc, Grade, Interests, Nickname, Password, publicUser, requireUser, type Role, type UserDoc } from "../lib/users";
 
 export const authRouter = Router();
@@ -24,9 +25,9 @@ const SignupBody = z.object({
 
 authRouter.post("/signup", async (req, res) => {
   const body = parse(SignupBody, req.body);
-  // 개인정보 보호법: 만 14세 미만은 법정대리인 동의가 있어야 한다
-  if (body.under14 && !body.guardianConsent) {
-    throw new ApiError(400, "guardian_consent_required", "만 14세 미만은 보호자 동의가 필요해요.", [{ field: "guardianConsent", message: "보호자 동의를 받아 주세요." }]);
+  // 개인정보 보호법: 만 14세 미만은 법정대리인 동의를 회사가 확인해야 한다 — 이메일 가입에는 그 확인 절차가 없으므로 받지 않는다
+  if (body.under14) {
+    throw new ApiError(400, "guardian_consent_required", "만 14세 미만은 Google로 가입해 주세요. 보호자에게 동의 확인 메일을 보내 드려요.", [{ field: "under14", message: "보호자 확인이 필요해요." }]);
   }
 
   let uid: string;
@@ -117,7 +118,8 @@ authRouter.post("/google", async (req, res) => {
   const t = await googleToken(req.headers.authorization);
   const snap = await paths.user(t.uid).get();
   if (!snap.exists) {
-    ok(res, { registered: false, profile: { email: (t.email ?? "").toLowerCase(), name: (t.name as string | undefined) ?? "", picture: (t.picture as string | undefined) ?? null } });
+    // 만 14세 미만이 보호자 동의를 기다리는 중이면 pending 을 함께 준다 → 팝업이 "기다리는 중" 화면을 띄운다
+    ok(res, { registered: false, profile: { email: (t.email ?? "").toLowerCase(), name: (t.name as string | undefined) ?? "", picture: (t.picture as string | undefined) ?? null }, pending: await pendingOf(t.uid) });
     return;
   }
   const doc = snap.data() as UserDoc;
@@ -126,16 +128,28 @@ authRouter.post("/google", async (req, res) => {
   ok(res, { registered: true, user: publicUser(t.uid, doc) });
 });
 
-const GoogleSignupBody = SignupBody.omit({ email: true, password: true });
+const GoogleSignupBody = SignupBody.omit({ email: true, password: true, guardianConsent: true }).extend({
+  guardianEmail: Email.optional(), // 만 14세 미만이면 꼭 — 보호자에게 동의 확인 메일을 보낸다
+});
 
 authRouter.post("/google/signup", async (req, res) => {
   const t = await googleToken(req.headers.authorization);
   const body = parse(GoogleSignupBody, req.body);
-  if (body.under14 && !body.guardianConsent) {
-    throw new ApiError(400, "guardian_consent_required", "만 14세 미만은 보호자 동의가 필요해요.", [{ field: "guardianConsent", message: "보호자 동의를 받아 주세요." }]);
-  }
   const ref = paths.user(t.uid);
   if ((await ref.get()).exists) throw new ApiError(409, "already_registered", "이미 가입했어요. 바로 시작하면 돼요.");
+
+  // 만 14세 미만: 회원 문서를 바로 만들지 않고, 보호자가 메일 링크에서 동의하면 그때 만든다 (routes/guardian.ts)
+  if (body.under14) {
+    if (!body.guardianEmail) throw new ApiError(400, "guardian_email_required", "보호자의 이메일을 적어 주세요.", [{ field: "guardianEmail", message: "보호자에게 동의 확인 메일을 보내요." }]);
+    const pending = await requestGuardianConsent({
+      uid: t.uid,
+      childEmail: (t.email ?? "").toLowerCase(),
+      guardianEmail: body.guardianEmail,
+      form: { nickname: body.nickname, grade: body.grade, interests: body.interests },
+    });
+    ok(res, { registered: false, pending }, 202);
+    return;
+  }
 
   const email = (t.email ?? "").toLowerCase();
   const role: Role = email && t.email_verified && adminEmails().includes(email) ? "admin" : "student";
@@ -157,6 +171,20 @@ authRouter.post("/google/signup", async (req, res) => {
   await ref.set(doc);
   await auth.setCustomUserClaims(t.uid, { role });
   ok(res, { registered: true, user: publicUser(t.uid, doc) }, 201);
+});
+
+/** 보호자 동의 요청 다시 보내기 — guardianEmail 을 주면 그 주소로 바꿔 보낸다 */
+authRouter.post("/google/guardian/resend", async (req, res) => {
+  const t = await googleToken(req.headers.authorization);
+  const body = parse(z.object({ guardianEmail: Email.optional() }), req.body);
+  ok(res, { pending: await resendGuardianRequest(t.uid, body.guardianEmail) });
+});
+
+/** 보호자 동의 요청 취소 — 학생이 "취소"를 누르거나 다른 계정으로 바꿀 때 */
+authRouter.delete("/google/guardian", async (req, res) => {
+  const t = await googleToken(req.headers.authorization);
+  await cancelGuardianRequest(t.uid);
+  ok(res, { cancelled: true });
 });
 
 function strip(t: { idToken: string; refreshToken: string; expiresIn: number }) {

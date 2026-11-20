@@ -35,8 +35,8 @@ export const LlmSettings = z.object({
   dailyTurnLimit: z.number().int().min(0).max(10_000),
   /** Claude 에게 함께 보내는 이전 대화 수 (질문 + 답 한 쌍이 2) */
   historyMessages: z.number().int().min(0).max(40),
-  /** 작업별 모델 — 지금 서버가 쓰는 작업은 질문에 답하기(answer) */
-  tasks: z.object({ answer: TaskSettings }),
+  /** 작업별 모델 — answer: 질문에 답하기 · coach: 되묻기 다듬기(rq) · 학생 답 채점(feedback) */
+  tasks: z.object({ answer: TaskSettings, coach: TaskSettings }),
 });
 export type LlmSettings = z.infer<typeof LlmSettings>;
 
@@ -53,6 +53,13 @@ export const DEFAULT_SETTINGS: LlmSettings = {
       maxTokens: 16000,
       timeoutMs: 60_000,
     },
+    // 짧은 JSON 하나만 만드는 일이라 빠르고 저렴한 모델로 충분하다
+    coach: {
+      model: process.env.ASKBACK_COACH_MODEL || "claude-sonnet-5-5",
+      effort: "low",
+      maxTokens: 4000,
+      timeoutMs: 30_000,
+    },
   },
 };
 
@@ -64,7 +71,7 @@ export const LlmSettingsPatch = z
     refusalFallback: LlmSettings.shape.refusalFallback,
     dailyTurnLimit: LlmSettings.shape.dailyTurnLimit,
     historyMessages: LlmSettings.shape.historyMessages,
-    tasks: z.object({ answer: TaskSettings.partial() }).partial(),
+    tasks: z.object({ answer: TaskSettings.partial(), coach: TaskSettings.partial() }).partial(),
   })
   .partial()
   .strict();
@@ -79,7 +86,10 @@ export async function getLlmSettings(fresh = false): Promise<LlmSettings> {
   const merged = LlmSettings.safeParse({
     ...DEFAULT_SETTINGS,
     ...stored,
-    tasks: { answer: { ...DEFAULT_SETTINGS.tasks.answer, ...(stored.tasks?.answer ?? {}) } },
+    tasks: {
+      answer: { ...DEFAULT_SETTINGS.tasks.answer, ...(stored.tasks?.answer ?? {}) },
+      coach: { ...DEFAULT_SETTINGS.tasks.coach, ...(stored.tasks?.coach ?? {}) },
+    },
   });
   const value = merged.success ? merged.data : DEFAULT_SETTINGS;
   cache = { at: Date.now(), value };
@@ -91,7 +101,10 @@ export async function updateLlmSettings(patch: z.infer<typeof LlmSettingsPatch>,
   const next = LlmSettings.parse({
     ...current,
     ...patch,
-    tasks: { answer: { ...current.tasks.answer, ...(patch.tasks?.answer ?? {}) } },
+    tasks: {
+      answer: { ...current.tasks.answer, ...(patch.tasks?.answer ?? {}) },
+      coach: { ...current.tasks.coach, ...(patch.tasks?.coach ?? {}) },
+    },
   });
   await paths.llmSettings().set({ ...next, updatedAt: FieldValue.serverTimestamp(), updatedBy: by });
   cache = { at: Date.now(), value: next };

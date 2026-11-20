@@ -3,7 +3,7 @@
 // 한 턴의 파이프라인 (설계서 v3 §8): 관문 → 답변기 → 코치(배지·칩·역질문) → 기록·리포트
 import { analyze } from "./analyzer";
 import { read, uid, update, write } from "./db";
-import { chipsFor, deepQuestion, deepReply, generateAnswer, gradeAnswer, refineRQ, roleOf } from "./engine";
+import { chipsFor, deepQuestion, deepReply, generateAnswer, gradeAnswer, refineRQ, roleOf, writeReport } from "./engine";
 import { formatIntro } from "./draft";
 import { buildWindowReport, reportsOf } from "./report";
 import { buildRQ, elementAdd, elementById, pickElement } from "./rq";
@@ -142,9 +142,13 @@ export async function runTurn(projectId: string, text: string, chipUsed: ChipKin
     const reports = read("reports");
     const prev = reportsOf(reports, projectId, project.name).pop() ?? null;
     const index = Math.max(0, ...reports.map((r) => r.index)) + 1;
-    const report = buildWindowReport(index, windowIndex, projectId, inWindow, read("rqs").filter((r) => r.projectId === projectId && r.windowIndex === windowIndex), mine, read("projects"), prev, Date.now());
+    const report = { ...buildWindowReport(index, windowIndex, projectId, inWindow, read("rqs").filter((r) => r.projectId === projectId && r.windowIndex === windowIndex), mine, read("projects"), prev, Date.now()), writtenBy: "local" as const };
     write("reports", [...reports, report]);
     write("state", { ...read("state"), ...bump });
+    // 숫자는 이미 나왔다 — 문장 세 개만 Claude 가 다시 쓰면 그 자리에서 바꿔 끼운다 (기다리지 않는다)
+    void writeReport(report, inWindow, project, profile).then((better) => {
+      if (better) update("reports", (prev) => prev.map((r) => (r.index === report.index && !r.opened ? better : r)));
+    });
   } else {
     write("state", { ...read("state"), ...bump });
   }

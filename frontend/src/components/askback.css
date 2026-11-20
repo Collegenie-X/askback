@@ -530,3 +530,26 @@ body:has(.phone)::after {
 .phone .info-tag { flex-shrink: 0; font-size: 11px; font-weight: 800; color: var(--color-sub); background: var(--color-sand); border-radius: 999px; padding: 2px 8px; }
 .phone .act-tag { font-size: 11px; font-weight: 800; color: #1d1600; background: var(--color-clay); border-radius: 999px; padding: 1px 8px; }
 
+
+/* ── 로그인 팝업 — 단계가 옆으로 넘어가고, 체크가 톡 튀고, 다 되면 버튼이 빛난다 ── */
+@keyframes ab-slide-in { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes ab-slide-back { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+@keyframes ab-pop-up { from { opacity: 0; transform: translateY(40px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes ab-tick { 0% { transform: scale(0); } 60% { transform: scale(1.35); } 100% { transform: scale(1); } }
+@keyframes ab-ready { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 200, 61, 0.55); } 50% { box-shadow: 0 0 0 7px rgba(255, 200, 61, 0); } }
+@keyframes ab-confetti { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 100% { opacity: 0; transform: translate(var(--dx), 150px) rotate(540deg); } }
+.phone .login-pop { animation: ab-pop-up 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.phone .slide-in { animation: ab-slide-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.phone .slide-back { animation: ab-slide-back 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.phone .tick-pop { display: inline-block; animation: ab-tick 0.28s ease-out both; }
+.phone .ready-glow { animation: ab-ready 1.6s ease-out infinite; }
+.phone .google-btn { border-bottom: 4px solid #c9cbd6; transition: transform 0.06s, border-width 0.06s; }
+.phone .google-btn:active { transform: translateY(3px); border-bottom-width: 1px; }
+.phone .confetti { position: absolute; left: 50%; top: 40px; width: 0; height: 0; pointer-events: none; }
+.phone .confetti i { position: absolute; width: 7px; height: 11px; border-radius: 2px; background: hsl(calc(var(--i) * 47), 90%, 65%); --dx: calc((var(--i) - 6.5) * 22px); animation: ab-confetti 1.3s cubic-bezier(0.2, 0.7, 0.4, 1) calc(var(--i) * 25ms) both; }
+@media (prefers-reduced-motion: reduce) {
+  .phone .login-pop, .phone .slide-in, .phone .slide-back, .phone .tick-pop, .phone .ready-glow, .phone .confetti i { animation: none; }
+}
+@keyframes ab-mail-ring { 0% { opacity: 0.7; transform: scale(1); } 100% { opacity: 0; transform: scale(1.55); } }
+.phone .mail-ring { animation: ab-mail-ring 1.8s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .phone .mail-ring { animation: none; opacity: 0; } }

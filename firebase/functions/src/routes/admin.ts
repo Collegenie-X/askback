@@ -117,7 +117,7 @@ export function adminRouter(getKey: () => string | undefined) {
       ...current,
       ...(body.override ?? {}),
       enabled: true,
-      tasks: { answer: { ...current.tasks.answer, ...(body.override?.tasks?.answer ?? {}) } },
+      tasks: { ...current.tasks, answer: { ...current.tasks.answer, ...(body.override?.tasks?.answer ?? {}) } },
     };
     const result = await askClaude({ apiKey: getKey(), settings, question: body.text, context: "관리자 시험 질문", history: [] });
     await paths.llmCalls().add({

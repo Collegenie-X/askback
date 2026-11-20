@@ -13,7 +13,6 @@ export type View =
   | { name: "notes" }
   | { name: "library" }
   | { name: "settings" }
-  | { name: "account" }
   | { name: "space" };
 
 interface Ctx {
@@ -22,6 +21,7 @@ interface Ctx {
   openMd: (doc: MdDoc) => void;
   openReport: (index: number) => void; // 리포트 자세히 — 화면을 떠나지 않고 팝업으로 연다
   openDrawer: () => void;
+  openLogin: () => void; // 로그인 팝업 — 보던 화면 위에 겹쳐 연다
   confirm: (o: ConfirmOptions) => Promise<boolean>; // 앱 안 확인 창 — window.confirm 대신
 }
 

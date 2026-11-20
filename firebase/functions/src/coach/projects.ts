@@ -5,6 +5,7 @@ import formats from "@front/data/formats.json";
 import { db, FieldValue, paths } from "../lib/firebase";
 import type { Response } from "express";
 import { ApiError, notFound, ok, parse } from "../lib/http";
+import { recordRoutes } from "./records";
 import { runTurn } from "./turn";
 
 export const FORMAT_KEYS = Object.keys(formats.formats) as [string, ...string[]];
@@ -138,6 +139,9 @@ export function projectsRouter(getKey: () => string | undefined) {
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() })).reverse();
     ok(res, { items, nextBefore: snap.size === limit ? (items[0] as { createdAt?: number }).createdAt ?? null : null });
   });
+
+  // 질문 하나 조회 · 되묻기 · 기록 하나씩 저장(PUT)
+  recordRoutes(r, getKey);
 
   return r;
 }
