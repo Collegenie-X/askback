@@ -30,16 +30,22 @@ export async function checkLive(): Promise<boolean> {
 
 // 서버(Cloud Functions /v1/llm) — 키는 서버 비밀값에만 있다. 로그인한 학생만 쓴다.
 let serverDown = false;
+/** 마지막 서버 호출이 왜 실패했는지 — 답 카드 위에 한 줄로 보여 준다 (조용히 데모 카드로 빠지지 않게) */
+let lastServerError: string | null = null;
 
 async function callServer<T>(task: Task, body: Record<string, unknown>): Promise<T | null> {
+  lastServerError = null;
   if (serverDown || !firebaseAuth().currentUser) return null;
+  const started = Date.now();
   try {
     const r = await api<{ data: T }>(`/llm/${task}`, { method: "POST", body });
     return r.data;
   } catch (e) {
     // 서버에 키가 없거나 관리자가 꺼 두면 이번 접속 동안은 다시 부르지 않는다
     if (e instanceof ApiFailure && (e.code === "no_key" || e.code === "disabled")) serverDown = true;
-    console.warn("[askback] 서버 Claude 호출 실패 — 로컬 답 카드로 답해요:", e instanceof Error ? e.message : e);
+    const secs = Math.round((Date.now() - started) / 1000);
+    lastServerError = `${e instanceof Error ? e.message : String(e)}${e instanceof ApiFailure ? ` · ${e.code} ${e.status}` : ""} · ${secs}초`;
+    console.warn("[askback] 서버 Claude 호출 실패 — 로컬 답 카드로 답해요:", lastServerError);
     return null;
   }
 }
@@ -163,6 +169,7 @@ export async function generateAnswer(question: string, analysis: Analysis, proje
   const out = await callClaude<AnswerOut>("answer", question, contextOf(project, profile), historyOf(messages), images);
   if (!out) {
     const local = await localAnswer(question, analysis, project);
+    if (lastServerError) local.md = `> ⚠️ 서버에서 Claude 답을 받지 못해서 데모 카드로 답했어 — ${lastServerError}\n\n${local.md}`;
     if (!images.length) return local;
     // 서버 없이 돌 때는 사진 속을 읽지 못한다 — 읽은 척하지 않고 그대로 말한다
     const note = `> 📷 사진 ${images.length}장 받았어. 지금은 서버 없이 도는 중이라 **사진 속 내용은 읽지 못해** (Claude API를 연결하면 사진을 보고 답해). 사진에서 봐줬으면 하는 걸 글로 한 줄만 보태 줄래?\n\n`;

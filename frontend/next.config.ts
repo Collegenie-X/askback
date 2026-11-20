@@ -7,6 +7,9 @@ const TEENSPARK_API = process.env.TEENSPARK_API ?? "https://asia-northeast3-teen
 
 const nextConfig: NextConfig = {
   devIndicators: false, // 모바일 화면 왼쪽 아래 입력창을 가리지 않게
+  // /api/v1 rewrite 프록시는 기본 30초에 끊는다 — Claude 답(/v1/llm/answer)은 그보다 길 수 있어서
+  // Cloud Function 제한(timeoutSeconds: 180)과 맞춘다
+  experimental: { proxyTimeout: 180_000 },
   async rewrites() {
     return [
       // /api/sim · /api/turn (Next 라우트)은 그대로 두고, /api/v1/** 만 Firebase 로 보낸다
