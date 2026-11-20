@@ -8,6 +8,7 @@ import { requireRole, requireUser } from "./lib/users";
 import { getLlmSettings } from "./llm/settings";
 import { adminRouter } from "./routes/admin";
 import { authRouter } from "./routes/auth";
+import { llmRouter } from "./routes/llm";
 import { guardianRouter, useMailKey } from "./routes/guardian";
 import { meRouter } from "./routes/me";
 
@@ -44,6 +45,7 @@ export function createApp(getKey: () => string | undefined, getMailKey: () => st
   v1.use("/projects", requireUser, projectsRouter(getKey));
   v1.post("/ask", requireUser, askHandler(getKey));
   v1.post("/ask/stream", requireUser, askHandler(getKey, true));
+  v1.use("/llm", requireUser, llmRouter(getKey)); // 브라우저 답변 엔진(engine.ts)이 Claude 한 번만 빌려 쓰는 길 — 키는 서버에만
   v1.use("/admin", requireUser, requireRole("admin"), adminRouter(getKey));
 
   // 함수 주소(/api/v1/...)로도, Hosting rewrite(/api/** → api)로도 같은 경로가 열린다

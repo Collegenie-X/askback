@@ -61,7 +61,7 @@ export function contextOf(user: AuthedUser, project: ProjectDoc) {
     .join("\n");
 }
 
-async function reserveTurn(uid: string, limit: number) {
+export async function reserveTurn(uid: string, limit: number) {
   const ref = paths.usage(uid, kstDay());
   await db.runTransaction(async (tx) => {
     const used = ((await tx.get(ref)).data()?.turns as number) ?? 0;
@@ -76,7 +76,7 @@ export async function addTokens(uid: string, r: CoachResult<unknown>) {
   await paths.usage(uid, kstDay()).set({ inputTokens: FieldValue.increment(r.usage.inputTokens), outputTokens: FieldValue.increment(r.usage.outputTokens) }, { merge: true });
 }
 
-export async function logCall(uid: string, projectId: string, model: string, r: ClaudeResult | CoachResult<unknown>, task: "answer" | "rq" | "feedback" | "report" = "answer") {
+export async function logCall(uid: string, projectId: string, model: string, r: ClaudeResult | CoachResult<unknown>, task: "answer" | "rq" | "feedback" | "report" | "deep" = "answer") {
   if (!r.ok && (r.reason === "disabled" || r.reason === "no_key")) return; // 실제로 부르지 않은 것은 남기지 않는다
   await paths.llmCalls().add({
     uid,

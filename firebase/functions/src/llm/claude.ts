@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import prompts from "@front/data/prompts.json";
-import { AnswerSchema, FeedbackSchema, ReportSchema, RQSchema, type AnswerOut, type FeedbackOut, type ReportOut, type RQOut } from "@front/lib/schemas";
+import { AnswerSchema, DeepSchema, FeedbackSchema, ReportSchema, RQSchema, type AnswerOut, type DeepOut, type FeedbackOut, type ReportOut, type RQOut } from "@front/lib/schemas";
 import { FALLBACK_MODELS, type LlmSettings } from "./settings";
 import { JsonStringFieldStream } from "./stream-json";
 
@@ -121,9 +121,10 @@ const COACH = {
   rq: { schema: RQSchema, system: prompts.rq.system.join("\n") },
   feedback: { schema: FeedbackSchema, system: prompts.feedback.system.join("\n") },
   report: { schema: ReportSchema, system: prompts.report.system.join("\n") },
+  deep: { schema: DeepSchema, system: prompts.deep.system.join("\n") },
 } as const;
-type CoachTask = keyof typeof COACH;
-type CoachOut = { rq: RQOut; feedback: FeedbackOut; report: ReportOut };
+export type CoachTask = keyof typeof COACH;
+type CoachOut = { rq: RQOut; feedback: FeedbackOut; report: ReportOut; deep: DeepOut };
 
 export type CoachResult<T> =
   | { ok: true; out: T; model: string; usage: ClaudeUsage; ms: number }

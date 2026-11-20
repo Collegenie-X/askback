@@ -3,7 +3,8 @@
 // 로그인 팝업 — 보던 화면 위에 겹쳐 열린다. 페이지를 떠나지 않는다.
 //
 //   ① Google로 시작  →  ② 학년 (중1 · 중2 · 기타면 만 14세 확인)  →  ③ 동의  →  🎉 환영
-//   만 14세 미만:  ③ 동의 + 보호자 이메일  →  ④ 보호자 동의 기다리기 (메일 링크에서 보호자가 "동의합니다" → 저절로 🎉)
+//   가입은 만 14세 이상만:  ②에서 "아직이에요" 를 고르면 안내만 하고 넘어가지 않는다 (로그인 없이 이 기기에서는 쓸 수 있다)
+//   (예전에 보내 둔 보호자 동의 요청이 남아 있으면 ④ 기다리기 화면은 그대로 보인다)
 //   이미 가입했다면 ① 다음 바로 닫힌다. 로그인한 뒤 다시 열면 '내 계정' 카드(학년 · 로그아웃 · 탈퇴).
 //   동의 줄의 "보기 ›" 는 팝업 안에서 문서 페이지로 넘어가고, "동의하고 돌아가기" 로 체크까지 한 번에.
 import { useEffect, useRef, useState } from "react";
@@ -16,7 +17,7 @@ import LegalView from "./LegalView";
 
 const ASK_AGE = ["중1", "중2", "기타"]; // 중3 이상은 이미 만 14세가 지났다
 const STEPS = ["Google", "학년", "동의"];
-const STEPS_KID = [...STEPS, "보호자"]; // 만 14세 미만은 보호자 동의가 한 칸 더
+const STEPS_KID = [...STEPS, "보호자"]; // 예전에 보낸 보호자 동의 요청을 기다리는 화면에서만
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginDialog({ onClose }: { onClose: () => void }) {
@@ -58,7 +59,7 @@ export default function LoginDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-// 위쪽 진행 막대 (3칸, 만 14세 미만은 4칸)
+// 위쪽 진행 막대 (3칸)
 function Progress({ at, steps = STEPS }: { at: number; steps?: string[] }) {
   return (
     <div className="mb-5 mr-9 flex gap-1.5" aria-label={`${steps.length}단계 중 ${at + 1}단계`}>
@@ -122,7 +123,6 @@ function Signup({ profile }: { profile: GoogleProfile }) {
   const [under14, setUnder14] = useState<boolean | null>(null);
   const [agreed, setAgreed] = useState<Record<LegalId, boolean>>({ terms: false, privacy: false, guardian: false });
   const [doc, setDoc] = useState<LegalId | null>(null);
-  const [guardianEmail, setGuardianEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -137,25 +137,21 @@ function Signup({ profile }: { profile: GoogleProfile }) {
     setUnder14(false);
     next();
   };
-  const pickAge = (u: boolean) => { setUnder14(u); next(); };
+  const pickAge = (u: boolean) => { setUnder14(u); if (!u) next(); }; // 만 14세 미만이면 다음으로 가지 않는다
 
   const needed: LegalId[] = ["terms", "privacy"]; // 보호자 동의는 아이가 체크하지 않는다 — 보호자가 메일에서 직접
   const all = needed.every((k) => agreed[k]);
   const toggleAll = () => setAgreed((a) => ({ ...a, ...Object.fromEntries(needed.map((k) => [k, !all])) }));
-  const gEmail = guardianEmail.trim().toLowerCase();
-  const sameAsMe = gEmail === profile.email.toLowerCase();
-  const emailOk = EMAIL.test(gEmail) && !sameAsMe;
-  const left = needed.filter((k) => !agreed[k]).length + (under14 && !emailOk ? 1 : 0);
-  const ready = !!nickname.trim() && !!grade && under14 !== null && left === 0;
-  const steps = under14 ? STEPS_KID : STEPS;
+  const left = needed.filter((k) => !agreed[k]).length;
+  const ready = !!nickname.trim() && !!grade && under14 === false && left === 0;
 
   const submit = async () => {
     if (!ready || busy) return;
     setBusy(true);
     setError("");
     try {
-      await completeSignup({ nickname: nickname.trim(), grade, interests: [], under14: !!under14, guardianEmail: under14 ? gEmail : undefined, agreeTerms: true, agreePrivacy: true });
-      // 성공하면 계정 상태가 바뀌어 화면이 저절로 넘어간다 (🎉 환영 또는 ④ 보호자 기다리기)
+      await completeSignup({ nickname: nickname.trim(), grade, interests: [], under14: false, agreeTerms: true, agreePrivacy: true });
+      // 성공하면 계정 상태가 바뀌어 화면이 저절로 넘어간다 (🎉 환영)
     } catch (e) {
       setError((e as Error).message);
       setBusy(false);
@@ -180,7 +176,7 @@ function Signup({ profile }: { profile: GoogleProfile }) {
 
   return (
     <>
-      <Progress at={step === "grade" ? 1 : 2} steps={steps} />
+      <Progress at={step === "grade" ? 1 : 2} />
       {step === "grade" ? (
         <div key="grade" className={back ? "slide-back" : "slide-in"}>
           <div className="flex items-center gap-1.5">
@@ -204,11 +200,17 @@ function Signup({ profile }: { profile: GoogleProfile }) {
           {grade && ASK_AGE.includes(grade) && (
             <div className="rise mt-5 rounded-2xl border border-line bg-card p-3.5">
               <p className="text-[14px] font-extrabold">🎂 만 14세가 지났어?</p>
-              <p className="mt-0.5 text-[11.5px] text-sub">올해 생일이 지났는지로 따져요. 아직이면 보호자 동의가 필요해요.</p>
+              <p className="mt-0.5 text-[11.5px] text-sub">올해 생일이 지났는지로 따져요. 틴스파크AI는 만 14세 이상부터 가입할 수 있어요.</p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => pickAge(false)} aria-pressed={under14 === false} className={`slot rounded-xl py-2.5 text-[13px] font-bold ${under14 === false ? "slot-on text-clay" : ""}`}>네, 지났어요</button>
                 <button type="button" onClick={() => pickAge(true)} aria-pressed={under14 === true} className={`slot rounded-xl py-2.5 text-[13px] font-bold ${under14 === true ? "slot-on text-clay" : ""}`}>아직이에요</button>
               </div>
+              {under14 && (
+                <div role="alert" className="rise mt-3 rounded-xl border border-clay bg-clay-soft px-3 py-2.5 text-[12.5px] leading-relaxed">
+                  <p className="font-extrabold">🎂 만 14세 생일이 지나면 다시 만나요!</p>
+                  <p className="mt-0.5 text-sub">가입은 만 14세 이상만 할 수 있어요. 그동안은 <b className="text-ink">로그인 없이</b> 이 기기에서 질문하고 리포트를 볼 수 있어요.</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -236,27 +238,14 @@ function Signup({ profile }: { profile: GoogleProfile }) {
             ))}
           </ul>
 
-          {under14 && (
-            <div className="rise mt-3 rounded-2xl border border-clay bg-clay-soft p-3.5">
-              <div className="flex items-center gap-2">
-                <p className="flex-1 text-[14px] font-extrabold">👨‍👩‍👧 보호자 이메일 <span className="text-[11px] text-clay">[필수]</span></p>
-                <button type="button" onClick={() => { setBack(false); setDoc("guardian"); }} className="shrink-0 rounded-full border border-line bg-card px-2.5 py-1 text-[11.5px] font-bold text-sub active:bg-sand">보기 ›</button>
-              </div>
-              <p className="mt-0.5 text-[11.5px] leading-relaxed text-sub">만 14세 미만은 법에 따라 보호자 동의가 필요해요. 이 주소로 동의 요청 메일을 보내고, 보호자가 메일에서 <b className="text-ink">동의합니다</b>를 누르면 가입이 끝나요.</p>
-              <input type="email" inputMode="email" autoComplete="off" value={guardianEmail} onChange={(e) => setGuardianEmail(e.target.value)} placeholder="parent@example.com" aria-label="보호자 이메일" aria-invalid={!!gEmail && !emailOk} className={`mt-2.5 w-full rounded-xl border bg-paper px-3.5 py-3 text-[15px] outline-none transition-colors ${gEmail && !emailOk ? "border-[#fb7185]" : emailOk ? "border-clay" : "border-line focus:border-clay"}`} />
-              {sameAsMe && <p className="mt-1.5 text-[11.5px] text-[#fda4af]">내 이메일이에요. 보호자의 이메일을 적어 줘.</p>}
-              {emailOk && <p className="rise mt-1.5 text-[11.5px] font-bold text-clay">✓ 이 주소로 보낼게요</p>}
-            </div>
-          )}
-
           <p className="mt-2 rounded-xl bg-sand px-3 py-2 text-[11.5px] leading-relaxed text-sub">🌏 AI 답을 만들기 위해 질문 글은 미국의 Anthropic으로 보내져요(국외 이전). AI 학습에는 쓰이지 않아요. 자세한 내용은 개인정보 <b className="text-ink">보기 ›</b> 5항에 있어요.</p>
 
           {error && <p role="alert" className="rise mt-3 rounded-xl border border-[#fb7185] bg-[#2a1220] px-3 py-2 text-[13px] text-[#fda4af]">{error}</p>}
 
           <button type="button" onClick={submit} disabled={!ready || busy} className={`mt-5 w-full rounded-2xl py-3.5 text-[15px] font-extrabold ${ready ? "chunk ready-glow" : "chunk-ghost text-sub"}`}>
-            {busy ? (under14 ? "보호자에게 보내는 중…" : "가입하는 중…") : !ready ? `필수 항목 ${left}개 남았어요` : under14 ? "보호자에게 동의 요청 보내기 📨" : "시작하기 🚀"}
+            {busy ? "가입하는 중…" : !ready ? `필수 항목 ${left}개 남았어요` : "시작하기 🚀"}
           </button>
-          <button type="button" onClick={() => goStep("grade")} className="mx-auto mt-3 block text-[12px] text-sub">‹ 학년 다시 고르기 · {grade}{under14 ? " · 만 14세 미만" : ""}</button>
+          <button type="button" onClick={() => goStep("grade")} className="mx-auto mt-3 block text-[12px] text-sub">‹ 학년 다시 고르기 · {grade}</button>
         </div>
       )}
     </>

@@ -9,6 +9,8 @@ import type { AnswerOut, DeepOut, FeedbackOut, ReportOut, RQOut } from "./schema
 import { applyReport, reportInput } from "./reportAi";
 import type { Analysis, Chip, TurnScript, LensKey, Message, Openness, Profile, Project, ReverseQuestion, RoleKey, Turn, WindowReport } from "./types";
 import { applyRQ, feedbackInput, fromFeedback, localGrade, rqInput, type FeedbackResult } from "./grade";
+import { api, ApiFailure } from "./account";
+import { firebaseAuth } from "./firebase";
 
 type Task = "answer" | "rq" | "feedback" | "deep" | "report";
 let live: boolean | null = null;
@@ -26,8 +28,25 @@ export async function checkLive(): Promise<boolean> {
   return live;
 }
 
+// 서버(Cloud Functions /v1/llm) — 키는 서버 비밀값에만 있다. 로그인한 학생만 쓴다.
+let serverDown = false;
+
+async function callServer<T>(task: Task, body: Record<string, unknown>): Promise<T | null> {
+  if (serverDown || !firebaseAuth().currentUser) return null;
+  try {
+    const r = await api<{ data: T }>(`/llm/${task}`, { method: "POST", body });
+    return r.data;
+  } catch (e) {
+    // 서버에 키가 없거나 관리자가 꺼 두면 이번 접속 동안은 다시 부르지 않는다
+    if (e instanceof ApiFailure && (e.code === "no_key" || e.code === "disabled")) serverDown = true;
+    console.warn("[askback] 서버 Claude 호출 실패 — 로컬 답 카드로 답해요:", e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
 async function callClaude<T>(task: Task, input: string, context: string, history?: { role: "user" | "assistant"; content: string }[], images?: string[]): Promise<T | null> {
-  if (!(await checkLive())) return null;
+  // ① 이 Next 서버에 키가 있으면(/api/turn) 그쪽 ② 없으면 로그인한 학생은 Firebase 서버 ③ 둘 다 안 되면 null → 로컬 카드
+  if (!(await checkLive())) return callServer<T>(task, { input, context, history, images });
   try {
     const res = await fetch("/api/turn", {
       method: "POST",

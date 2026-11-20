@@ -4,7 +4,7 @@ import { z } from "zod";
 import { auth, FieldValue, paths, Timestamp } from "../lib/firebase";
 import { ApiError, ok, parse } from "../lib/http";
 import { refreshIdToken, sendPasswordReset, signInWithPassword } from "../lib/identity";
-import { cancelGuardianRequest, pendingOf, requestGuardianConsent, resendGuardianRequest } from "./guardian";
+import { cancelGuardianRequest, pendingOf, resendGuardianRequest } from "./guardian";
 import { adminEmails, ensureUserDoc, Grade, Interests, Nickname, Password, publicUser, requireUser, type Role, type UserDoc } from "../lib/users";
 
 export const authRouter = Router();
@@ -23,12 +23,13 @@ const SignupBody = z.object({
   agreePrivacy: z.literal(true, { message: "개인정보 수집 · 이용에 동의해야 가입할 수 있어요." }),
 });
 
+/** 만 14세 미만 가입 요청 — 화면도 막지만 서버에서 한 번 더 막는다 */
+const under14Error = () => new ApiError(400, "under14_not_allowed", "틴스파크AI는 만 14세 이상부터 가입할 수 있어요. 그동안은 로그인 없이 이 기기에서 써 볼 수 있어요.", [{ field: "under14", message: "만 14세 이상만 가입할 수 있어요." }]);
+
 authRouter.post("/signup", async (req, res) => {
   const body = parse(SignupBody, req.body);
-  // 개인정보 보호법: 만 14세 미만은 법정대리인 동의를 회사가 확인해야 한다 — 이메일 가입에는 그 확인 절차가 없으므로 받지 않는다
-  if (body.under14) {
-    throw new ApiError(400, "guardian_consent_required", "만 14세 미만은 Google로 가입해 주세요. 보호자에게 동의 확인 메일을 보내 드려요.", [{ field: "under14", message: "보호자 확인이 필요해요." }]);
-  }
+  // 가입은 만 14세 이상만 받는다 (만 14세 미만 · 보호자 동의 가입은 열지 않는다)
+  if (body.under14) throw under14Error();
 
   let uid: string;
   try {
@@ -50,7 +51,7 @@ authRouter.post("/signup", async (req, res) => {
     role,
     status: "active",
     dailyLimit: null,
-    consent: { termsAt: now, privacyAt: now, under14: body.under14, guardianAt: body.under14 ? now : null },
+    consent: { termsAt: now, privacyAt: now, under14: body.under14, guardianAt: null },
     stats: { projects: 0, turns: 0 },
     createdAt: now,
     updatedAt: now,
@@ -138,18 +139,8 @@ authRouter.post("/google/signup", async (req, res) => {
   const ref = paths.user(t.uid);
   if ((await ref.get()).exists) throw new ApiError(409, "already_registered", "이미 가입했어요. 바로 시작하면 돼요.");
 
-  // 만 14세 미만: 회원 문서를 바로 만들지 않고, 보호자가 메일 링크에서 동의하면 그때 만든다 (routes/guardian.ts)
-  if (body.under14) {
-    if (!body.guardianEmail) throw new ApiError(400, "guardian_email_required", "보호자의 이메일을 적어 주세요.", [{ field: "guardianEmail", message: "보호자에게 동의 확인 메일을 보내요." }]);
-    const pending = await requestGuardianConsent({
-      uid: t.uid,
-      childEmail: (t.email ?? "").toLowerCase(),
-      guardianEmail: body.guardianEmail,
-      form: { nickname: body.nickname, grade: body.grade, interests: body.interests },
-    });
-    ok(res, { registered: false, pending }, 202);
-    return;
-  }
+  // 가입은 만 14세 이상만 받는다 — 보호자 동의 메일(routes/guardian.ts)로 가입하는 길은 닫아 둔다
+  if (body.under14) throw under14Error();
 
   const email = (t.email ?? "").toLowerCase();
   const role: Role = email && t.email_verified && adminEmails().includes(email) ? "admin" : "student";
@@ -162,7 +153,7 @@ authRouter.post("/google/signup", async (req, res) => {
     role,
     status: "active",
     dailyLimit: null,
-    consent: { termsAt: now, privacyAt: now, under14: body.under14, guardianAt: body.under14 ? now : null },
+    consent: { termsAt: now, privacyAt: now, under14: body.under14, guardianAt: null },
     stats: { projects: 0, turns: 0 },
     createdAt: now,
     updatedAt: now,
