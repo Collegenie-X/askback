@@ -83,19 +83,19 @@ function PickArt() {
 // 2. 질문 버튼 — 빈칸에서 시작하지 않는다. 칩을 누르면 초안이 입력창에 들어온다
 function ChipsArt() {
   const chips = [
-    { t: "📐 설계 묻기", c: V, w: 54 },
-    { t: "🧩 형식 질문", c: SUB, w: 52 },
-    { t: "🚀 확장", c: C, w: 36 },
-    { t: "🧭 다듬기", c: SUB, w: 42 },
+    { t: "설계 묻기", c: V, w: 46 },
+    { t: "형식 질문", c: SUB, w: 44 },
+    { t: "확장", c: C, w: 28 },
+    { t: "다듬기", c: SUB, w: 34 },
   ];
   let x = 18;
   return (
     <Frame id="chips" c={V}>
       <rect x="10" y="22" width="220" height="132" rx="16" fill="url(#card-chips)" stroke={LN} strokeWidth="1.2" />
-      {/* 💡 질문 바로 만들기 */}
+      {/* 질문 바로 만들기 */}
       <g className="ob-pop">
         <rect x="18" y="32" width="58" height="18" rx="9" fill={`${P}22`} stroke={P} strokeWidth="1.2" />
-        <text x="47" y="44.5" textAnchor="middle" fontSize="8" fontWeight="800" fill={P}>🔭 심화</text>
+        <text x="47" y="44.5" textAnchor="middle" fontSize="8" fontWeight="800" fill={P}>심화</text>
       </g>
       <text x="84" y="44.5" fontSize="7.5" fontWeight="700" fill={SUB}>렌즈를 고르면 깊은 질문이 나와</text>
       {chips.map((c, i) => {
@@ -134,7 +134,7 @@ function OpenArt() {
       <rect x="132" y="12" width="96" height="22" rx="11" fill={B} />
       <text x="180" y="26.5" textAnchor="middle" fontSize="8" fontWeight="800" fill={TX}>물 주는 방법 알려 줘</text>
       <rect x="12" y="42" width="216" height="118" rx="16" fill="url(#card-open)" stroke={LN} strokeWidth="1.2" />
-      <text x="22" y="58" fontSize="8" fontWeight="800" fill={TX}>🪐 방법 3개를 비교해 볼게</text>
+      <text x="22" y="58" fontSize="8" fontWeight="800" fill={TX}>방법 3개를 비교해 볼게</text>
       {[66, 74, 82].map((y, i) => (
         <g key={y} className="rise" style={{ animationDelay: `${0.1 + i * 0.1}s` }}>
           <rect x="22" y={y} width="8" height="4" rx="2" fill={[G, M, B][i]} />
@@ -143,9 +143,9 @@ function OpenArt() {
       ))}
       <g className="ob-pop" style={{ animationDelay: "0.45s" }}>
         <rect x="22" y="94" width="196" height="58" rx="10" fill={`${M}1f`} stroke={M} strokeWidth="1.4" />
-        <text x="30" y="107" fontSize="7.5" fontWeight="900" fill={M}>🫵 네가 정할 것 — 여기부턴 내가 대신 못 정해</text>
-        <text x="32" y="122" fontSize="8" fontWeight="700" fill={TX}>🙋 흙이 얼마나 마르면 물을 줄까?</text>
-        <text x="32" y="138" fontSize="8" fontWeight="700" fill={TX}>🙋 물이 넘치면 누가 알아야 해?</text>
+        <text x="30" y="107" fontSize="7.5" fontWeight="900" fill={M}>네가 정할 것 — 여기부턴 내가 대신 못 정해</text>
+        <text x="32" y="122" fontSize="8" fontWeight="700" fill={TX}>· 흙이 얼마나 마르면 물을 줄까?</text>
+        <text x="32" y="138" fontSize="8" fontWeight="700" fill={TX}>· 물이 넘치면 누가 알아야 해?</text>
       </g>
       <Hand x={176} y={118} />
     </Frame>
@@ -167,7 +167,7 @@ function AskBackArt() {
         <rect x="14" y="74" width="140" height="42" rx="14" fill={`${P}22`} stroke={P} strokeWidth="1.8" />
         <circle cx="34" cy="95" r="12" fill={P} />
         <text x="34" y="99" textAnchor="middle" fontSize="10" fontWeight="900" fill={BG2}>왜?</text>
-        <text x="52" y="91" fontSize="8" fontWeight="900" fill={P}>🧭 되묻기</text>
+        <text x="52" y="91" fontSize="8" fontWeight="900" fill={P}>되묻기</text>
         <text x="52" y="105" fontSize="7.5" fontWeight="700" fill={TX}>왜 그 방법을 골랐어?</text>
       </g>
       <path d="M154 96c22 0 34 10 36 26" fill="none" stroke={P} strokeWidth="1.8" strokeDasharray="3 3" />
@@ -197,7 +197,7 @@ function ReportArt() {
       <g className="rise" style={{ animationDelay: "0.4s" }}>
         <path d="M22 44h58l14 14v66H22z" fill="url(#card-rep)" stroke={LN} strokeWidth="1.4" />
         <path d="M80 44v14h14" fill="none" stroke={LN} strokeWidth="1.4" />
-        <text x="30" y="62" fontSize="8" fontWeight="900" fill={TX}>📊 리포트</text>
+        <text x="30" y="62" fontSize="8" fontWeight="900" fill={TX}>리포트</text>
         {[72, 84, 96, 108].map((y, i) => (
           <g key={y}>
             <path d={`M30 ${y}l3 3 6-6`} fill="none" stroke={M} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -226,11 +226,11 @@ function ReportArt() {
 
 type Step = { art: ReactNode; c: string; word: string; title: string; desc: string; tags: string[] };
 const STEPS: Step[] = [
-  { art: <PickArt />, c: G, word: "템플릿", title: "먼저 무엇을 만들지 골라", desc: "형식을 고르면 질문 버튼 · 채울 칸 · 코치가 되묻는 것이 그 형식에 맞춰져. 나중에 바꿔도 돼.", tags: ["📄 논문", "🔎 리서치", "📣 캠페인", "💻 서비스", "🤖 제품"] },
-  { art: <ChipsArt />, c: V, word: "질문 버튼", title: "빈칸에서 시작하지 않아", desc: "입력창 위 버튼을 누르면 질문 초안이 들어와. 고쳐서 보내기만 하면 돼. 💡를 누르면 더 많은 질문이 펼쳐져.", tags: ["📐 설계 묻기", "🧩 형식 질문", "🚀 확장", "🧭 다듬기", "🔭 심화"] },
-  { art: <OpenArt />, c: M, word: "열린 질문", title: "답은 끝까지, 정할 건 너에게", desc: "답은 숨기지 않고 끝까지 줘. 대신 답마다 코치가 일부러 안 정한 ‘🫵 네가 정할 것’이 붙어. 그 칸을 네 말로 정하면서 다음 질문을 이어 가면 돼.", tags: ["🫵 네가 정할 것", "🙋 열린 질문", "❓ 물음표로 끝나"] },
-  { art: <AskBackArt />, c: P, word: "되묻기", title: "두 번 물으면 한 번, 내가 물어", desc: "‘왜 그렇게 했어?’에 네 말로 한 줄 답하면 설계가 네 것이 돼. 급할 땐 [나중에]로 넘겨도 괜찮아.", tags: ["🧭 되묻기", "🥁 2문 1역", "⏭ 나중에"] },
-  { art: <ReportArt />, c: G, word: "리포트", title: "물으면 저절로 기획서가 쌓여", desc: "질문 10개마다 리포트 한 장. 대화가 도는 동안 7단계 기획 가이드가 한 칸씩 차고, 기획서.md로 내보낼 수 있어.", tags: ["📊 리포트", "🕯 불씨 → 🚀 봉화", "📄 .md"] },
+  { art: <PickArt />, c: G, word: "템플릿", title: "먼저 무엇을 만들지 골라", desc: "형식을 고르면 질문 버튼 · 채울 칸 · 코치가 되묻는 것이 그 형식에 맞춰져. 나중에 바꿔도 돼.", tags: ["논문", "리서치", "캠페인", "서비스", "제품"] },
+  { art: <ChipsArt />, c: V, word: "질문 버튼", title: "빈칸에서 시작하지 않아", desc: "입력창 위 버튼을 누르면 질문 초안이 들어와. 고쳐서 보내기만 하면 돼. 💡를 누르면 더 많은 질문이 펼쳐져.", tags: ["설계 묻기", "형식 질문", "확장", "다듬기", "심화"] },
+  { art: <OpenArt />, c: M, word: "열린 질문", title: "답은 끝까지, 정할 건 너에게", desc: "답은 숨기지 않고 끝까지 줘. 대신 답마다 코치가 일부러 안 정한 ‘네가 정할 것’이 붙어. 그 칸을 네 말로 정하면서 다음 질문을 이어 가면 돼.", tags: ["네가 정할 것", "열린 질문", "물음표로 끝나"] },
+  { art: <AskBackArt />, c: P, word: "되묻기", title: "두 번 물으면 한 번, 내가 물어", desc: "‘왜 그렇게 했어?’에 네 말로 한 줄 답하면 설계가 네 것이 돼. 급할 땐 [나중에]로 넘겨도 괜찮아.", tags: ["되묻기", "2문 1역", "나중에"] },
+  { art: <ReportArt />, c: G, word: "리포트", title: "물으면 저절로 기획서가 쌓여", desc: "질문 10개마다 리포트 한 장. 대화가 도는 동안 7단계 기획 가이드가 한 칸씩 차고, 기획서.md로 내보낼 수 있어.", tags: ["리포트", "불씨 → 봉화", ".md"] },
 ];
 
 export default function Welcome({ onNewProject, onDemo }: { onNewProject: () => void; onDemo: () => void }) {
@@ -253,7 +253,7 @@ export default function Welcome({ onNewProject, onDemo }: { onNewProject: () => 
       <div className="scroll flex min-h-0 flex-1 flex-col px-7 pb-[max(16px,env(safe-area-inset-bottom))] pt-5">
         {guide && <div className="mb-3 grid grid-cols-[1fr_auto_1fr] items-center">
           {step === 0 ? (
-            <span className="justify-self-start text-xs font-semibold text-clay">📘 사용 설명서</span>
+            <span className="justify-self-start text-xs font-semibold text-clay">사용 설명서</span>
           ) : (
             <button type="button" className="justify-self-start text-xs font-semibold text-sub" onClick={() => setStep(step - 1)}>‹ 이전</button>
           )}
@@ -289,15 +289,15 @@ export default function Welcome({ onNewProject, onDemo }: { onNewProject: () => 
                   <Buddy level={1} size={44} />
                   <p className="text-[13px] font-bold [word-break:keep-all]">준비 끝! 무엇을 만들지부터 골라 볼까?</p>
                 </div>
-                <button type="button" onClick={onNewProject} className="w-full rounded-2xl bg-ink py-3.5 text-[15px] font-bold text-paper active:opacity-80">📐 템플릿 고르고 시작하기</button>
+                <button type="button" onClick={onNewProject} className="w-full rounded-2xl bg-ink py-3.5 text-[15px] font-bold text-paper active:opacity-80">템플릿 고르고 시작하기</button>
                 <div className="grid grid-cols-2 gap-2">
-                  <button type="button" onClick={onDemo} className="rounded-2xl border border-clay py-2.5 text-[13px] font-bold text-clay">📂 예시 먼저 보기</button>
-                  <button type="button" onClick={free} className="rounded-2xl border border-line bg-card py-2.5 text-[13px] font-bold">💬 그냥 물어볼래</button>
+                  <button type="button" onClick={onDemo} className="rounded-2xl border border-clay py-2.5 text-[13px] font-bold text-clay">예시 먼저 보기</button>
+                  <button type="button" onClick={free} className="rounded-2xl border border-line bg-card py-2.5 text-[13px] font-bold">그냥 물어볼래</button>
                 </div>
                 <div className="flex justify-center gap-4 pt-2 text-xs font-semibold text-sub">
-                  <button type="button" onClick={() => { setGuide(true); setStep(0); }}>📘 사용 설명서 보기</button>
-                  <Link href="/about">✨ 소개 다시 보기</Link>
-                  <button type="button" onClick={openLogin}>🔐 {account.status === "signedIn" ? account.user.nickname : "로그인"}</button>
+                  <button type="button" onClick={() => { setGuide(true); setStep(0); }}>사용 설명서 보기</button>
+                  <Link href="/about">소개 다시 보기</Link>
+                  <button type="button" onClick={openLogin}>{account.status === "signedIn" ? account.user.nickname : "로그인"}</button>
                 </div>
               </>
             ) : (
